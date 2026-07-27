@@ -122,7 +122,8 @@ class VoiceCloneService:
                 -1, "克隆响应中无 demo_audio 试听链接（可能未传 text）"
             )
         os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
-        session = await self.client._get_session()
+        # 用独立的下载 session，不带 Authorization，避免破坏对象存储签名
+        session = await self.client._get_download_session()
         async with session.get(demo_url) as resp:
             if resp.status >= 400:
                 body = await resp.text()

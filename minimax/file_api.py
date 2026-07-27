@@ -49,7 +49,8 @@ class FileService:
         download_url = await self.get_download_url(file_id)
         os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
 
-        session = await self.client._get_session()
+        # 用独立的下载 session，不带 Authorization，避免破坏对象存储签名
+        session = await self.client._get_download_session()
         async with session.get(download_url) as resp:
             if resp.status >= 400:
                 body = await resp.text()
@@ -63,7 +64,8 @@ class FileService:
     async def download_bytes(self, file_id: int) -> bytes:
         """下载文件到内存，返回字节。"""
         download_url = await self.get_download_url(file_id)
-        session = await self.client._get_session()
+        # 用独立的下载 session，不带 Authorization，避免破坏对象存储签名
+        session = await self.client._get_download_session()
         async with session.get(download_url) as resp:
             if resp.status >= 400:
                 body = await resp.text()

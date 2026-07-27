@@ -50,9 +50,12 @@ class MinimaxClient:
         self.retry_times = retry_times
         self.retry_backoff = retry_backoff
         self._session: Optional[aiohttp.ClientSession] = None
+        # 下载外部资源(对象存储 URL)用的 session，不带 Authorization header，
+        # 否则会破坏对象存储的签名计算 -> SignatureDoesNotMatch
+        self._download_session: Optional[aiohttp.ClientSession] = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
-        """获取或创建 aiohttp 会话。"""
+        """获取或创建 aiohttp 会话（带 Authorization，用于 Minimax API）。"""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(
                 timeout=self.timeout,
@@ -62,6 +65,16 @@ class MinimaxClient:
                 },
             )
         return self._session
+
+    async def _get_download_session(self) -> aiohttp.ClientSession:
+        """获取用于下载外部资源(对象存储)的 session，不带 Authorization。
+
+        Minimax 的下载 URL 指向对象存储(OSS/COS/S3)，签名计算不包含额外
+        header；若复用带 Authorization 的 session 会导致 SignatureDoesNotMatch。
+        """
+        if self._download_session is None or self._download_session.closed:
+            self._download_session = aiohttp.ClientSession(timeout=self.timeout)
+        return self._download_session
 
     def _build_url(self, path: str, with_group: bool = True) -> str:
         """拼接完整 URL，国内平台附加 GroupId。"""
@@ -193,3 +206,6 @@ class MinimaxClient:
         if self._session and not self._session.closed:
             await self._session.close()
             self._session = None
+        if self._download_session and not self._download_session.closed:
+            await self._download_session.close()
+            self._download_session = None
