@@ -208,10 +208,13 @@ class Main(Star):
         try:
             vm = VoiceManageService(self.client)
             data = await vm.list_voices("all")
+            voices = []
+            for key in ("system_voice", "voice_cloning", "voice_generation"):
+                for v in data.get(key, []) or []:
+                    voices.append(v)
             lines = ["可用音色："]
-            voices = data.get("voices", []) or data.get("system_voice", [])
             for v in voices[:20]:
-                name = v.get("name", "?")
+                name = v.get("voice_name") or v.get("voice_id", "?")
                 vid = v.get("voice_id", "?")
                 lines.append(f"  · {name} → {vid}")
             if len(voices) > 20:
@@ -279,11 +282,25 @@ class Main(Star):
         })
 
     async def _api_voices(self):
-        """从 Minimax API 获取音色列表。"""
+        """从 Minimax API 获取音色列表（合并系统/克隆/生成音色）。"""
         try:
             vm = VoiceManageService(self.client)
             data = await vm.list_voices("all")
-            return json_response(data)
+            voices = []
+            for key, label in (
+                ("system_voice", "system"),
+                ("voice_cloning", "voice_cloning"),
+                ("voice_generation", "voice_generation"),
+            ):
+                for v in data.get(key, []) or []:
+                    item = dict(v)
+                    item.setdefault("type", label)
+                    # 统一 name 字段（官方返回 voice_name）
+                    item.setdefault(
+                        "name", v.get("voice_name") or v.get("voice_id")
+                    )
+                    voices.append(item)
+            return json_response({"voices": voices, "raw": data})
         except Exception as e:
             return error_response(f"获取音色失败: {e}", status_code=500)
 
@@ -418,15 +435,18 @@ class Main(Star):
             data = await vm.list_voices("all")
             found = None
             for key, label in (
-                ("voice_clone", "voice_clone"),
+                ("voice_cloning", "voice_cloning"),
+                ("voice_generation", "voice_generation"),
                 ("system_voice", "system"),
-                ("voices", "system"),
             ):
                 lst = data.get(key, []) or []
                 for v in lst:
                     if v.get("voice_id") == voice_id:
                         found = dict(v)
                         found.setdefault("type", label)
+                        found.setdefault(
+                            "name", v.get("voice_name") or v.get("voice_id")
+                        )
                         break
                 if found:
                     break

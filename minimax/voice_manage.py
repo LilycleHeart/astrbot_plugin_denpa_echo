@@ -15,15 +15,20 @@ class VoiceManageService:
         """获取音色列表。
 
         Args:
-            voice_type: 'all' | 'system' | 'voice_clone'
+            voice_type: 'all' | 'system' | 'voice_cloning' | 'voice_generation'
 
         Returns:
-            Minimax 返回的音色列表数据
+            Minimax 返回的音色列表数据（含 system_voice / voice_cloning /
+            voice_generation 三个列表）
+
+        Note:
+            官方接口为 POST /v1/get_voice，voice_type 放在 JSON body 中。
+            克隆音色需成功用于一次语音合成后才会在 voice_cloning 中出现。
         """
         return await self.client._request(
-            "GET",
+            "POST",
             "/v1/get_voice",
-            params={"voice_type": voice_type},
+            json_body={"voice_type": voice_type},
         )
 
     async def list_system_voices_static(self) -> list:

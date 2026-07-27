@@ -333,13 +333,9 @@ async function loadVoices() {
   const voiceType = document.getElementById("voice-type").value;
   try {
     const data = await bridge.apiGet("voices");
-    let voices = data.voices || data.system_voice || [];
+    let voices = data.voices || [];
     if (voiceType !== "all") {
-      voices = voices.filter(
-        (v) => (v.type || v.voice_type || "") === voiceType ||
-               (voiceType === "system" && !v.is_clone) ||
-               (voiceType === "voice_clone" && v.is_clone)
-      );
+      voices = voices.filter((v) => (v.type || "") === voiceType);
     }
     state.voices = voices;
     renderVoices(voices);
