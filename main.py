@@ -185,7 +185,7 @@ class Main(Star):
                 text=text,
                 tts_params=tts_params,
                 umo=umo,
-                use_sync=True,
+                use_async=False,
             )
             self._record_stat(text, meta)
             yield event.chain_result([Record(file=wav_path, url=wav_path)])
@@ -338,7 +338,7 @@ class Main(Star):
                 text=text,
                 tts_params=tts_params,
                 umo="preview",
-                use_sync=True,
+                use_async=False,
                 skip_polish=True,
             )
             self._record_stat(text, meta)
@@ -501,7 +501,7 @@ class Main(Star):
                 text=text,
                 tts_params=tts_params,
                 umo="debug",
-                use_sync=True,
+                use_async=False,
                 skip_polish=True,
             )
             elapsed = int((time.time() - t0) * 1000)

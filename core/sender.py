@@ -98,7 +98,7 @@ class MessageSender:
                 text=text,
                 tts_params=tts_params,
                 umo=umo,
-                use_sync=self.use_sync,
+                use_async=not self.use_sync,
             )
 
             # 构造新消息链
