@@ -154,7 +154,8 @@ class MessageSender:
             )
 
             # 通过 context 主动发送语音
-            message_chain = MessageChain().record(file=wav_path, url=wav_path)
+            # MessageChain 没有 .record() 便捷方法，直接构造 chain
+            message_chain = MessageChain(chain=[Record(file=wav_path, url=wav_path)])
             await self.context.send_message(umo, message_chain)
 
             logger.info(

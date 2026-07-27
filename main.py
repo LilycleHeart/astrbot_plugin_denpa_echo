@@ -50,7 +50,7 @@ class Main(Star):
                 get_astrbot_data_path,
             )
             self.plugin_data_dir = os.path.join(
-                get_astrbot_data_path(), "plugins_data", PLUGIN_NAME
+                get_astrbot_data_path(), "plugin_data", PLUGIN_NAME
             )
         except Exception:
             pass
