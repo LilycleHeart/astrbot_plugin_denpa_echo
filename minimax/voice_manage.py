@@ -38,14 +38,23 @@ class VoiceManageService:
             for name, vid in ALL_SYSTEM_VOICES
         ]
 
-    async def delete_voice(self, voice_id: str) -> dict:
-        """删除克隆音色。
+    async def delete_voice(
+        self, voice_id: str, voice_type: str = "voice_cloning"
+    ) -> dict:
+        """删除克隆/生成音色。
 
         Args:
             voice_id: 待删除的音色 ID
+            voice_type: 'voice_cloning' 或 'voice_generation'（系统音色不可删除）
+
+        Note:
+            官方接口为 POST /v1/delete_voice，body 需同时包含 voice_type 与 voice_id。
+            删除后该 voice_id 无法再次使用。
         """
         resp = await self.client._request(
-            "POST", "/v1/del_voice", json_body={"voice_id": voice_id}
+            "POST",
+            "/v1/delete_voice",
+            json_body={"voice_type": voice_type, "voice_id": voice_id},
         )
-        logger.info(f"[Minimax] 已删除音色: {voice_id}")
+        logger.info(f"[Minimax] 已删除音色: {voice_id} (type={voice_type})")
         return resp

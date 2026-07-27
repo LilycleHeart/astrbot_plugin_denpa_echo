@@ -402,10 +402,10 @@ class Main(Star):
                 prompt_text=prompt_text,
                 preview_text=preview_text,
             )
-            # 下载试听音频到本地
-            preview_file_id = result.get("file_id")
+            # 下载试听音频到本地（voice_clone 响应里的 demo_audio 是试听 URL）
+            demo_audio_url = result.get("demo_audio")
             audio_url = None
-            if preview_file_id:
+            if demo_audio_url:
                 preview_path = os.path.join(
                     self.plugin_data_dir, "clone_preview",
                     f"{voice_id}_{int(time.time())}.mp3",
@@ -418,7 +418,7 @@ class Main(Star):
             return json_response({
                 "success": True,
                 "voice_id": voice_id,
-                "preview_file_id": preview_file_id,
+                "demo_audio": demo_audio_url,
                 "audio_path": audio_url,
                 "raw": result,
             })

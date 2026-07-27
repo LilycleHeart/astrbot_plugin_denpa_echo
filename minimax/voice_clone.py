@@ -109,11 +109,28 @@ class VoiceCloneService:
     async def get_clone_preview_audio(
         self, clone_resp: dict, save_path: str
     ) -> str:
-        """从克隆响应中提取试听音频并下载。
+        """从克隆响应中下载试听音频。
 
-        克隆成功后响应里的 file_id 对应一段试听音频。
+        voice_clone 响应里的 ``demo_audio`` 字段是试听音频的下载 URL（仅当
+        请求带了 text + model 时返回）。
         """
-        file_id = clone_resp.get("file_id")
-        if file_id is None:
-            raise MinimaxAPIError(-1, "克隆响应中无 file_id")
-        return await self.file_service.download(file_id, save_path)
+        import os
+
+        demo_url = clone_resp.get("demo_audio")
+        if not demo_url:
+            raise MinimaxAPIError(
+                -1, "克隆响应中无 demo_audio 试听链接（可能未传 text）"
+            )
+        os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
+        session = await self.client._get_session()
+        async with session.get(demo_url) as resp:
+            if resp.status >= 400:
+                body = await resp.text()
+                raise MinimaxAPIError(
+                    resp.status, f"下载试听音频失败: {body[:200]}"
+                )
+            with open(save_path, "wb") as f:
+                async for chunk in resp.content.iter_chunked(8192):
+                    f.write(chunk)
+        logger.debug(f"[Minimax] 克隆试听音频已下载到 {save_path}")
+        return save_path

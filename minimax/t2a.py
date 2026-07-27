@@ -1,6 +1,5 @@
 """同步/异步/流式语音合成。"""
 import asyncio
-import base64
 import json
 from typing import AsyncIterator, Optional
 
@@ -132,13 +131,13 @@ class T2AService:
 
         resp = await self.client._request("POST", "/v1/t2a_v2", json_body=payload)
 
-        audio_b64 = resp.get("data", {}).get("audio", "")
-        if not audio_b64:
+        audio_hex = resp.get("data", {}).get("audio", "")
+        if not audio_hex:
             raise MinimaxAPIError(-1, "响应中无音频数据", resp.get("trace_id", ""))
 
         extra = resp.get("extra_info", {})
         return T2AResult(
-            audio_bytes=base64.b64decode(audio_b64),
+            audio_bytes=bytes.fromhex(audio_hex),
             audio_format=extra.get("audio_format", params.get("format", "mp3")),
             sample_rate=extra.get("audio_sample_rate", params.get("sample_rate", 32000)),
             audio_length=extra.get("audio_length", 0),
