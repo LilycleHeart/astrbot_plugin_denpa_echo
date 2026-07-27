@@ -146,11 +146,19 @@ class MessageSender:
         """追加模式后台任务。"""
         try:
             tts_params = self.tts_engine.build_tts_params()
+            # 短文本用同步合成（秒级完成，单次 HTTP 请求即返回音频）；
+            # 仅当文本超长(>8000字符，超过同步 t2a_v2 的 10000 上限安全余量)
+            # 才降级用异步合成（创建任务+轮询+下载，慢但支持超长文本）。
+            use_async = len(text) > 8000
+            logger.info(
+                f"[TTS] 追加模式后台合成: {len(text)}字, "
+                f"{'异步' if use_async else '同步'}"
+            )
             wav_path, meta = await self.tts_engine.synthesize_to_wav(
                 text=text,
                 tts_params=tts_params,
                 umo=umo,
-                use_async=True,  # 追加模式默认用异步
+                use_async=use_async,
             )
 
             # 通过 context 主动发送语音
