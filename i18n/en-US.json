@@ -1,0 +1,77 @@
+{
+  "title": "Minimax TTS Console",
+  "subtitle": "Synthesis · Clone · Dictionary · Status",
+  "refresh": "Refresh",
+  "tabs": {
+    "overview": "Overview",
+    "voices": "Voices",
+    "clone": "Voice Clone",
+    "debug": "Debug Preview",
+    "logs": "Logs",
+    "settings": "UI Settings"
+  },
+  "overview": {
+    "title": "Overview",
+    "subtitle": "API connectivity and runtime stats",
+    "api": "API Status",
+    "today": "Today",
+    "cache": "Cache Size",
+    "ffmpeg": "ffmpeg",
+    "configTitle": "Current Configuration"
+  },
+  "voices": {
+    "title": "Voice Management",
+    "subtitle": "System and cloned voices, click to preview",
+    "load": "Load Voices",
+    "all": "All",
+    "system": "System",
+    "cloned": "Cloned"
+  },
+  "clone": {
+    "title": "Voice Clone",
+    "subtitle": "Upload audio to clone a custom voice (10s-5min, mp3/wav/m4a)",
+    "source": "Source Audio",
+    "dropHint": "Click or drag a file here (10s-5min, mp3/wav/m4a)",
+    "voiceId": "Custom Voice ID",
+    "voiceIdHint": "Alphanumeric and underscore only, used as voice_id for synthesis",
+    "model": "Clone Model",
+    "preview": "Preview Text",
+    "start": "Start Clone"
+  },
+  "debug": {
+    "title": "Debug Preview",
+    "subtitle": "Synthesize and play inline",
+    "text": "Text",
+    "voice": "Voice",
+    "speed": "Speed",
+    "emotion": "Emotion",
+    "synth": "Synthesize"
+  },
+  "logs": {
+    "title": "Logs",
+    "subtitle": "Recent 200 synthesis records"
+  },
+  "settings": {
+    "title": "UI Settings",
+    "subtitle": "Fluent UI 2 color and background settings",
+    "colorMode": "Color Mode",
+    "dynamic": "Dynamic (follow theme)",
+    "static": "Static (custom)",
+    "brandColor": "Brand Color",
+    "bgMode": "Background Mode",
+    "bgTheme": "Follow Theme",
+    "bgBrand": "Brand Gradient",
+    "bgCustom": "Custom",
+    "customBg": "Custom Light Background",
+    "customBgDark": "Custom Dark Background",
+    "radius": "Corner Radius (px)",
+    "save": "Save",
+    "reset": "Reset"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Minimax TTS Console",
+      "description": "Voice synthesis, cloning, preview and status"
+    }
+  }
+}

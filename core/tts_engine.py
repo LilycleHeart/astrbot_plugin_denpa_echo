@@ -1,0 +1,318 @@
+"""TTS 引擎：润色 -> 合成 -> 转换 的完整编排。"""
+import hashlib
+import os
+import time
+from typing import Optional
+
+from astrbot.api import logger
+
+from .audio_utils import AudioConverter
+from .polisher import TextPolisher
+from .text_utils import quick_clean
+from ..minimax.client import MinimaxClient, MinimaxAPIError
+from ..minimax.file_api import FileService
+from ..minimax.t2a import T2AResult, T2AService
+
+
+class TTSEngine:
+    """TTS 全流程编排器。
+
+    流程：
+        1. （可选）LLM 润色
+        2. 缓存命中检查
+        3. 调用 Minimax 合成（同步/异步）
+        4. 音频格式转换（-> wav）
+        5. 写入缓存与本地文件
+    """
+
+    def __init__(
+        self,
+        client: MinimaxClient,
+        polisher: TextPolisher,
+        converter: AudioConverter,
+        config: dict,
+        plugin_data_dir: str,
+    ):
+        """
+        Args:
+            client: Minimax 客户端
+            polisher: LLM 润色器
+            converter: 音频转换器
+            config: 完整插件配置
+            plugin_data_dir: 插件数据目录（用于缓存）
+        """
+        self.client = client
+        self.t2a = T2AService(client)
+        self.file_service = FileService(client)
+        self.polisher = polisher
+        self.converter = converter
+        self.config = config
+
+        # 缓存配置
+        adv = config.get("advanced", {}) or {}
+        cache_dir = adv.get("cache_dir", "")
+        if cache_dir and not os.path.isabs(cache_dir):
+            # 相对路径基于插件数据目录
+            cache_dir = os.path.join(plugin_data_dir, "cache")
+        self.cache_dir = cache_dir
+        self.cache_enabled = bool(self.cache_dir)
+        self.cache_max_size_mb = int(adv.get("cache_max_size_mb", 500))
+        if self.cache_enabled:
+            os.makedirs(self.cache_dir, exist_ok=True)
+            self._cleanup_cache_if_needed()
+
+    def _cache_key(self, text: str, params: dict) -> str:
+        """根据文本 + 关键参数生成缓存键。"""
+        # 只取影响音频结果的关键参数
+        key_fields = [
+            "model", "voice_id", "speed", "vol", "pitch", "emotion",
+            "language_boost", "format", "sample_rate", "bitrate", "channel",
+        ]
+        key_parts = [text]
+        for k in key_fields:
+            if k in params:
+                key_parts.append(f"{k}={params[k]}")
+        if params.get("use_timbre_weights") and params.get("timbre_weights"):
+            tw = params["timbre_weights"]
+            key_parts.append(
+                "tw="
+                + ",".join(
+                    f"{t.get('voice_id')}:{t.get('weight')}" for t in tw
+                )
+            )
+        vm = params.get("voice_modify", {}) or {}
+        if vm.get("enabled"):
+            key_parts.append(
+                f"vm={vm.get('pitch',0)},{vm.get('intensity',0)},{vm.get('timbre',0)},{vm.get('sound_effects','')}"
+            )
+        return hashlib.md5("|".join(str(p) for p in key_parts).encode()).hexdigest()
+
+    def _cache_path(self, key: str) -> str:
+        return os.path.join(self.cache_dir, f"{key}.wav")
+
+    def _cleanup_cache_if_needed(self) -> None:
+        """若缓存超限，按最旧访问时间删除。"""
+        if not self.cache_enabled or not os.path.isdir(self.cache_dir):
+            return
+        try:
+            files = [
+                os.path.join(self.cache_dir, f)
+                for f in os.listdir(self.cache_dir)
+                if f.endswith(".wav")
+            ]
+            if not files:
+                return
+            total_mb = sum(
+                os.path.getsize(f) for f in files
+            ) / (1024 * 1024)
+            if total_mb <= self.cache_max_size_mb:
+                return
+            # 按 mtime 排序，删除最旧的直到低于阈值
+            files.sort(key=lambda f: os.path.getmtime(f))
+            while files and total_mb > self.cache_max_size_mb * 0.9:
+                f = files.pop(0)
+                size = os.path.getsize(f) / (1024 * 1024)
+                try:
+                    os.remove(f)
+                    total_mb -= size
+                    logger.debug(f"[TTS] 缓存清理: {f} ({size:.2f}MB)")
+                except OSError:
+                    pass
+        except Exception as e:
+            logger.warning(f"[TTS] 缓存清理失败: {e}")
+
+    def build_tts_params(self) -> dict:
+        """从插件配置构造 TTS 参数（合并 tts/audio/voice_modify/pronunciation_dict）。"""
+        cfg = self.config
+        params: dict = {}
+        params.update(cfg.get("tts", {}) or {})
+        # audio_setting 参数扁平化
+        audio_cfg = cfg.get("audio", {}) or {}
+        params.update(audio_cfg)
+        params["voice_modify"] = cfg.get("voice_modify", {}) or {}
+        params["pronunciation_dict"] = cfg.get("pronunciation_dict", {}) or {}
+        return params
+
+    async def synthesize_to_wav(
+        self,
+        text: str,
+        tts_params: Optional[dict] = None,
+        umo: str = "",
+        use_async: bool = False,
+        skip_polish: bool = False,
+    ) -> tuple[str, dict]:
+        """完整流程：润色 -> 合成 -> 转 wav。
+
+        Args:
+            text: 待合成文本
+            tts_params: TTS 参数（None 则从配置读取）
+            umo: unified_msg_origin（用于 LLM 润色获取 Provider）
+            use_async: 是否使用异步合成（长文本）
+            skip_polish: 跳过 LLM 润色（用于面板试听）
+
+        Returns:
+            (wav 文件路径, 元信息 dict)
+        """
+        if tts_params is None:
+            tts_params = self.build_tts_params()
+
+        # 1. 润色
+        if skip_polish:
+            polished = quick_clean(text)
+        else:
+            polished = await self.polisher.polish(text, umo)
+            # 即使润色过，也做一次兜底清洗（去掉残留 markdown）
+            if not self.polisher.enabled:
+                polished = quick_clean(polished)
+
+        if not polished:
+            raise MinimaxAPIError(-1, "润色后文本为空")
+
+        # 2. 缓存检查
+        cache_key = self._cache_key(polished, tts_params)
+        wav_cache_path = self._cache_path(cache_key)
+        if self.cache_enabled and os.path.exists(wav_cache_path):
+            # 更新访问时间
+            os.utime(wav_cache_path)
+            logger.debug(f"[TTS] 命中缓存: {wav_cache_path}")
+            return wav_cache_path, {"cached": True, "text": polished}
+
+        # 3. 合成
+        src_format = tts_params.get("format", "mp3")
+        sample_rate = int(tts_params.get("sample_rate", 32000))
+        channels = int(tts_params.get("channel", 1))
+
+        if use_async:
+            wav_bytes, meta = await self._synthesize_async(
+                polished, tts_params, src_format, sample_rate, channels
+            )
+        else:
+            wav_bytes, meta = await self._synthesize_sync(
+                polished, tts_params, src_format, sample_rate, channels
+            )
+
+        # 4. 写入缓存
+        if self.cache_enabled:
+            os.makedirs(os.path.dirname(os.path.abspath(wav_cache_path)), exist_ok=True)
+            with open(wav_cache_path, "wb") as f:
+                f.write(wav_bytes)
+            meta["cache_path"] = wav_cache_path
+            return wav_cache_path, meta
+
+        # 5. 无缓存时写到临时文件
+        import tempfile
+        tmp = tempfile.NamedTemporaryFile(
+            suffix=".wav", delete=False, dir=self.cache_dir or None
+        )
+        tmp.write(wav_bytes)
+        tmp.close()
+        meta["cache_path"] = tmp.name
+        return tmp.name, meta
+
+    async def _synthesize_sync(
+        self,
+        text: str,
+        params: dict,
+        src_format: str,
+        sample_rate: int,
+        channels: int,
+    ) -> tuple[bytes, dict]:
+        """同步合成。"""
+        t0 = time.time()
+        result = await self.t2a.sync_synthesize(text, params)
+        elapsed = time.time() - t0
+        logger.info(
+            f"[TTS] 同步合成完成: {len(text)}字 -> "
+            f"{len(result.audio_bytes)}B, 耗时 {elapsed:.2f}s, "
+            f"trace={result.trace_id}"
+        )
+
+        # 转换为 wav
+        if src_format == "wav":
+            wav_bytes = result.audio_bytes
+        else:
+            wav_bytes = self.converter.to_wav(
+                result.audio_bytes,
+                src_format,
+                sample_rate=sample_rate,
+                channels=channels,
+            )
+
+        meta = {
+            "mode": "sync",
+            "elapsed_ms": int(elapsed * 1000),
+            "usage_chars": result.usage_characters,
+            "audio_length_ms": result.audio_length,
+            "trace_id": result.trace_id,
+            "text": text,
+        }
+        return wav_bytes, meta
+
+    async def _synthesize_async(
+        self,
+        text: str,
+        params: dict,
+        src_format: str,
+        sample_rate: int,
+        channels: int,
+    ) -> tuple[bytes, dict]:
+        """异步合成（长文本）。"""
+        t0 = time.time()
+        task_id, _ = await self.t2a.async_synthesize(text, params)
+        logger.info(f"[TTS] 异步任务已创建: task_id={task_id}")
+
+        file_id = await self.t2a.wait_for_task(task_id)
+        audio_bytes = await self.file_service.download_bytes(file_id)
+        elapsed = time.time() - t0
+        logger.info(
+            f"[TTS] 异步合成完成: task_id={task_id}, "
+            f"{len(text)}字 -> {len(audio_bytes)}B, 耗时 {elapsed:.2f}s"
+        )
+
+        if src_format == "wav":
+            wav_bytes = audio_bytes
+        else:
+            wav_bytes = self.converter.to_wav(
+                audio_bytes,
+                src_format,
+                sample_rate=sample_rate,
+                channels=channels,
+            )
+
+        meta = {
+            "mode": "async",
+            "task_id": task_id,
+            "file_id": file_id,
+            "elapsed_ms": int(elapsed * 1000),
+            "text": text,
+        }
+        return wav_bytes, meta
+
+    def cache_size_mb(self) -> float:
+        """返回当前缓存大小（MB）。"""
+        if not self.cache_enabled or not os.path.isdir(self.cache_dir):
+            return 0.0
+        try:
+            total = sum(
+                os.path.getsize(os.path.join(self.cache_dir, f))
+                for f in os.listdir(self.cache_dir)
+                if f.endswith(".wav")
+                and os.path.isfile(os.path.join(self.cache_dir, f))
+            )
+            return total / (1024 * 1024)
+        except Exception:
+            return 0.0
+
+    def clear_cache(self) -> int:
+        """清空缓存，返回删除的文件数。"""
+        if not self.cache_enabled or not os.path.isdir(self.cache_dir):
+            return 0
+        count = 0
+        for f in os.listdir(self.cache_dir):
+            if f.endswith(".wav"):
+                try:
+                    os.remove(os.path.join(self.cache_dir, f))
+                    count += 1
+                except OSError:
+                    pass
+        return count

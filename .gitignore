@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 插件运行时数据（不应提交）
+data/
+cache/
+uploads/
+clone_preview/
+
+# IDE
+.vscode/
+.idea/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 测试
+_test_*.py
+.pytest_cache/
+
+# 工作区元数据（不提交）
+.workbuddy/

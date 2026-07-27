@@ -1,0 +1,120 @@
+/* Fluent UI 2 主题：亮色 / 暗色
+ * 颜色令牌参考 https://fluent2.microsoft.design/color-tokens2
+ * 支持：跟随主题（data-theme） + 用户自定义品牌色覆盖
+ */
+
+/* ===== 亮色主题（默认）===== */
+:root,
+[data-theme="light"] {
+  /* 中性背景 */
+  --color-bg-1: #ffffff;          /* colorNeutralBackground1 - 主背景 */
+  --color-bg-2: #f5f5f5;          /* colorNeutralBackground2 - 卡片次背景 */
+  --color-bg-3: #ebebeb;          /* colorNeutralBackground3 - 输入框等 */
+  --color-bg-subtle: #fafafa;     /* 悬停态微背景 */
+  --color-bg-hover: #f0f0f0;
+  --color-bg-pressed: #e6e6e6;
+  --color-transparent: transparent;
+
+  /* 中性前景 */
+  --color-fg-1: #242424;          /* colorNeutralForeground1 - 主文字 */
+  --color-fg-2: #424242;          /* colorNeutralForeground2 - 次文字 */
+  --color-fg-3: #616161;          /* colorNeutralForeground3 - 三级/hint */
+  --color-fg-4: #8a8a8a;          /* 更弱 */
+  --color-fg-disabled: #adadad;
+  --color-fg-inverted: #ffffff;
+
+  /* 品牌色（默认 Microsoft Fluent 品牌蓝，可被 JS 覆盖） */
+  --color-brand: #0f6cbd;         /* colorBrandBackground */
+  --color-brand-hover: #0e5fa5;
+  --color-brand-pressed: #0c5290;
+  --color-brand-fg: #0f6cbd;      /* colorBrandForeground1 */
+  --color-brand-fg-hover: #0a4d87;
+  --color-brand-border: #0f6cbd;
+
+  /* 边框/描边 */
+  --color-stroke-1: #d1d1d1;      /* colorNeutralStroke1 */
+  --color-stroke-2: #e0e0e0;
+  --color-stroke-accessible: #616161;  /* AA 对比度 */
+  --color-stroke-disabled: #e0e0e0;
+
+  /* 状态色 */
+  --color-success-bg: #e6f5ea;
+  --color-success-fg: #0e6b3a;
+  --color-success-border: #54b467;
+  --color-warning-bg: #fff4ce;
+  --color-warning-fg: #8a5400;
+  --color-warning-border: #f5c842;
+  --color-danger-bg: #fde7e9;
+  --color-danger-fg: #b10e1c;
+  --color-danger-border: #f4858c;
+  --color-info-bg: #e5f1fb;
+  --color-info-fg: #0f6cbd;
+
+  /* 应用背景（可被 background_mode 配置覆盖） */
+  --color-app-bg: var(--color-bg-1);
+  --color-app-bg-gradient: linear-gradient(
+    135deg,
+    var(--color-bg-1) 0%,
+    var(--color-bg-2) 100%
+  );
+}
+
+/* ===== 暗色主题 ===== */
+[data-theme="dark"] {
+  --color-bg-1: #1a1a1a;
+  --color-bg-2: #252525;
+  --color-bg-3: #2d2d2d;
+  --color-bg-subtle: #1f1f1f;
+  --color-bg-hover: #303030;
+  --color-bg-pressed: #383838;
+
+  --color-fg-1: #ffffff;
+  --color-fg-2: #d1d1d1;
+  --color-fg-3: #a0a0a0;
+  --color-fg-4: #787878;
+  --color-fg-disabled: #5a5a5a;
+  --color-fg-inverted: #242424;
+
+  --color-brand: #2886de;
+  --color-brand-hover: #3a95e8;
+  --color-brand-pressed: #1f74c4;
+  --color-brand-fg: #62abf5;
+  --color-brand-fg-hover: #7bbaf7;
+  --color-brand-border: #2886de;
+
+  --color-stroke-1: #404040;
+  --color-stroke-2: #2d2d2d;
+  --color-stroke-accessible: #a0a0a0;
+  --color-stroke-disabled: #2d2d2d;
+
+  --color-success-bg: #0e2714;
+  --color-success-fg: #54b467;
+  --color-success-border: #2d6b3a;
+  --color-warning-bg: #4a3400;
+  --color-warning-fg: #f5c842;
+  --color-warning-border: #8a5400;
+  --color-danger-bg: #442326;
+  --color-danger-fg: #f4858c;
+  --color-danger-border: #8b1d24;
+  --color-info-bg: #0a2536;
+  --color-info-fg: #62abf5;
+
+  --color-app-bg: var(--color-bg-1);
+  --color-app-bg-gradient: linear-gradient(
+    135deg,
+    var(--color-bg-1) 0%,
+    var(--color-bg-2) 100%
+  );
+}
+
+/* 自定义背景模式容器（由 JS 设置 class） */
+.bg-mode-brand-gradient {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-brand) 8%, var(--color-bg-1)) 0%,
+    var(--color-bg-1) 60%
+  );
+}
+.bg-mode-custom {
+  background: var(--color-app-bg);
+}

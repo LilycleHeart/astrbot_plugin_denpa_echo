@@ -1,0 +1,77 @@
+{
+  "title": "Minimax TTS 控制台",
+  "subtitle": "语音合成 · 语音克隆 · 发音词典 · 运行状态",
+  "refresh": "刷新",
+  "tabs": {
+    "overview": "状态总览",
+    "voices": "音色管理",
+    "clone": "语音克隆",
+    "debug": "调试试听",
+    "logs": "运行日志",
+    "settings": "界面设置"
+  },
+  "overview": {
+    "title": "状态总览",
+    "subtitle": "API 连通性与运行统计",
+    "api": "API 状态",
+    "today": "今日合成",
+    "cache": "缓存大小",
+    "ffmpeg": "ffmpeg",
+    "configTitle": "当前配置摘要"
+  },
+  "voices": {
+    "title": "音色管理",
+    "subtitle": "系统音色与克隆音色，点击试听",
+    "load": "加载音色",
+    "all": "全部",
+    "system": "系统音色",
+    "cloned": "克隆音色"
+  },
+  "clone": {
+    "title": "语音克隆",
+    "subtitle": "上传音频文件，克隆自定义音色（10s-5min，mp3/wav/m4a）",
+    "source": "源音频文件",
+    "dropHint": "点击或拖拽文件到此处（10s-5min，mp3/wav/m4a）",
+    "voiceId": "自定义音色 ID",
+    "voiceIdHint": "仅字母数字下划线，将作为后续合成的 voice_id",
+    "model": "克隆模型",
+    "preview": "试听文本",
+    "start": "开始克隆"
+  },
+  "debug": {
+    "title": "调试试听",
+    "subtitle": "输入文本即时合成试听",
+    "text": "合成文本",
+    "voice": "音色",
+    "speed": "语速",
+    "emotion": "情绪",
+    "synth": "合成试听"
+  },
+  "logs": {
+    "title": "运行日志",
+    "subtitle": "最近 200 条合成记录"
+  },
+  "settings": {
+    "title": "界面设置",
+    "subtitle": "Fluent UI 2 取色与背景设置",
+    "colorMode": "取色模式",
+    "dynamic": "动态（跟随主题）",
+    "static": "静态（自定义）",
+    "brandColor": "品牌色",
+    "bgMode": "背景模式",
+    "bgTheme": "跟随主题",
+    "bgBrand": "品牌色渐变",
+    "bgCustom": "自定义",
+    "customBg": "自定义亮色背景",
+    "customBgDark": "自定义暗色背景",
+    "radius": "圆角大小（px）",
+    "save": "保存设置",
+    "reset": "恢复默认"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Minimax TTS 控制台",
+      "description": "语音合成、语音克隆、试听与运行状态管理"
+    }
+  }
+}

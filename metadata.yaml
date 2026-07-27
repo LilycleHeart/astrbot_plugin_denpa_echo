@@ -1,0 +1,22 @@
+name: astrbot_plugin_minimax_tts
+display_name: Minimax TTS 语音合成
+desc: 接入 Minimax 官方 TTS API 的全功能语音合成插件，支持语音克隆、LLM 合成前润色、拦截/追加双发送模式、Fluent UI 2 自定义控制台面板（10px 圆角 + 动静态取色）。
+short_desc: Minimax 官方 TTS 全功能插件，含语音克隆、LLM 润色、Fluent UI 面板。
+version: v1.0.0
+author: LilycleHeart
+repo: https://github.com/LilycleHeart/astrbot_plugin_minimax_tts
+astrbot_version: ">=4.16,<5"
+support_platforms:
+  - aiocqhttp
+  - qq_official
+  - telegram
+  - discord
+  - wecom
+  - lark
+  - dingtalk
+  - kook
+  - vocechat
+  - weixin_official_account
+  - satori
+  - misskey
+  - line

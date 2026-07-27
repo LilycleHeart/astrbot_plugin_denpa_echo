@@ -1,0 +1,73 @@
+/* Fluent UI 2 设计令牌 + 10px 圆角定制
+ * 参考来源：https://fluent2.microsoft.design/design-tokens
+ * 本插件在 Fluent 默认基础上将 borderRadiusLarge/XLarge 统一为 10px
+ */
+
+:root {
+  /* === 圆角令牌（10px 体系）=== */
+  --radius-small: 2px;
+  --radius-medium: 4px;
+  --radius-large: 10px;        /* Fluent 默认 6px，本插件定制 */
+  --radius-xlarge: 10px;       /* Fluent 默认 8px，本插件定制 */
+  --radius-circular: 9999px;
+
+  /* === 间距令牌 === */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-s: 8px;
+  --spacing-snudge: 10px;
+  --spacing-m: 12px;
+  --spacing-l: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --spacing-xxxl: 32px;
+
+  /* === 字体 === */
+  --font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system,
+                 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+
+  --font-size-100: 10px;
+  --font-size-200: 12px;
+  --font-size-300: 14px;
+  --font-size-400: 16px;
+  --font-size-500: 20px;
+  --font-size-600: 24px;
+  --font-size-700: 28px;
+  --font-size-800: 32px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-base: 1.5;
+
+  /* === 动效令牌 === */
+  --duration-ultra-fast: 50ms;
+  --duration-faster: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-gentle: 250ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+
+  --curve-accelerate-max: cubic-bezier(0.9, 0.1, 1, 0.2);
+  --curve-decelerate-max: cubic-bezier(0.1, 0.9, 0.2, 1);
+  --curve-easy-ease: cubic-bezier(0.33, 0, 0.67, 1);
+  --curve-standard: cubic-bezier(0.33, 0, 0.1, 1);
+
+  /* === 阴影令牌 === */
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.10);
+  --shadow-8: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.14);
+  --shadow-28: 0 14px 28px rgba(0, 0, 0, 0.18);
+  --shadow-64: 0 32px 64px rgba(0, 0, 0, 0.24);
+
+  /* === z-index === */
+  --z-toast: 1000;
+  --z-modal: 900;
+  --z-dropdown: 800;
+  --z-sticky: 100;
+}
