@@ -14,6 +14,7 @@ const state = {
     background_mode: "theme",
     custom_background: "#f5f5f5",
     custom_background_dark: "#1a1a1a",
+    background_image: "",
     corner_radius: 10,
   },
   voices: [],
@@ -81,6 +82,10 @@ function applyUiConfig() {
   // 背景
   const app = document.getElementById("app");
   app.classList.remove("bg-mode-brand-gradient", "bg-mode-custom");
+  app.style.backgroundImage = "";
+  app.style.backgroundSize = "";
+  app.style.backgroundPosition = "";
+  app.style.backgroundAttachment = "";
   if (ui.background_mode === "brand_gradient") {
     app.classList.add("bg-mode-brand-gradient");
   } else if (ui.background_mode === "custom") {
@@ -89,6 +94,11 @@ function applyUiConfig() {
       : ui.custom_background || "#f5f5f5";
     root.style.setProperty("--color-app-bg", bg);
     app.classList.add("bg-mode-custom");
+  } else if (ui.background_mode === "image" && ui.background_image) {
+    app.style.backgroundImage = `url('./bg?t=${Date.now()}')`;
+    app.style.backgroundSize = "cover";
+    app.style.backgroundPosition = "center";
+    app.style.backgroundAttachment = "fixed";
   }
 
   // 圆角
@@ -99,6 +109,8 @@ function applyUiConfig() {
 
   // 同步设置面板的输入框
   syncSettingsInputs();
+  // 同步背景图预览
+  updateBgPreview();
 }
 
 function syncSettingsInputs() {
@@ -174,6 +186,43 @@ function bindEvents() {
   });
   document.getElementById("btn-clone").onclick = doClone;
 
+  // 按 ID 加载已有音色
+  document.getElementById("btn-load-voice").onclick = loadVoiceById;
+  document.getElementById("load-voice-id").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") loadVoiceById();
+  });
+
+  // 背景图上传
+  const bgInput = document.getElementById("bg-image-file");
+  const bgDrop = document.getElementById("bg-drop");
+  bgInput.onchange = (e) => {
+    const f = e.target.files[0];
+    document.getElementById("bg-file-name").textContent = f
+      ? f.name
+      : "点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）";
+  };
+  ["dragover", "dragenter"].forEach((evt) => {
+    bgDrop.addEventListener(evt, (e) => {
+      e.preventDefault();
+      bgDrop.classList.add("dragover");
+    });
+  });
+  ["dragleave", "drop"].forEach((evt) => {
+    bgDrop.addEventListener(evt, (e) => {
+      e.preventDefault();
+      bgDrop.classList.remove("dragover");
+    });
+  });
+  bgDrop.addEventListener("drop", (e) => {
+    const f = e.dataTransfer.files[0];
+    if (f) {
+      bgInput.files = e.dataTransfer.files;
+      document.getElementById("bg-file-name").textContent = f.name;
+    }
+  });
+  document.getElementById("btn-bg-upload").onclick = uploadBgImage;
+  document.getElementById("btn-bg-remove").onclick = removeBgImage;
+
   // 调试
   document.getElementById("btn-debug-synth").onclick = doDebugSynth;
   document.getElementById("debug-speed").oninput = (e) => {
@@ -212,6 +261,7 @@ function previewUiConfig() {
     background_mode: document.getElementById("ui-bg-mode").value,
     custom_background: document.getElementById("ui-custom-bg").value,
     custom_background_dark: document.getElementById("ui-custom-bg-dark").value,
+    background_image: state.uiConfig.background_image || "",
     corner_radius: parseInt(document.getElementById("ui-radius").value) || 10,
   };
   applyUiConfig();
@@ -433,6 +483,130 @@ async function doClone() {
   }
 }
 
+// ========== 按 ID 加载已有音色 ==========
+async function loadVoiceById() {
+  const voiceId = document.getElementById("load-voice-id").value.trim();
+  if (!voiceId) {
+    showToast("请输入音色 ID", "warning");
+    return;
+  }
+  const btn = document.getElementById("btn-load-voice");
+  btn.disabled = true;
+  btn.textContent = "查询中...";
+  const resultEl = document.getElementById("load-voice-result");
+  resultEl.innerHTML = '<div class="skeleton" style="height:90px"></div>';
+  try {
+    const data = await bridge.apiGet("voice/get", { voice_id: voiceId });
+    const label = (data.voice && (data.voice.name || data.voice.voice_id)) || voiceId;
+    const typeBadge = data.found
+      ? (data.voice.type === "system"
+          ? '<span class="badge badge-info">系统音色</span>'
+          : '<span class="badge badge-success">克隆音色</span>')
+      : '<span class="badge badge-warning">未在列表中</span>';
+    const note = data.found
+      ? ""
+      : `<p class="text-sm text-muted mt-s">${escapeHtml(data.note || "若 Minimax 端仍有效即可试听/设为默认")}</p>`;
+    resultEl.innerHTML = `
+      <div class="stat-card">
+        <div class="flex-between">
+          <div style="overflow:hidden">
+            <div class="text-bold truncate">${escapeHtml(label)}</div>
+            <div class="text-mono text-sm text-muted truncate">${escapeHtml(voiceId)}</div>
+            <div class="mt-s">${typeBadge}</div>
+          </div>
+        </div>
+        ${note}
+        <div class="flex gap-s mt-m">
+          <button class="btn btn-subtle btn-sm" id="btn-preview-loaded">▶ 试听</button>
+          <button class="btn btn-primary btn-sm" id="btn-set-default">设为默认音色</button>
+        </div>
+      </div>`;
+    document.getElementById("btn-preview-loaded").onclick = () =>
+      previewVoice(voiceId, label);
+    document.getElementById("btn-set-default").onclick = () =>
+      setDefaultVoice(voiceId, label);
+    showToast(data.found ? "已找到该音色" : "未在列表中找到，仍可试听", data.found ? "success" : "info");
+  } catch (e) {
+    resultEl.innerHTML = `<div class="stat-card">
+      <span class="badge badge-danger">查询失败</span>
+      <p class="text-sm text-muted mt-s">${escapeHtml(e.message)}</p>
+    </div>`;
+    showToast(`查询失败: ${e.message}`, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "查询音色";
+  }
+}
+
+async function setDefaultVoice(voiceId, name) {
+  try {
+    await bridge.apiPost("voice/set_default", { voice_id: voiceId });
+    showToast(`已将「${name}」设为默认音色`, "success");
+    loadOverview();
+  } catch (e) {
+    showToast(`设置失败: ${e.message}`, "error");
+  }
+}
+
+// ========== 背景图上传 ==========
+async function uploadBgImage() {
+  const fileInput = document.getElementById("bg-image-file");
+  const file = fileInput.files[0];
+  if (!file) {
+    showToast("请选择背景图片", "warning");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast("图片不能超过 5MB", "warning");
+    return;
+  }
+  const btn = document.getElementById("btn-bg-upload");
+  btn.disabled = true;
+  btn.textContent = "上传中...";
+  try {
+    const resp = await bridge.upload("bg/upload", file);
+    state.uiConfig.background_image = resp.path;
+    document.getElementById("bg-file-name").textContent = resp.filename || file.name;
+    updateBgPreview();
+    // 自动切换到图片背景模式并预览
+    document.getElementById("ui-bg-mode").value = "image";
+    previewUiConfig();
+    showToast("背景图上传成功，已切换为图片背景", "success");
+  } catch (e) {
+    showToast(`上传失败: ${e.message}`, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "上传";
+  }
+}
+
+async function removeBgImage() {
+  try {
+    await bridge.apiPost("bg/remove");
+    state.uiConfig.background_image = "";
+    document.getElementById("bg-file-name").textContent =
+      "点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）";
+    document.getElementById("bg-image-file").value = "";
+    updateBgPreview();
+    applyUiConfig();
+    showToast("已移除背景图", "info");
+  } catch (e) {
+    showToast(`移除失败: ${e.message}`, "error");
+  }
+}
+
+function updateBgPreview() {
+  const ui = state.uiConfig;
+  const wrap = document.getElementById("bg-preview-wrap");
+  const img = document.getElementById("bg-preview");
+  if (ui.background_image && wrap && img) {
+    img.src = `./bg?t=${Date.now()}`;
+    wrap.style.display = "";
+  } else if (wrap) {
+    wrap.style.display = "none";
+  }
+}
+
 // ========== 调试试听 ==========
 async function doDebugSynth() {
   const text = document.getElementById("debug-text").value.trim();
@@ -523,6 +697,7 @@ function resetUiConfig() {
     background_mode: "theme",
     custom_background: "#f5f5f5",
     custom_background_dark: "#1a1a1a",
+    background_image: "",
     corner_radius: 10,
   };
   applyUiConfig();

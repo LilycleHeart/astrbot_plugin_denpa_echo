@@ -97,6 +97,8 @@ class Main(Star):
             ("stats", self._api_stats, ["GET"], "运行状态"),
             ("voices", self._api_voices, ["GET"], "音色列表"),
             ("voices/static", self._api_voices_static, ["GET"], "内置音色列表"),
+            ("voice/get", self._api_voice_get, ["GET"], "按 ID 查询音色"),
+            ("voice/set_default", self._api_voice_set_default, ["POST"], "设置默认音色"),
             ("preview", self._api_preview, ["POST"], "试听合成"),
             ("clone/upload", self._api_clone_upload, ["POST"], "上传克隆音频"),
             ("clone/start", self._api_clone_start, ["POST"], "执行语音克隆"),
@@ -105,6 +107,9 @@ class Main(Star):
             ("config/full", self._api_config_full, ["GET"], "完整配置"),
             ("config/save", self._api_config_save, ["POST"], "保存配置"),
             ("audio", self._api_audio, ["GET"], "音频文件"),
+            ("bg/upload", self._api_bg_upload, ["POST"], "上传背景图"),
+            ("bg", self._api_bg, ["GET"], "背景图文件"),
+            ("bg/remove", self._api_bg_remove, ["POST"], "移除背景图"),
             ("cache/clear", self._api_cache_clear, ["POST"], "清空缓存"),
             ("cache/size", self._api_cache_size, ["GET"], "缓存大小"),
             ("logs", self._api_logs, ["GET"], "运行日志"),
@@ -403,6 +408,56 @@ class Main(Star):
         except Exception as e:
             return error_response(f"克隆失败: {e}", status_code=500)
 
+    async def _api_voice_get(self):
+        """按音色 ID 查询音色信息（支持已有克隆音色 ID 直接加载）。"""
+        voice_id = request.query.get("voice_id", "")
+        if not voice_id:
+            return error_response("缺少 voice_id 参数", status_code=400)
+        try:
+            vm = VoiceManageService(self.client)
+            data = await vm.list_voices("all")
+            found = None
+            for key, label in (
+                ("voice_clone", "voice_clone"),
+                ("system_voice", "system"),
+                ("voices", "system"),
+            ):
+                lst = data.get(key, []) or []
+                for v in lst:
+                    if v.get("voice_id") == voice_id:
+                        found = dict(v)
+                        found.setdefault("type", label)
+                        break
+                if found:
+                    break
+            if found:
+                return json_response({
+                    "found": True,
+                    "voice": found,
+                    "voice_id": voice_id,
+                })
+            # 未在列表中找到，仍允许使用（跨账号或已不在列表的克隆音色）
+            return json_response({
+                "found": False,
+                "voice_id": voice_id,
+                "note": "未在音色列表中找到该 ID，若 Minimax 端仍有效即可试听/设为默认",
+            })
+        except Exception as e:
+            return error_response(f"查询音色失败: {e}", status_code=500)
+
+    async def _api_voice_set_default(self):
+        """将指定音色 ID 设为默认音色（写入 tts.voice_id）。"""
+        payload = await request.json(default={})
+        voice_id = payload.get("voice_id", "")
+        if not voice_id:
+            return error_response("缺少 voice_id", status_code=400)
+        try:
+            self.config.setdefault("tts", {})["voice_id"] = voice_id
+            self.config.save_config()
+            return json_response({"saved": True, "voice_id": voice_id})
+        except Exception as e:
+            return error_response(f"保存失败: {e}", status_code=500)
+
     async def _api_debug_synth(self):
         """调试合成（带完整参数）。"""
         payload = await request.json(default={})
@@ -481,6 +536,63 @@ class Main(Star):
         if not os.path.isfile(abs_path):
             return error_response("文件不存在", status_code=404)
         return file_response(abs_path, content_type="audio/wav")
+
+    async def _api_bg_upload(self):
+        """上传 UI 背景图，保存到插件数据目录并写入配置。"""
+        from astrbot.api.web import PluginUploadFile
+        files = await request.files()
+        upload = files.get("file")
+        if not isinstance(upload, PluginUploadFile):
+            return error_response("缺少上传文件（字段名应为 file）", status_code=400)
+
+        ext = os.path.splitext(upload.filename)[1].lower()
+        if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+            return error_response("仅支持 jpg/png/webp/gif 图片", status_code=400)
+
+        bg_dir = os.path.join(self.plugin_data_dir, "backgrounds")
+        os.makedirs(bg_dir, exist_ok=True)
+        save_path = os.path.join(bg_dir, f"bg_{int(time.time())}{ext}")
+        await upload.save(save_path)
+
+        self.config.setdefault("ui", {})["background_image"] = save_path
+        try:
+            self.config.save_config()
+        except Exception as e:
+            logger.warning(f"[Minimax TTS] 保存背景图配置失败: {e}")
+        logger.info(f"[Minimax TTS] 背景图已上传: {save_path}")
+        return json_response({
+            "saved": True,
+            "path": save_path,
+            "filename": upload.filename,
+        })
+
+    async def _api_bg(self):
+        """返回当前背景图文件。"""
+        ui = self.config.get("ui", {}) or {}
+        path = ui.get("background_image", "")
+        if not path:
+            return error_response("未设置背景图", status_code=404)
+        abs_path = os.path.abspath(path)
+        if not abs_path.startswith(os.path.abspath(self.plugin_data_dir)):
+            return error_response("路径不在允许范围内", status_code=403)
+        if not os.path.isfile(abs_path):
+            return error_response("背景图文件不存在", status_code=404)
+        ext = os.path.splitext(abs_path)[1].lower()
+        ct = {
+            ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".png": "image/png", ".webp": "image/webp",
+            ".gif": "image/gif",
+        }.get(ext, "application/octet-stream")
+        return file_response(abs_path, content_type=ct)
+
+    async def _api_bg_remove(self):
+        """移除背景图配置。"""
+        self.config.setdefault("ui", {})["background_image"] = ""
+        try:
+            self.config.save_config()
+        except Exception:
+            pass
+        return json_response({"removed": True})
 
     async def _api_cache_clear(self):
         """清空缓存。"""

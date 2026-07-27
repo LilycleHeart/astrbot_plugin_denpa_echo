@@ -165,6 +165,36 @@
             </div>
           </div>
         </div>
+
+        <div class="card mt-m">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title" data-i18n="clone.loadTitle">按音色 ID 加载已有音色</h2>
+              <p class="card-subtitle" data-i18n="clone.loadSubtitle">
+                已有克隆音色 ID（如 moss_audio_xxx）可直接加载、试听并设为默认，无需重新克隆
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-2">
+            <div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="clone.loadId">音色 ID</label>
+                <input class="input" id="load-voice-id"
+                       placeholder="moss_audio_5bb1d090-8951-11f1-b0af-0eac018832f6" />
+                <p class="form-hint" data-i18n="clone.loadIdHint">
+                  支持系统音色与克隆音色 ID，可跨账号加载
+                </p>
+              </div>
+              <button class="btn" id="btn-load-voice" data-i18n="clone.loadBtn">查询音色</button>
+            </div>
+            <div id="load-voice-result">
+              <div class="empty-state">
+                <div class="empty-state-icon">🔎</div>
+                <p data-i18n="clone.loadEmpty">输入音色 ID 后点击查询</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ===== 调试试听 ===== -->
@@ -281,6 +311,7 @@
                 <option value="theme" data-i18n="settings.bgTheme">跟随主题</option>
                 <option value="brand_gradient" data-i18n="settings.bgBrand">品牌色渐变</option>
                 <option value="custom" data-i18n="settings.bgCustom">自定义</option>
+                <option value="image" data-i18n="settings.bgImage">背景图片</option>
               </select>
             </div>
             <div class="form-row">
@@ -302,6 +333,24 @@
                        value="#1a1a1a" style="width:60px;padding:4px" />
                 <input class="input" id="ui-custom-bg-dark" value="#1a1a1a" />
               </div>
+            </div>
+          </div>
+
+          <div class="form-row mt-m" id="bg-image-row">
+            <label class="form-label" data-i18n="settings.bgImageLabel">背景图片上传</label>
+            <div class="flex gap-s flex-wrap">
+              <label class="file-drop" id="bg-drop" style="flex:1;min-width:200px">
+                <input type="file" id="bg-image-file" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                <div id="bg-file-name" data-i18n="settings.bgImageHint">
+                  点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）
+                </div>
+              </label>
+              <button class="btn" id="btn-bg-upload" data-i18n="settings.bgImageUpload">上传</button>
+              <button class="btn btn-subtle" id="btn-bg-remove" data-i18n="settings.bgImageRemove">移除</button>
+            </div>
+            <div id="bg-preview-wrap" class="mt-s" style="display:none">
+              <img id="bg-preview" alt="背景预览"
+                   style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--color-stroke)" />
             </div>
           </div>
           <div class="flex gap-s mt-m">

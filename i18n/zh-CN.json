@@ -36,7 +36,13 @@
     "voiceIdHint": "仅字母数字下划线，将作为后续合成的 voice_id",
     "model": "克隆模型",
     "preview": "试听文本",
-    "start": "开始克隆"
+    "start": "开始克隆",
+    "loadTitle": "按音色 ID 加载已有音色",
+    "loadSubtitle": "已有克隆音色 ID（如 moss_audio_xxx）可直接加载、试听并设为默认，无需重新克隆",
+    "loadId": "音色 ID",
+    "loadIdHint": "支持系统音色与克隆音色 ID，可跨账号加载",
+    "loadBtn": "查询音色",
+    "loadEmpty": "输入音色 ID 后点击查询"
   },
   "debug": {
     "title": "调试试听",
@@ -62,6 +68,11 @@
     "bgTheme": "跟随主题",
     "bgBrand": "品牌色渐变",
     "bgCustom": "自定义",
+    "bgImage": "背景图片",
+    "bgImageLabel": "背景图片上传",
+    "bgImageHint": "点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）",
+    "bgImageUpload": "上传",
+    "bgImageRemove": "移除",
     "customBg": "自定义亮色背景",
     "customBgDark": "自定义暗色背景",
     "radius": "圆角大小（px）",

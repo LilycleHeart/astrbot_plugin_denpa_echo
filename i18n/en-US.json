@@ -36,7 +36,13 @@
     "voiceIdHint": "Alphanumeric and underscore only, used as voice_id for synthesis",
     "model": "Clone Model",
     "preview": "Preview Text",
-    "start": "Start Clone"
+    "start": "Start Clone",
+    "loadTitle": "Load Existing Voice by ID",
+    "loadSubtitle": "Load, preview and set an existing cloned voice ID (e.g. moss_audio_xxx) as default without re-cloning",
+    "loadId": "Voice ID",
+    "loadIdHint": "Supports system and cloned voice IDs, cross-account allowed",
+    "loadBtn": "Query Voice",
+    "loadEmpty": "Enter a voice ID and click query"
   },
   "debug": {
     "title": "Debug Preview",
@@ -62,6 +68,11 @@
     "bgTheme": "Follow Theme",
     "bgBrand": "Brand Gradient",
     "bgCustom": "Custom",
+    "bgImage": "Background Image",
+    "bgImageLabel": "Background Image Upload",
+    "bgImageHint": "Click or drag an image here (jpg/png/webp/gif, recommended ≤2MB)",
+    "bgImageUpload": "Upload",
+    "bgImageRemove": "Remove",
     "customBg": "Custom Light Background",
     "customBgDark": "Custom Dark Background",
     "radius": "Corner Radius (px)",
