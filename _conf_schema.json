@@ -114,7 +114,7 @@
   "auto_emotion": {
     "description": "自动情绪识别",
     "type": "object",
-    "hint": "开启后由 LLM 根据文本自动判断朗读情绪并应用到合成；开启时忽略上方 tts.emotion 的固定值",
+    "hint": "开启后由 LLM 根据文本自动判断朗读情绪并应用到合成；开启时忽略上方 tts.emotion 的固定值；与『LLM 润色』同时开启时自动合并为单次 LLM 调用（使用润色配置的模型），解析失败自动回退为两次独立调用",
     "items": {
       "enabled": {
         "description": "启用自动情绪识别",
@@ -350,7 +350,7 @@
   "polish": {
     "description": "LLM 润色（合成前）",
     "type": "object",
-    "hint": "调用 LLM 对将朗读的文本清洗润色，去除 markdown/emoji/代码块，调整语气",
+    "hint": "调用 LLM 对将朗读的文本清洗润色，去除 markdown/emoji/代码块，调整语气；与『自动情绪识别』同时开启时，两者会自动合并为单次 LLM 调用（由润色模型承担），减少一次调用延迟",
     "items": {
       "enabled": {
         "description": "启用 LLM 润色",

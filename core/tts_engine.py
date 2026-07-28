@@ -1,6 +1,9 @@
 """TTS 引擎：润色 -> 合成 -> 转换 的完整编排。"""
+import asyncio
 import hashlib
+import json
 import os
+import re
 import time
 from typing import Optional
 
@@ -140,6 +143,91 @@ class TTSEngine:
         params["pronunciation_dict"] = cfg.get("pronunciation_dict", {}) or {}
         return params
 
+    async def _combined_polish_emotion(self, text: str, umo: str) -> tuple[str, str]:
+        """单次 LLM 调用同时完成润色 + 情绪识别。
+
+        仅当润色与自动情绪同时开启、且都未被 skip 时由 synthesize_to_wav 调用。
+        使用润色配置的 Provider（用户选定的模型）。要求模型返回 JSON：
+            {"text": "润色后的文本", "emotion": "情绪单词或 neutral"}
+        任何解析/调用失败都抛异常，由调用方回退为两次独立调用（不降级），
+        保证与未合并时行为完全一致。
+        """
+        polisher = self.polisher
+        classifier = self.emotion_classifier
+
+        provider = polisher._get_provider(umo)
+        if provider is None:
+            raise RuntimeError("未找到润色 Provider，无法合并调用")
+
+        # 复用润色模板构造基础任务
+        if "{text}" in polisher.prompt_template:
+            base = polisher.prompt_template.replace("{text}", text)
+        else:
+            base = f"{polisher.prompt_template}\n\n原文：\n{text}"
+
+        emotion_list = ", ".join(classifier._VALID_EMOTIONS + ["neutral"])
+        json_instruction = (
+            "\n\n--- 额外任务 ---\n"
+            "同时，请判断这段文本朗读时应使用的情绪。\n"
+            f"可选情绪（只能选一个，英文小写）：{emotion_list}。"
+            "若文本没有强烈情绪请选 neutral。\n"
+            "请严格以 JSON 格式输出，不要包含 markdown 代码块、不要任何额外解释文字，"
+            '只输出一个 JSON 对象：\n{"text": "润色后的文本", "emotion": "情绪单词"}'
+        )
+        prompt = base + json_instruction
+
+        timeout = max(polisher.timeout, classifier.timeout)
+        try:
+            resp = await asyncio.wait_for(
+                provider.text_chat(
+                    prompt=prompt,
+                    system_prompt=(
+                        "你是语音朗读文本润色与情绪分析助手。"
+                        "请先按用户指令处理文本，再按要求以单个 JSON 对象输出结果，"
+                        "不要输出 JSON 以外的任何内容。"
+                    ),
+                    contexts=[],
+                ),
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError:
+            raise RuntimeError(f"合并调用超时（{timeout}s）")
+        except Exception as e:
+            raise RuntimeError(f"合并调用 LLM 失败: {e}")
+
+        raw = EmotionClassifier._extract_text(resp)
+        if not raw:
+            raise RuntimeError("合并调用 LLM 返回为空")
+
+        data = self._parse_combined_json(raw)
+        polished = (data.get("text") or "").strip()
+        if not polished:
+            raise RuntimeError("合并调用解析到的 text 为空")
+        emotion = classifier._parse(data.get("emotion") or "")
+        return polished, emotion
+
+    @staticmethod
+    def _parse_combined_json(raw: str) -> dict:
+        """从 LLM 返回中提取并解析 JSON 对象（容忍 markdown 代码块/多余文字）。"""
+        raw = (raw or "").strip()
+        # 1. 直接解析
+        try:
+            obj = json.loads(raw)
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            pass
+        # 2. 提取第一个 {...}（支持跨行），容忍前后多余文字
+        m = re.search(r"\{.*\}", raw, re.DOTALL)
+        if m:
+            try:
+                obj = json.loads(m.group(0))
+                if isinstance(obj, dict):
+                    return obj
+            except Exception:
+                pass
+        raise RuntimeError("无法从 LLM 返回解析出 JSON")
+
     async def synthesize_to_wav(
         self,
         text: str,
@@ -175,27 +263,44 @@ class TTSEngine:
             "whitespace": bool(tp_cfg.get("normalize_whitespace", True)),
         }
 
-        # 1. 润色
-        if skip_polish:
-            polished = quick_clean(text, **clean_kwargs)
-        else:
-            polished = await self.polisher.polish(text, umo)
-            # 即使润色过，也做一次兜底清洗（去掉残留 markdown）
-            if not self.polisher.enabled:
-                polished = quick_clean(polished, **clean_kwargs)
+        # 1. 润色 + 自动情绪（两者均开启且均未 skip 时，合并为单次 LLM 调用）
+        combined_ok = False
+        if (
+            not skip_polish
+            and not skip_emotion_classify
+            and self.polisher.enabled
+            and self.emotion_classifier.enabled
+        ):
+            try:
+                polished, emo = await self._combined_polish_emotion(text, umo)
+                tts_params["emotion"] = emo
+                combined_ok = True
+                logger.debug(f"[TTS] 润色+情绪 合并单次调用成功, emotion={emo!r}")
+            except Exception as e:
+                logger.warning(f"[TTS] 合并调用失败，回退为两次独立调用: {e}")
+
+        if not combined_ok:
+            # 1a. 润色
+            if skip_polish:
+                polished = quick_clean(text, **clean_kwargs)
+            else:
+                polished = await self.polisher.polish(text, umo)
+                # 即使润色过，也做一次兜底清洗（去掉残留 markdown）
+                if not self.polisher.enabled:
+                    polished = quick_clean(polished, **clean_kwargs)
+
+            # 1b. 自动情绪识别（开启且未跳过时，覆盖 tts_params 中的 emotion）
+            if not skip_emotion_classify and self.emotion_classifier.enabled:
+                try:
+                    emo = await self.emotion_classifier.classify(polished, umo)
+                    # "" 表示 neutral，build_payload 会忽略该字段
+                    tts_params["emotion"] = emo
+                    logger.debug(f"[TTS] 自动情绪识别结果: {emo!r}")
+                except Exception as e:
+                    logger.warning(f"[TTS] 情绪识别异常，使用默认/中性: {e}")
 
         if not polished:
             raise MinimaxAPIError(-1, "润色后文本为空")
-
-        # 1.5 自动情绪识别（开启且未跳过时，覆盖 tts_params 中的 emotion）
-        if not skip_emotion_classify and self.emotion_classifier.enabled:
-            try:
-                emo = await self.emotion_classifier.classify(polished, umo)
-                # "" 表示 neutral，build_payload 会忽略该字段
-                tts_params["emotion"] = emo
-                logger.debug(f"[TTS] 自动情绪识别结果: {emo!r}")
-            except Exception as e:
-                logger.warning(f"[TTS] 情绪识别异常，使用默认/中性: {e}")
 
         # 2. 缓存检查
         cache_key = self._cache_key(polished, tts_params)
