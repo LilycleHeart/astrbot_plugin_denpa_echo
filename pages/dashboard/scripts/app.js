@@ -95,7 +95,11 @@ function applyUiConfig() {
     root.style.setProperty("--color-app-bg", bg);
     app.classList.add("bg-mode-custom");
   } else if (ui.background_mode === "image" && ui.background_image) {
-    app.style.backgroundImage = `url('./bg?t=${Date.now()}')`;
+    // data: 前缀表示 base64 内联存储，直接使用；否则走 /bg 端点兼容旧路径配置
+    const bgSrc = ui.background_image.startsWith("data:")
+      ? ui.background_image
+      : `./bg?t=${Date.now()}`;
+    app.style.backgroundImage = `url('${bgSrc}')`;
     app.style.backgroundSize = "cover";
     app.style.backgroundPosition = "center";
     app.style.backgroundAttachment = "fixed";
@@ -561,7 +565,7 @@ async function uploadBgImage() {
   btn.textContent = "上传中...";
   try {
     const resp = await bridge.upload("bg/upload", file);
-    state.uiConfig.background_image = resp.path;
+    state.uiConfig.background_image = resp.data;
     document.getElementById("bg-file-name").textContent = resp.filename || file.name;
     updateBgPreview();
     // 自动切换到图片背景模式并预览
@@ -596,7 +600,9 @@ function updateBgPreview() {
   const wrap = document.getElementById("bg-preview-wrap");
   const img = document.getElementById("bg-preview");
   if (ui.background_image && wrap && img) {
-    img.src = `./bg?t=${Date.now()}`;
+    img.src = ui.background_image.startsWith("data:")
+      ? ui.background_image
+      : `./bg?t=${Date.now()}`;
     wrap.style.display = "";
   } else if (wrap) {
     wrap.style.display = "none";

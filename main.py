@@ -563,7 +563,8 @@ class Main(Star):
         return file_response(abs_path, content_type="audio/wav")
 
     async def _api_bg_upload(self):
-        """上传 UI 背景图，保存到插件数据目录并写入配置。"""
+        """上传 UI 背景图，以 base64 data URI 内联存储，不再依赖服务端文件路径。"""
+        import base64
         from astrbot.api.web import PluginUploadFile
         files = await request.files()
         upload = files.get("file")
@@ -574,20 +575,41 @@ class Main(Star):
         if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
             return error_response("仅支持 jpg/png/webp/gif 图片", status_code=400)
 
-        bg_dir = os.path.join(self.plugin_data_dir, "backgrounds")
-        os.makedirs(bg_dir, exist_ok=True)
-        save_path = os.path.join(bg_dir, f"bg_{int(time.time())}{ext}")
-        await upload.save(save_path)
+        # 取文件字节：优先用 body 属性，否则临时落盘读取后删除
+        body = getattr(upload, "body", None)
+        if body is None:
+            bg_dir = os.path.join(self.plugin_data_dir, "backgrounds")
+            os.makedirs(bg_dir, exist_ok=True)
+            tmp_path = os.path.join(bg_dir, f"tmp_{int(time.time())}{ext}")
+            await upload.save(tmp_path)
+            try:
+                with open(tmp_path, "rb") as f:
+                    body = f.read()
+            finally:
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
 
-        self.config.setdefault("ui", {})["background_image"] = save_path
+        if len(body) > 5 * 1024 * 1024:
+            return error_response("图片不能超过 5MB", status_code=400)
+
+        mime = {
+            ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".png": "image/png", ".webp": "image/webp",
+            ".gif": "image/gif",
+        }.get(ext, "application/octet-stream")
+        data_uri = f"data:{mime};base64," + base64.b64encode(body).decode("ascii")
+
+        self.config.setdefault("ui", {})["background_image"] = data_uri
         try:
             self.config.save_config()
         except Exception as e:
             logger.warning(f"[Minimax TTS] 保存背景图配置失败: {e}")
-        logger.info(f"[Minimax TTS] 背景图已上传: {save_path}")
+        logger.info(f"[Minimax TTS] 背景图已上传（base64 内联，{len(body)} 字节）")
         return json_response({
             "saved": True,
-            "path": save_path,
+            "data": data_uri,
             "filename": upload.filename,
         })
 
