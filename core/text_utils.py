@@ -174,16 +174,18 @@ def extract_plain_text(message_chain: list) -> str:
     return "".join(parts).strip()
 
 
-def quick_clean(text: str) -> str:
+def quick_clean(text: str, enable_kaomoji: bool = True) -> str:
     """不调用 LLM 的快速清洗（作为润色关闭时的兜底）。
 
-    顺序：markdown -> emoji -> url -> 空白规范化
+    顺序：markdown -> emoji -> [颜文字] -> url -> 空白规范化
+    颜文字过滤受 enable_kaomoji 控制（由配置 text_processing.kaomoji_filter 传入）。
     """
     if not text:
         return ""
     text = strip_markdown(text)
     text = strip_emoji(text)
-    text = strip_kaomoji(text)
+    if enable_kaomoji:
+        text = strip_kaomoji(text)
     text = strip_urls(text)
     text = normalize_whitespace(text)
     return text

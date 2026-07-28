@@ -165,14 +165,18 @@ class TTSEngine:
         if tts_params is None:
             tts_params = self.build_tts_params()
 
+        # 颜文字过滤开关（配置 text_processing.kaomoji_filter，默认开启）
+        tp_cfg = self.config.get("text_processing", {}) or {}
+        strip_kao = bool(tp_cfg.get("kaomoji_filter", True))
+
         # 1. 润色
         if skip_polish:
-            polished = quick_clean(text)
+            polished = quick_clean(text, enable_kaomoji=strip_kao)
         else:
             polished = await self.polisher.polish(text, umo)
             # 即使润色过，也做一次兜底清洗（去掉残留 markdown）
             if not self.polisher.enabled:
-                polished = quick_clean(polished)
+                polished = quick_clean(polished, enable_kaomoji=strip_kao)
 
         if not polished:
             raise MinimaxAPIError(-1, "润色后文本为空")
