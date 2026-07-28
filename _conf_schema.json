@@ -312,13 +312,37 @@
   "text_processing": {
     "description": "文本预处理（规则清洗）",
     "type": "object",
-    "hint": "合成前对文本的规则清洗开关；关闭某项则保留该内容进入语音合成",
+    "hint": "合成前对文本的规则清洗开关，每一项可独立开启/关闭；关闭某项则保留该内容进入语音合成",
     "items": {
+      "markdown_filter": {
+        "description": "过滤 markdown 标记",
+        "type": "bool",
+        "default": true,
+        "hint": "去除 **、#、`、[] 等 markdown 符号"
+      },
+      "emoji_filter": {
+        "description": "过滤 emoji",
+        "type": "bool",
+        "default": true,
+        "hint": "去除表情符号（不影响中文/英文/数字）"
+      },
+      "url_filter": {
+        "description": "过滤 URL 链接",
+        "type": "bool",
+        "default": true,
+        "hint": "去除 http(s):// 链接及其包裹的 markdown"
+      },
       "kaomoji_filter": {
         "description": "过滤颜文字",
         "type": "bool",
         "default": true,
         "hint": "去除 (´・ω・`) (≧▽≦) 等颜文字（高频清单+通用正则双层）；关闭则保留颜文字朗读"
+      },
+      "normalize_whitespace": {
+        "description": "规范化空白",
+        "type": "bool",
+        "default": true,
+        "hint": "合并多余空格、去除首尾空白、清理全角空格"
       }
     }
   },
