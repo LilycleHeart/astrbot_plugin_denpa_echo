@@ -76,6 +76,7 @@ class Main(Star):
             converter=self.converter,
             config=config,
             plugin_data_dir=self.plugin_data_dir,
+            context=context,
         )
         self.sender = MessageSender(
             tts_engine=self.tts_engine,
@@ -339,6 +340,7 @@ class Main(Star):
                 umo="preview",
                 use_async=False,
                 skip_polish=True,
+                skip_emotion_classify=True,
             )
             self._record_stat(text, meta)
             return json_response({
@@ -502,6 +504,7 @@ class Main(Star):
                 umo="debug",
                 use_async=False,
                 skip_polish=True,
+                skip_emotion_classify=True,
             )
             elapsed = int((time.time() - t0) * 1000)
             self._record_stat(text, meta)

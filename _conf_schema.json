@@ -111,6 +111,46 @@
     }
   },
 
+  "auto_emotion": {
+    "description": "自动情绪识别",
+    "type": "object",
+    "hint": "开启后由 LLM 根据文本自动判断朗读情绪并应用到合成；开启时忽略上方 tts.emotion 的固定值",
+    "items": {
+      "enabled": {
+        "description": "启用自动情绪识别",
+        "type": "bool",
+        "default": false,
+        "hint": "关闭则使用 tts.emotion 的固定情绪（或不设置）"
+      },
+      "provider_id": {
+        "description": "情绪识别所用 LLM",
+        "type": "string",
+        "_special": "select_provider",
+        "default": "",
+        "hint": "从 AstrBot 已配置的模型中选择一个用于情绪分类；留空则用当前会话默认模型"
+      },
+      "default_emotion": {
+        "description": "兜底情绪",
+        "type": "string",
+        "options": ["", "happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm"],
+        "default": "",
+        "hint": "识别失败或文本无明确情绪时的兜底值；留空表示 neutral（不设置）"
+      },
+      "timeout": {
+        "description": "LLM 调用超时（秒）",
+        "type": "float",
+        "default": 10,
+        "hint": "超时将回退到兜底情绪，不阻塞合成"
+      },
+      "fallback_on_error": {
+        "description": "失败时降级",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭时情绪识别异常也不报错，仅以 neutral 合成"
+      }
+    }
+  },
+
   "audio": {
     "description": "音频输出设置",
     "type": "object",

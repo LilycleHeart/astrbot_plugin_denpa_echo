@@ -8,6 +8,7 @@ from astrbot.api import logger
 
 from .audio_utils import AudioConverter
 from .polisher import TextPolisher
+from .emotion_classifier import EmotionClassifier
 from .text_utils import quick_clean
 from ..minimax.client import MinimaxClient, MinimaxAPIError
 from ..minimax.file_api import FileService
@@ -32,6 +33,7 @@ class TTSEngine:
         converter: AudioConverter,
         config: dict,
         plugin_data_dir: str,
+        context=None,
     ):
         """
         Args:
@@ -40,6 +42,7 @@ class TTSEngine:
             converter: 音频转换器
             config: 完整插件配置
             plugin_data_dir: 插件数据目录（用于缓存）
+            context: AstrBot Context（用于自动情绪识别的 LLM 调用）
         """
         self.client = client
         self.t2a = T2AService(client)
@@ -47,6 +50,10 @@ class TTSEngine:
         self.polisher = polisher
         self.converter = converter
         self.config = config
+        self.context = context
+        self.emotion_classifier = EmotionClassifier(
+            context, config.get("auto_emotion", {}) or {}
+        )
 
         # 缓存配置
         adv = config.get("advanced", {}) or {}
@@ -140,15 +147,17 @@ class TTSEngine:
         umo: str = "",
         use_async: bool = False,
         skip_polish: bool = False,
+        skip_emotion_classify: bool = False,
     ) -> tuple[str, dict]:
-        """完整流程：润色 -> 合成 -> 转 wav。
+        """完整流程：润色 -> 情绪识别 -> 合成 -> 转 wav。
 
         Args:
             text: 待合成文本
             tts_params: TTS 参数（None 则从配置读取）
-            umo: unified_msg_origin（用于 LLM 润色获取 Provider）
+            umo: unified_msg_origin（用于 LLM 润色/情绪识别获取 Provider）
             use_async: 是否使用异步合成（长文本）
             skip_polish: 跳过 LLM 润色（用于面板试听）
+            skip_emotion_classify: 跳过自动情绪识别（用于面板手动选情绪时）
 
         Returns:
             (wav 文件路径, 元信息 dict)
@@ -167,6 +176,16 @@ class TTSEngine:
 
         if not polished:
             raise MinimaxAPIError(-1, "润色后文本为空")
+
+        # 1.5 自动情绪识别（开启且未跳过时，覆盖 tts_params 中的 emotion）
+        if not skip_emotion_classify and self.emotion_classifier.enabled:
+            try:
+                emo = await self.emotion_classifier.classify(polished, umo)
+                # "" 表示 neutral，build_payload 会忽略该字段
+                tts_params["emotion"] = emo
+                logger.debug(f"[TTS] 自动情绪识别结果: {emo!r}")
+            except Exception as e:
+                logger.warning(f"[TTS] 情绪识别异常，使用默认/中性: {e}")
 
         # 2. 缓存检查
         cache_key = self._cache_key(polished, tts_params)
