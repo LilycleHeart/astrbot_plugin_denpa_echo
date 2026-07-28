@@ -12,7 +12,7 @@ from astrbot.api import logger
 from .audio_utils import AudioConverter
 from .polisher import TextPolisher
 from .emotion_classifier import EmotionClassifier
-from .text_utils import quick_clean
+from .text_utils import quick_clean, strip_custom_rules
 from ..minimax.client import MinimaxClient, MinimaxAPIError
 from ..minimax.file_api import FileService
 from ..minimax.t2a import T2AResult, T2AService
@@ -258,10 +258,16 @@ class TTSEngine:
         clean_kwargs = {
             "markdown": bool(tp_cfg.get("markdown_filter", True)),
             "emoji": bool(tp_cfg.get("emoji_filter", True)),
-            "kaomoji": bool(tp_cfg.get("kaomoji_filter", True)),
             "url": bool(tp_cfg.get("url_filter", True)),
             "whitespace": bool(tp_cfg.get("normalize_whitespace", True)),
         }
+        # 自定义正则清洗规则（用户自行配置），始终对最终文本生效
+        custom_patterns: list = []
+        for r in (tp_cfg.get("custom_rules", []) or []):
+            p = r.get("pattern", "") if isinstance(r, dict) else str(r)
+            p = (p or "").strip()
+            if p:
+                custom_patterns.append(p)
 
         # 1. 润色 + 自动情绪（两者均开启且均未 skip 时，合并为单次 LLM 调用）
         combined_ok = False
@@ -298,6 +304,10 @@ class TTSEngine:
                     logger.debug(f"[TTS] 自动情绪识别结果: {emo!r}")
                 except Exception as e:
                     logger.warning(f"[TTS] 情绪识别异常，使用默认/中性: {e}")
+
+        # 自定义正则清洗规则：始终对最终文本生效（无论是否启用 LLM 润色）
+        if custom_patterns:
+            polished = strip_custom_rules(polished, custom_patterns)
 
         if not polished:
             raise MinimaxAPIError(-1, "润色后文本为空")

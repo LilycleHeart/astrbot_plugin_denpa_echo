@@ -3,7 +3,7 @@
 from .text_utils import (
     strip_markdown,
     strip_emoji,
-    strip_kaomoji,
+    strip_custom_rules,
     extract_plain_text,
     quick_clean,
 )
@@ -15,7 +15,7 @@ from .sender import MessageSender
 __all__ = [
     "strip_markdown",
     "strip_emoji",
-    "strip_kaomoji",
+    "strip_custom_rules",
     "extract_plain_text",
     "quick_clean",
     "TextPolisher",

@@ -312,7 +312,7 @@
   "text_processing": {
     "description": "文本预处理（规则清洗）",
     "type": "object",
-    "hint": "合成前对文本的规则清洗开关，每一项可独立开启/关闭；关闭某项则保留该内容进入语音合成",
+    "hint": "合成前对文本的规则清洗开关，每一项可独立开启/关闭；关闭某项则保留该内容进入语音合成。custom_rules 为始终生效的自定义正则删除规则（不受润色开关影响）",
     "items": {
       "markdown_filter": {
         "description": "过滤 markdown 标记",
@@ -332,11 +332,18 @@
         "default": true,
         "hint": "去除 http(s):// 链接及其包裹的 markdown"
       },
-      "kaomoji_filter": {
-        "description": "过滤颜文字",
-        "type": "bool",
-        "default": true,
-        "hint": "去除 (´・ω・`) (≧▽≦) 等颜文字（高频清单+通用正则双层）；关闭则保留颜文字朗读"
+      "custom_rules": {
+        "description": "自定义正则清洗规则",
+        "type": "list",
+        "default": [],
+        "hint": "逐条填写正则表达式，匹配到的内容会从朗读文本中删除（如 \"\\\\(.*?\\\\)\" 删除圆括号及其内容）。无效正则会自动忽略并告警；该规则始终生效，不受润色开关影响",
+        "items": {
+          "pattern": {
+            "description": "正则表达式",
+            "type": "string",
+            "default": ""
+          }
+        }
       },
       "normalize_whitespace": {
         "description": "规范化空白",
