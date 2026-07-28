@@ -5,17 +5,15 @@
 /* —— Card —— */
 .card {
   background: var(--color-bg-1);
-  border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-xlarge);
-  box-shadow: var(--shadow-2);
-  padding: var(--space-l);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-4);
+  padding: var(--space-m);
   transition: box-shadow var(--motion-fast) var(--motion-ease),
     border-color var(--motion-fast) var(--motion-ease);
   animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
 }
 .card:hover {
   box-shadow: var(--shadow-8);
-  border-color: var(--color-stroke-1);
 }
 .card-header {
   display: flex;
@@ -41,8 +39,7 @@
 /* —— Stat Card —— */
 .stat-card {
   background: var(--color-bg-1);
-  border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-medium);
   box-shadow: var(--shadow-2);
   padding: var(--space-m) var(--space-l);
   display: flex;
@@ -266,7 +263,7 @@ input[type="color"].input {
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-medium);
 }
 .table {
   width: 100%;
@@ -302,7 +299,7 @@ input[type="color"].input {
   text-align: center;
   padding: var(--space-l);
   border: 1px dashed var(--color-stroke-1);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-medium);
   color: var(--color-fg-3);
   background: var(--color-bg-1);
   cursor: pointer;
@@ -327,7 +324,7 @@ input[type="color"].input {
 .audio-player {
   background: var(--color-bg-2);
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-medium);
   padding: var(--space-s) var(--space-m);
 }
 .audio-player audio {
@@ -401,7 +398,7 @@ input[type="color"].input {
   background: var(--color-bg-1);
   border: 1px solid var(--color-stroke-2);
   border-left: 3px solid var(--color-stroke-1);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-medium);
   box-shadow: var(--shadow-16);
   font-size: var(--font-size-body);
   color: var(--color-fg-1);

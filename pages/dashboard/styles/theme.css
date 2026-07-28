@@ -52,7 +52,7 @@ body {
   margin-bottom: var(--space-l);
   background: var(--color-bg-1);
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-large);
   box-shadow: var(--shadow-4);
   position: relative;
   overflow: hidden;
@@ -106,9 +106,10 @@ body {
   background: transparent;
   font-family: inherit;
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-regular);
   color: var(--color-fg-2);
-  padding: var(--space-s) var(--space-m);
+  height: 44px;
+  padding: 0 var(--space-m);
   cursor: pointer;
   position: relative;
   border-bottom: 2px solid transparent;

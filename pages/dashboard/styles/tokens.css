@@ -51,12 +51,12 @@
   --color-error-bg: #FDE7E9;
   --color-info: #0F6CBD;             /* info 语义使用品牌蓝 */
 
-  /* —— 圆角 (Fluent 2: small 2 / medium 4 / large 6 / xlarge 8 / circular 999) —— */
-  --radius-small: 2px;               /* badge / 小元素 */
-  --radius-medium: 4px;              /* 控件 (input/button/select) */
-  --radius-large: 6px;               /* 次要容器 */
-  --radius-xlarge: 8px;              /* 卡片 / 大容器 */
-  --radius-circular: 999px;          /* 胶囊 / 滑块 / 头像 */
+  /* —— 圆角 (Fluent 2 Shapes: None0 / Small2 / Medium4 / Large8 / XLarge12 / Circle50%) —— */
+  --radius-small: 2px;               /* Small badges, <32px 元素 */
+  --radius-medium: 4px;              /* Buttons, dropdown, Input, Card, Tab */
+  --radius-large: 8px;               /* Large buttons */
+  --radius-xlarge: 12px;             /* Button sheets, popovers, hero */
+  --radius-circular: 999px;          /* Pill / slider track / avatar */
   --radius-2xlarge: 12px;           /* hero / 大卡 */
   --radius-3xlarge: 16px;
 
@@ -156,8 +156,8 @@
 
   --radius-small: 2px;
   --radius-medium: 4px;
-  --radius-large: 6px;
-  --radius-xlarge: 8px;
+  --radius-large: 8px;
+  --radius-xlarge: 12px;
   --radius-circular: 999px;
   --radius-2xlarge: 12px;
   --radius-3xlarge: 16px;
