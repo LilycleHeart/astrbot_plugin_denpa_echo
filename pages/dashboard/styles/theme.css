@@ -1,120 +1,210 @@
-/* Fluent UI 2 主题：亮色 / 暗色
- * 颜色令牌参考 https://fluent2.microsoft.design/color-tokens2
- * 支持：跟随主题（data-theme） + 用户自定义品牌色覆盖
- */
+/* ============================================================
+   Minimax TTS 控制台 — 主题层（深色 · 声波主线）
+   ============================================================ */
 
-/* ===== 亮色主题（默认）===== */
-:root,
-[data-theme="light"] {
-  /* 中性背景 */
-  --color-bg-1: #ffffff;          /* colorNeutralBackground1 - 主背景 */
-  --color-bg-2: #f5f5f5;          /* colorNeutralBackground2 - 卡片次背景 */
-  --color-bg-3: #ebebeb;          /* colorNeutralBackground3 - 输入框等 */
-  --color-bg-subtle: #fafafa;     /* 悬停态微背景 */
-  --color-bg-hover: #f0f0f0;
-  --color-bg-pressed: #e6e6e6;
-  --color-transparent: transparent;
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* 中性前景 */
-  --color-fg-1: #242424;          /* colorNeutralForeground1 - 主文字 */
-  --color-fg-2: #424242;          /* colorNeutralForeground2 - 次文字 */
-  --color-fg-3: #616161;          /* colorNeutralForeground3 - 三级/hint */
-  --color-fg-4: #8a8a8a;          /* 更弱 */
-  --color-fg-disabled: #adadad;
-  --color-fg-inverted: #ffffff;
-
-  /* 品牌色（默认 Microsoft Fluent 品牌蓝，可被 JS 覆盖） */
-  --color-brand: #0f6cbd;         /* colorBrandBackground */
-  --color-brand-hover: #0e5fa5;
-  --color-brand-pressed: #0c5290;
-  --color-brand-fg: #0f6cbd;      /* colorBrandForeground1 */
-  --color-brand-fg-hover: #0a4d87;
-  --color-brand-border: #0f6cbd;
-
-  /* 边框/描边 */
-  --color-stroke-1: #d1d1d1;      /* colorNeutralStroke1 */
-  --color-stroke-2: #e0e0e0;
-  --color-stroke-accessible: #616161;  /* AA 对比度 */
-  --color-stroke-disabled: #e0e0e0;
-
-  /* 状态色 */
-  --color-success-bg: #e6f5ea;
-  --color-success-fg: #0e6b3a;
-  --color-success-border: #54b467;
-  --color-warning-bg: #fff4ce;
-  --color-warning-fg: #8a5400;
-  --color-warning-border: #f5c842;
-  --color-danger-bg: #fde7e9;
-  --color-danger-fg: #b10e1c;
-  --color-danger-border: #f4858c;
-  --color-info-bg: #e5f1fb;
-  --color-info-fg: #0f6cbd;
-
-  /* 应用背景（可被 background_mode 配置覆盖） */
-  --color-app-bg: var(--color-bg-1);
-  --color-app-bg-gradient: linear-gradient(
-    135deg,
-    var(--color-bg-1) 0%,
-    var(--color-bg-2) 100%
-  );
+html {
+  font-size: var(--text-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== 暗色主题 ===== */
-[data-theme="dark"] {
-  --color-bg-1: #1a1a1a;
-  --color-bg-2: #252525;
-  --color-bg-3: #2d2d2d;
-  --color-bg-subtle: #1f1f1f;
-  --color-bg-hover: #303030;
-  --color-bg-pressed: #383838;
-
-  --color-fg-1: #ffffff;
-  --color-fg-2: #d1d1d1;
-  --color-fg-3: #a0a0a0;
-  --color-fg-4: #787878;
-  --color-fg-disabled: #5a5a5a;
-  --color-fg-inverted: #242424;
-
-  --color-brand: #2886de;
-  --color-brand-hover: #3a95e8;
-  --color-brand-pressed: #1f74c4;
-  --color-brand-fg: #62abf5;
-  --color-brand-fg-hover: #7bbaf7;
-  --color-brand-border: #2886de;
-
-  --color-stroke-1: #404040;
-  --color-stroke-2: #2d2d2d;
-  --color-stroke-accessible: #a0a0a0;
-  --color-stroke-disabled: #2d2d2d;
-
-  --color-success-bg: #0e2714;
-  --color-success-fg: #54b467;
-  --color-success-border: #2d6b3a;
-  --color-warning-bg: #4a3400;
-  --color-warning-fg: #f5c842;
-  --color-warning-border: #8a5400;
-  --color-danger-bg: #442326;
-  --color-danger-fg: #f4858c;
-  --color-danger-border: #8b1d24;
-  --color-info-bg: #0a2536;
-  --color-info-fg: #62abf5;
-
-  --color-app-bg: var(--color-bg-1);
-  --color-app-bg-gradient: linear-gradient(
-    135deg,
-    var(--color-bg-1) 0%,
-    var(--color-bg-2) 100%
-  );
+body {
+  font-family: var(--font-body);
+  color: var(--text-1);
+  background: var(--color-app-bg);
+  line-height: 1.55;
+  overflow-x: hidden;
 }
 
-/* 自定义背景模式容器（由 JS 设置 class） */
+/* ── App Shell ── */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  position: relative;
+}
+
+/* ── Hero（签名区域：canvas 波形 + 标题）── */
+.hero {
+  position: relative;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--space-xl) var(--space-xl) var(--space-l);
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero-bg img,
+.hero-bg canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  pointer-events: none;
+}
+.hero-bg canvas {
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to top, var(--bg-1), transparent);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+.hero-content h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+}
+.hero-content .subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  margin-top: var(--space-xs);
+  letter-spacing: 0.01em;
+}
+
+.hero-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  margin-top: var(--space-m);
+}
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 var(--space-l);
+  border-bottom: 1px solid var(--stroke);
+  background: var(--bg-0);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  padding: var(--space-s) var(--space-m);
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.tab:hover { color: var(--text-2); }
+.tab.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+.tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ── Tab Panels ── */
+.tab-panels {
+  flex: 1;
+  padding: var(--space-l);
+  overflow-y: auto;
+}
+
+.tab-content {
+  display: none;
+  animation: fade-in 200ms ease-out both;
+}
+.tab-content.active { display: block; }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 背景模式 ── */
 .bg-mode-brand-gradient {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-brand) 8%, var(--color-bg-1)) 0%,
-    var(--color-bg-1) 60%
-  );
+  background-image:
+    linear-gradient(135deg, rgba(45,212,191,0.08) 0%, transparent 50%),
+    linear-gradient(225deg, rgba(56,189,248,0.06) 0%, transparent 50%);
 }
 .bg-mode-custom {
-  background: var(--color-app-bg);
+  /* --color-app-bg 由 JS 注入 */
+}
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  gap: var(--space-m);
+}
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .hero { min-height: 220px; padding: var(--space-l) var(--space-m); }
+  .tab-panels { padding: var(--space-m); }
+  .tabs { padding: 0 var(--space-m); }
+}
+
+/* ── Flex utils ── */
+.flex       { display: flex; }
+.flex-wrap  { flex-wrap: wrap; }
+.gap-s      { gap: var(--space-s); }
+.gap-m      { gap: var(--space-m); }
+.flex-between { justify-content: space-between; align-items: center; }
+.items-center { align-items: center; }
+
+.mt-s { margin-top: var(--space-s); }
+.mt-m { margin-top: var(--space-m); }
+.mb-s { margin-bottom: var(--space-s); }
+
+.text-bold   { font-weight: 600; }
+.text-mono   { font-family: var(--font-mono); }
+.text-sm     { font-size: var(--text-sm); }
+.text-muted  { color: var(--text-3); }
+.truncate    { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

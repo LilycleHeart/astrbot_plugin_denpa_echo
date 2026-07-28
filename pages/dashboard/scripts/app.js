@@ -30,6 +30,7 @@ async function init() {
   applyUiConfig();
   loadOverview();
   loadStaticVoices();  // 先加载内置音色填充下拉
+  Waveform.init();     // 启动波形可视化器
 
   bridge.onContext((newCtx) => {
     state.ctx = newCtx;
@@ -469,6 +470,9 @@ async function doClone() {
         <p class="text-sm text-muted mt-s">音色 ID: <code>${voiceId}</code></p>
         ${audioHtml}
       `;
+      // 接入波形
+      const cloneAudio = resultEl.querySelector('audio');
+      if (cloneAudio) Waveform.attachAudio(cloneAudio);
       showToast("语音克隆成功！", "success");
     } else {
       throw new Error("克隆未成功");
@@ -641,6 +645,8 @@ async function doDebugSynth() {
         耗时 ${result.elapsed_ms}ms · 字符 ${result.usage_chars}
       </p>
     `;
+    const dbgAudio = resultEl.querySelector('audio');
+    if (dbgAudio) Waveform.attachAudio(dbgAudio);
     showToast("合成成功", "success");
   } catch (e) {
     resultEl.innerHTML = `<span class="badge badge-danger">合成失败</span>
@@ -715,6 +721,9 @@ function playAudio(path, label) {
     <div class="text-sm text-bold mb-s">${label || "试听"}</div>
     <audio controls autoplay src="./audio?path=${encodeURIComponent(path)}" style="width:100%"></audio>
   `;
+  // 接入波形可视化器（同源 ./audio 可用 WebAudio 分析）
+  const audioEl = container.querySelector('audio');
+  if (audioEl) Waveform.attachAudio(audioEl);
   document.getElementById("toast-container").appendChild(container);
   setTimeout(() => {
     container.style.animation = "toast-out 0.25s forwards";
@@ -740,6 +749,125 @@ function escapeHtml(s) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+// ========== 实时波形可视化器（签名元素）==========
+const Waveform = (() => {
+  let canvas, ctx, w, h;
+  let raf = null;
+  let audioCtx = null, analyser = null, sourceNode = null;
+  let idlePhase = 0;
+  const ACCENT = '#2DD4BF';
+
+  function init() {
+    canvas = document.getElementById('waveform-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    resize();
+    window.addEventListener('resize', resize);
+    loop();
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = rect.width; h = rect.height;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  /** 将 HTMLAudioElement 接入 WebAudio 分析（同源 ./audio 可用） */
+  function attachAudio(audioEl) {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+      }
+      if (sourceNode) { try { sourceNode.disconnect(); } catch (_) {} }
+      sourceNode = audioCtx.createMediaElementSource(audioEl);
+      sourceNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    } catch (e) {
+      console.warn('[Waveform] AudioContext attach failed:', e.message);
+    }
+  }
+
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    const binCount = analyser ? analyser.frequencyBinCount : 128;
+    const freqData = new Uint8Array(binCount);
+    if (analyser) analyser.getByteFrequencyData(freqData);
+
+    const hasSignal = freqData.some(v => v > 12);
+
+    hasSignal ? drawSpectrum(freqData) : drawIdle();
+  }
+
+  /* ── 频谱柱状图（有音频播放时）── */
+  function drawSpectrum(data) {
+    const n = data.length;
+    const barW = Math.max(1.5, w / n * 0.65);
+    const gap = w / n - barW;
+
+    for (let i = 0; i < n; i++) {
+      const x = i * (barW + gap);
+      const barH = (data[i] / 255) * h * 0.72;
+      const y = h - barH;
+      const grad = ctx.createLinearGradient(x, y, x, h);
+      grad.addColorStop(0, ACCENT);
+      grad.addColorStop(1, 'rgba(45,212,191,0.08)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barW, barH);
+    }
+  }
+
+  /* ── 环境波形动画（空闲态）── */
+  function drawIdle() {
+    idlePhase += 0.008;
+    const cy = h / 2;
+    const lines = 22;
+
+    for (let li = 0; li < lines; li++) {
+      const off = li / lines - 0.5;
+      const baseY = cy + off * (h * 0.58);
+      const amp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4);
+      const freq = 0.007 + li * 0.00055;
+      const alpha = 0.08 + (1 - Math.abs(off)) * 0.22;
+
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(45,212,191,${alpha.toFixed(3)})`;
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= w; x += 3) {
+        const n = Math.sin(freq * x + idlePhase + li * 0.75)
+                  + 0.33 * Math.sin(freq * 2.4 * x + idlePhase * 1.35 + li * 1.15);
+        const y = baseY + amp * n;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // 中央主波
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(94,234,212,0.50)';
+    ctx.lineWidth = 2;
+    for (let x = 0; x <= w; x += 2) {
+      const n = Math.sin(0.0105 * x + idlePhase * 0.58)
+                + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
+                + 0.15 * Math.sin(0.052 * x + idlePhase * 1.85);
+      const y = cy + 46 * n;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  return { init, attachAudio };
+})();
 
 // 启动
 init();

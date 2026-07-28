@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,360 +10,321 @@
   </head>
   <body>
     <div class="app-shell" id="app">
-      <!-- 头部 -->
-      <header class="app-header">
-        <div>
-          <h1 data-i18n="title">Minimax TTS 控制台</h1>
-          <p class="subtitle" data-i18n="subtitle">
-            语音合成 · 语音克隆 · 发音词典 · 运行状态
-          </p>
+
+      <!-- ═══ Hero（签名区域：声波 canvas + 艺术图背景）═══ -->
+      <header class="hero">
+        <div class="hero-bg">
+          <!-- 静态声波制图艺术图 -->
+          <img src="./assets/soundfield.png" alt="" aria-hidden="true" />
+          <!-- 实时波形可视化器 -->
+          <canvas id="waveform-canvas"></canvas>
         </div>
-        <div class="flex gap-s">
+
+        <div class="hero-content">
+          <h1 data-i18n="title">Minimax TTS</h1>
+          <p class="subtitle" data-i18n="subtitle">语音合成 · 语音克隆 · 发音词典 · 运行状态</p>
+        </div>
+
+        <div class="hero-actions">
           <span id="api-status-badge" class="badge badge-neutral">检测中</span>
-          <button class="btn btn-subtle btn-sm" id="btn-refresh-all" data-i18n="refresh">
-            刷新
-          </button>
+          <button class="btn btn-subtle btn-sm" id="btn-refresh-all" data-i18n="refresh">刷新</button>
         </div>
       </header>
 
-      <!-- Tabs -->
-      <div class="tabs" role="tablist">
+      <!-- ═══ Tabs ═══ -->
+      <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="overview" data-i18n="tabs.overview">状态总览</button>
-        <button class="tab" data-tab="voices" data-i18n="tabs.voices">音色管理</button>
-        <button class="tab" data-tab="clone" data-i18n="tabs.clone">语音克隆</button>
-        <button class="tab" data-tab="debug" data-i18n="tabs.debug">调试试听</button>
-        <button class="tab" data-tab="logs" data-i18n="tabs.logs">运行日志</button>
-        <button class="tab" data-tab="settings" data-i18n="tabs.settings">界面设置</button>
-      </div>
+        <button class="tab" data-tab="voices"   data-i18n="tabs.voices">音色管理</button>
+        <button class="tab" data-tab="clone"    data-i18n="tabs.clone">语音克隆</button>
+        <button class="tab" data-tab="debug"    data-i18n="tabs.debug">调试试听</button>
+        <button class="tab" data-tab="logs"     data-i18n="tabs.logs">运行日志</button>
+        <button class="tab" data-tab="settings" data-i18n="settings.title">界面设置</button>
+      </nav>
 
-      <!-- ===== 状态总览 ===== -->
-      <section class="tab-content active" id="tab-overview">
-        <div class="grid grid-4" id="overview-stats">
-          <div class="stat-card">
-            <span class="stat-label" data-i18n="overview.api">API 状态</span>
-            <span class="stat-value-sm" id="stat-api">—</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label" data-i18n="overview.today">今日合成</span>
-            <span class="stat-value" id="stat-today">0</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label" data-i18n="overview.cache">缓存大小</span>
-            <span class="stat-value-sm" id="stat-cache">0 MB</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label" data-i18n="overview.ffmpeg">ffmpeg</span>
-            <span class="stat-value-sm" id="stat-ffmpeg">—</span>
-          </div>
-        </div>
+      <!-- ═══ Tab Panels ═══ -->
+      <main class="tab-panels">
 
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title" data-i18n="overview.configTitle">当前配置摘要</h2>
-          </div>
-          <div class="grid grid-2" id="overview-config">
+        <!-- ── 状态总览 ── -->
+        <section class="tab-content active" id="tab-overview">
+          <div class="grid grid-4" id="overview-stats">
             <div class="stat-card">
-              <span class="stat-label">发送模式</span>
-              <span class="stat-value-sm text-mono" id="stat-mode">—</span>
+              <span class="stat-label" data-i18n="overview.api">API 状态</span>
+              <span class="stat-value-sm" id="stat-api">—</span>
             </div>
             <div class="stat-card">
-              <span class="stat-label">模型</span>
-              <span class="stat-value-sm text-mono" id="stat-model">—</span>
+              <span class="stat-label" data-i18n="overview.today">今日合成</span>
+              <span class="stat-value" id="stat-today">0</span>
             </div>
             <div class="stat-card">
-              <span class="stat-label">默认音色</span>
-              <span class="stat-value-sm text-mono" id="stat-voice">—</span>
+              <span class="stat-label" data-i18n="overview.cache">缓存大小</span>
+              <span class="stat-value-sm" id="stat-cache">0 MB</span>
             </div>
             <div class="stat-card">
-              <span class="stat-label">LLM 润色</span>
-              <span class="stat-value-sm" id="stat-polish">—</span>
+              <span class="stat-label" data-i18n="overview.ffmpeg">ffmpeg</span>
+              <span class="stat-value-sm" id="stat-ffmpeg">—</span>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- ===== 音色管理 ===== -->
-      <section class="tab-content" id="tab-voices">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title" data-i18n="voices.title">音色管理</h2>
-              <p class="card-subtitle" data-i18n="voices.subtitle">
-                系统音色与克隆音色，点击试听
-              </p>
+          <div class="card mt-m">
+            <div class="card-header">
+              <h2 class="card-title" data-i18n="overview.configTitle">当前配置摘要</h2>
             </div>
-            <div class="flex gap-s flex-wrap">
-              <select class="select" id="voice-type" style="width:auto">
-                <option value="all" data-i18n="voices.all">全部</option>
-                <option value="system" data-i18n="voices.system">系统音色</option>
-                <option value="voice_cloning" data-i18n="voices.cloned">克隆音色</option>
-              </select>
-              <input class="input" id="voice-filter" placeholder="搜索音色..."
-                     style="width:200px" />
-              <button class="btn" id="btn-load-voices" data-i18n="voices.load">
-                加载音色
-              </button>
-            </div>
-          </div>
-          <div id="voice-list" class="grid grid-2">
-            <div class="empty-state">
-              <div class="empty-state-icon">🔊</div>
-              <p>点击「加载音色」获取列表</p>
+            <div class="grid grid-2" id="overview-config">
+              <div class="stat-card">
+                <span class="stat-label">发送模式</span>
+                <span class="stat-value-sm text-mono" id="stat-mode">—</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">模型</span>
+                <span class="stat-value-sm text-mono" id="stat-model">—</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">默认音色</span>
+                <span class="stat-value-sm text-mono" id="stat-voice">—</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">LLM 润色</span>
+                <span class="stat-value-sm" id="stat-polish">—</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- ===== 语音克隆 ===== -->
-      <section class="tab-content" id="tab-clone">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title" data-i18n="clone.title">语音克隆</h2>
-              <p class="card-subtitle" data-i18n="clone.subtitle">
-                上传音频文件，克隆自定义音色（10s-5min，mp3/wav/m4a）
-              </p>
+        <!-- ── 音色管理 ── -->
+        <section class="tab-content" id="tab-voices">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="voices.title">音色管理</h2>
+                <p class="card-subtitle" data-i18n="voices.subtitle">系统音色与克隆音色，点击试听</p>
+              </div>
+              <div class="flex gap-s flex-wrap">
+                <select class="select" id="voice-type" style="width:auto">
+                  <option value="all" data-i18n="voices.all">全部</option>
+                  <option value="system" data-i18n="voices.system">系统音色</option>
+                  <option value="voice_cloning" data-i18n="voices.cloned">克隆音色</option>
+                </select>
+                <input class="input" id="voice-filter" placeholder="搜索音色..." style="width:200px" />
+                <button class="btn" id="btn-load-voices" data-i18n="voices.load">加载音色</button>
+              </div>
+            </div>
+            <div id="voice-list" class="grid grid-2">
+              <div class="empty-state">
+                <div class="empty-state-icon">🔊</div>
+                <p>点击「加载音色」获取列表</p>
+              </div>
             </div>
           </div>
-          <div class="grid grid-2">
-            <div>
+        </section>
+
+        <!-- ── 语音克隆 ── -->
+        <section class="tab-content" id="tab-clone">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="clone.title">语音克隆</h2>
+                <p class="card-subtitle" data-i18n="clone.subtitle">上传音频文件，克隆自定义音色（10s–5min，mp3/wav/m4a）</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div>
+                <div class="form-row">
+                  <label class="form-label" data-i18n="clone.source">源音频文件</label>
+                  <label class="file-drop" id="clone-drop">
+                    <input type="file" id="clone-source" accept=".mp3,.wav,.m4a" />
+                    <div id="clone-file-name" data-i18n="clone.dropHint">点击或拖拽文件到此处（10s–5min，mp3/wav/m4a）</div>
+                  </label>
+                </div>
+                <div class="form-row">
+                  <label class="form-label" data-i18n="clone.voiceId">自定义音色 ID</label>
+                  <input class="input" id="clone-voice-id" placeholder="my_custom_voice_001" />
+                  <p class="form-hint" data-i18n="clone.voiceIdHint">仅字母数字下划线，将作为后续合成的 voice_id</p>
+                </div>
+                <div class="form-row">
+                  <label class="form-label" data-i18n="clone.model">克隆模型</label>
+                  <select class="select" id="clone-model">
+                    <option value="speech-02-hd">speech-02-hd（推荐）</option>
+                    <option value="speech-2.6-hd">speech-2.6-hd</option>
+                    <option value="speech-2.8-hd">speech-2.8-hd</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div class="form-row">
+                  <label class="form-label" data-i18n="clone.preview">试听文本</label>
+                  <textarea class="textarea" id="clone-preview-text" rows="3">你好，这是克隆音色的试听样本。</textarea>
+                </div>
+                <button class="btn btn-primary" id="btn-clone" data-i18n="clone.start">开始克隆</button>
+                <div id="clone-result" class="mt-m"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="clone.loadTitle">按音色 ID 加载已有音色</h2>
+                <p class="card-subtitle" data-i18n="clone.loadSubtitle">已有克隆音色 ID（如 moss_audio_xxx）可直接加载、试听并设为默认，无需重新克隆</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div>
+                <div class="form-row">
+                  <label class="form-label" data-i18n="clone.loadId">音色 ID</label>
+                  <input class="input" id="load-voice-id" placeholder="moss_audio_5bb1d090-8951-11f1-b0af-0eac018832f6" />
+                  <p class="form-hint" data-i18n="clone.loadIdHint">支持系统音色与克隆音色 ID，可跨账号加载</p>
+                </div>
+                <button class="btn" id="btn-load-voice" data-i18n="clone.loadBtn">查询音色</button>
+              </div>
+              <div id="load-voice-result">
+                <div class="empty-state">
+                  <div class="empty-state-icon">🔎</div>
+                  <p data-i18n="clone.loadEmpty">输入音色 ID 后点击查询</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── 调试试听 ── -->
+        <section class="tab-content" id="tab-debug">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="debug.title">调试试听</h2>
+                <p class="card-subtitle" data-i18n="debug.subtitle">输入文本即时合成试听</p>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-label" data-i18n="debug.text">合成文本</label>
+              <textarea class="textarea" id="debug-text" rows="3">你好，这是 Minimax TTS 的试听样本。</textarea>
+            </div>
+            <div class="grid grid-3">
               <div class="form-row">
-                <label class="form-label" data-i18n="clone.source">源音频文件</label>
-                <label class="file-drop" id="clone-drop">
-                  <input type="file" id="clone-source" accept=".mp3,.wav,.m4a" />
-                  <div id="clone-file-name" data-i18n="clone.dropHint">
-                    点击或拖拽文件到此处（10s-5min，mp3/wav/m4a）
-                  </div>
-                </label>
+                <label class="form-label" data-i18n="debug.voice">音色</label>
+                <select class="select" id="debug-voice"></select>
               </div>
               <div class="form-row">
-                <label class="form-label" data-i18n="clone.voiceId">自定义音色 ID</label>
-                <input class="input" id="clone-voice-id" placeholder="my_custom_voice_001" />
-                <p class="form-hint" data-i18n="clone.voiceIdHint">
-                  仅字母数字下划线，将作为后续合成的 voice_id
-                </p>
+                <label class="form-label"><span data-i18n="debug.speed">语速</span> <span id="debug-speed-val">1.0</span></label>
+                <input type="range" class="slider" id="debug-speed" min="0.5" max="2" step="0.1" value="1.0" />
               </div>
               <div class="form-row">
-                <label class="form-label" data-i18n="clone.model">克隆模型</label>
-                <select class="select" id="clone-model">
-                  <option value="speech-02-hd">speech-02-hd（推荐）</option>
-                  <option value="speech-2.6-hd">speech-2.6-hd</option>
-                  <option value="speech-2.8-hd">speech-2.8-hd</option>
+                <label class="form-label" data-i18n="debug.emotion">情绪</label>
+                <select class="select" id="debug-emotion">
+                  <option value="">默认</option>
+                  <option value="happy">happy</option>
+                  <option value="sad">sad</option>
+                  <option value="angry">angry</option>
+                  <option value="fearful">fearful</option>
+                  <option value="disgusted">disgusted</option>
+                  <option value="surprised">surprised</option>
+                  <option value="calm">calm</option>
                 </select>
               </div>
             </div>
-            <div>
+            <button class="btn btn-primary" id="btn-debug-synth" data-i18n="debug.synth">合成试听</button>
+            <div id="debug-result" class="mt-m"></div>
+          </div>
+        </section>
+
+        <!-- ── 运行日志 ── -->
+        <section class="tab-content" id="tab-logs">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="logs.title">运行日志</h2>
+                <p class="card-subtitle" data-i18n="logs.subtitle">最近 200 条合成记录</p>
+              </div>
+              <button class="btn btn-subtle btn-sm" id="btn-refresh-logs"><span data-i18n="refresh">刷新</span></button>
+            </div>
+            <div class="table-wrap">
+              <table class="table" id="logs-table">
+                <thead><tr><th>时间</th><th>模式</th><th>字符</th><th>耗时</th><th>缓存</th><th>预览</th></tr></thead>
+                <tbody id="logs-body">
+                  <tr><td colspan="6" class="text-muted" style="text-align:center">暂无记录</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── 界面设置 ── -->
+        <section class="tab-content" id="tab-settings">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" data-i18n="settings.title">界面设置</h2>
+                <p class="card-subtitle" data-i18n="settings.subtitle">取色、背景与圆角</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
               <div class="form-row">
-                <label class="form-label" data-i18n="clone.preview">试听文本</label>
-                <textarea class="textarea" id="clone-preview-text" rows="3">
-你好，这是克隆音色的试听样本。</textarea>
+                <label class="form-label" data-i18n="settings.colorMode">取色模式</label>
+                <select class="select" id="ui-color-mode">
+                  <option value="dynamic" data-i18n="settings.dynamic">动态（跟随主题）</option>
+                  <option value="static" data-i18n="settings.static">静态（自定义）</option>
+                </select>
               </div>
-              <button class="btn btn-primary" id="btn-clone" data-i18n="clone.start">
-                开始克隆
-              </button>
-              <div id="clone-result" class="mt-m"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card mt-m">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title" data-i18n="clone.loadTitle">按音色 ID 加载已有音色</h2>
-              <p class="card-subtitle" data-i18n="clone.loadSubtitle">
-                已有克隆音色 ID（如 moss_audio_xxx）可直接加载、试听并设为默认，无需重新克隆
-              </p>
-            </div>
-          </div>
-          <div class="grid grid-2">
-            <div>
               <div class="form-row">
-                <label class="form-label" data-i18n="clone.loadId">音色 ID</label>
-                <input class="input" id="load-voice-id"
-                       placeholder="moss_audio_5bb1d090-8951-11f1-b0af-0eac018832f6" />
-                <p class="form-hint" data-i18n="clone.loadIdHint">
-                  支持系统音色与克隆音色 ID，可跨账号加载
-                </p>
-              </div>
-              <button class="btn" id="btn-load-voice" data-i18n="clone.loadBtn">查询音色</button>
-            </div>
-            <div id="load-voice-result">
-              <div class="empty-state">
-                <div class="empty-state-icon">🔎</div>
-                <p data-i18n="clone.loadEmpty">输入音色 ID 后点击查询</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 调试试听 ===== -->
-      <section class="tab-content" id="tab-debug">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title" data-i18n="debug.title">调试试听</h2>
-              <p class="card-subtitle" data-i18n="debug.subtitle">
-                输入文本即时合成试听
-              </p>
-            </div>
-          </div>
-          <div class="form-row">
-            <label class="form-label" data-i18n="debug.text">合成文本</label>
-            <textarea class="textarea" id="debug-text" rows="3">你好，这是 Minimax TTS 的试听样本。</textarea>
-          </div>
-          <div class="grid grid-3">
-            <div class="form-row">
-              <label class="form-label" data-i18n="debug.voice">音色</label>
-              <select class="select" id="debug-voice"></select>
-            </div>
-            <div class="form-row">
-              <label class="form-label">
-                <span data-i18n="debug.speed">语速</span>
-                <span id="debug-speed-val">1.0</span>
-              </label>
-              <input type="range" class="slider" id="debug-speed" min="0.5" max="2"
-                     step="0.1" value="1.0" />
-            </div>
-            <div class="form-row">
-              <label class="form-label" data-i18n="debug.emotion">情绪</label>
-              <select class="select" id="debug-emotion">
-                <option value="">默认</option>
-                <option value="happy">happy</option>
-                <option value="sad">sad</option>
-                <option value="angry">angry</option>
-                <option value="fearful">fearful</option>
-                <option value="disgusted">disgusted</option>
-                <option value="surprised">surprised</option>
-                <option value="calm">calm</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn btn-primary" id="btn-debug-synth" data-i18n="debug.synth">
-            合成试听
-          </button>
-          <div id="debug-result" class="mt-m"></div>
-        </div>
-      </section>
-
-      <!-- ===== 运行日志 ===== -->
-      <section class="tab-content" id="tab-logs">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title" data-i18n="logs.title">运行日志</h2>
-              <p class="card-subtitle" data-i18n="logs.subtitle">最近 200 条合成记录</p>
-            </div>
-            <button class="btn btn-subtle btn-sm" id="btn-refresh-logs">
-              <span data-i18n="refresh">刷新</span>
-            </button>
-          </div>
-          <div class="table-wrap">
-            <table class="table" id="logs-table">
-              <thead>
-                <tr>
-                  <th>时间</th>
-                  <th>模式</th>
-                  <th>字符</th>
-                  <th>耗时</th>
-                  <th>缓存</th>
-                  <th>预览</th>
-                </tr>
-              </thead>
-              <tbody id="logs-body">
-                <tr><td colspan="6" class="text-muted" style="text-align:center">暂无记录</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 界面设置 ===== -->
-      <section class="tab-content" id="tab-settings">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title" data-i18n="settings.title">界面设置</h2>
-              <p class="card-subtitle" data-i18n="settings.subtitle">
-                Fluent UI 2 取色与背景设置
-              </p>
-            </div>
-          </div>
-          <div class="grid grid-2">
-            <div class="form-row">
-              <label class="form-label" data-i18n="settings.colorMode">取色模式</label>
-              <select class="select" id="ui-color-mode">
-                <option value="dynamic" data-i18n="settings.dynamic">动态（跟随主题）</option>
-                <option value="static" data-i18n="settings.static">静态（自定义）</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label class="form-label" data-i18n="settings.brandColor">品牌色</label>
-              <div class="flex gap-s">
-                <input type="color" class="input" id="ui-brand-color-picker"
-                       value="#0f6cbd" style="width:60px;padding:4px" />
-                <input class="input" id="ui-brand-color" value="#0f6cbd" />
-              </div>
-            </div>
-            <div class="form-row">
-              <label class="form-label" data-i18n="settings.bgMode">背景模式</label>
-              <select class="select" id="ui-bg-mode">
-                <option value="theme" data-i18n="settings.bgTheme">跟随主题</option>
-                <option value="brand_gradient" data-i18n="settings.bgBrand">品牌色渐变</option>
-                <option value="custom" data-i18n="settings.bgCustom">自定义</option>
-                <option value="image" data-i18n="settings.bgImage">背景图片</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label class="form-label" data-i18n="settings.radius">圆角大小（px）</label>
-              <input type="number" class="input" id="ui-radius" value="10" min="0" max="40" />
-            </div>
-            <div class="form-row">
-              <label class="form-label" data-i18n="settings.customBg">自定义亮色背景</label>
-              <div class="flex gap-s">
-                <input type="color" class="input" id="ui-custom-bg-picker"
-                       value="#f5f5f5" style="width:60px;padding:4px" />
-                <input class="input" id="ui-custom-bg" value="#f5f5f5" />
-              </div>
-            </div>
-            <div class="form-row">
-              <label class="form-label" data-i18n="settings.customBgDark">自定义暗色背景</label>
-              <div class="flex gap-s">
-                <input type="color" class="input" id="ui-custom-bg-dark-picker"
-                       value="#1a1a1a" style="width:60px;padding:4px" />
-                <input class="input" id="ui-custom-bg-dark" value="#1a1a1a" />
-              </div>
-            </div>
-          </div>
-
-          <div class="form-row mt-m" id="bg-image-row">
-            <label class="form-label" data-i18n="settings.bgImageLabel">背景图片上传</label>
-            <div class="flex gap-s flex-wrap">
-              <label class="file-drop" id="bg-drop" style="flex:1;min-width:200px">
-                <input type="file" id="bg-image-file" accept=".jpg,.jpeg,.png,.webp,.gif" />
-                <div id="bg-file-name" data-i18n="settings.bgImageHint">
-                  点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）
+                <label class="form-label" data-i18n="settings.brandColor">品牌色</label>
+                <div class="flex gap-s">
+                  <input type="color" class="input" id="ui-brand-color-picker" value="#2DD4BF" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-brand-color" value="#2DD4BF" />
                 </div>
-              </label>
-              <button class="btn" id="btn-bg-upload" data-i18n="settings.bgImageUpload">上传</button>
-              <button class="btn btn-subtle" id="btn-bg-remove" data-i18n="settings.bgImageRemove">移除</button>
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.bgMode">背景模式</label>
+                <select class="select" id="ui-bg-mode">
+                  <option value="theme" data-i18n="settings.bgTheme">跟随主题</option>
+                  <option value="brand_gradient" data-i18n="settings.bgBrand">品牌色渐变</option>
+                  <option value="custom" data-i18n="settings.bgCustom">自定义</option>
+                  <option value="image" data-i18n="settings.bgImage">背景图片</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.radius">圆角大小（px）</label>
+                <input type="number" class="input" id="ui-radius" value="14" min="0" max="40" />
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.customBg">自定义亮色背景</label>
+                <div class="flex gap-s">
+                  <input type="color" class="input" id="ui-custom-bg-picker" value="#f5f5f5" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-custom-bg" value="#f5f5f5" />
+                </div>
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.customBgDark">自定义暗色背景</label>
+                <div class="flex gap-s">
+                  <input type="color" class="input" id="ui-custom-bg-dark-picker" value="#11151C" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-custom-bg-dark" value="#11151C" />
+                </div>
+              </div>
             </div>
-            <div id="bg-preview-wrap" class="mt-s" style="display:none">
-              <img id="bg-preview" alt="背景预览"
-                   style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--color-stroke)" />
+
+            <div class="form-row mt-m" id="bg-image-row">
+              <label class="form-label" data-i18n="settings.bgImageLabel">背景图片上传</label>
+              <div class="flex gap-s flex-wrap">
+                <label class="file-drop" id="bg-drop" style="flex:1;min-width:200px">
+                  <input type="file" id="bg-image-file" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                  <div id="bg-file-name" data-i18n="settings.bgImageHint">点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）</div>
+                </label>
+                <button class="btn" id="btn-bg-upload" data-i18n="settings.bgImageUpload">上传</button>
+                <button class="btn btn-subtle" id="btn-bg-remove" data-i18n="settings.bgImageRemove">移除</button>
+              </div>
+              <div id="bg-preview-wrap" class="mt-s" style="display:none">
+                <img id="bg-preview" alt="背景预览"
+                     style="max-width:100%;max-height:160px;border-radius:var(--radius-md);border:1px solid var(--stroke)" />
+              </div>
+            </div>
+            <div class="flex gap-s mt-m">
+              <button class="btn btn-primary" id="btn-save-ui" data-i18n="settings.save">保存设置</button>
+              <button class="btn btn-subtle" id="btn-reset-ui" data-i18n="settings.reset">恢复默认</button>
             </div>
           </div>
-          <div class="flex gap-s mt-m">
-            <button class="btn btn-primary" id="btn-save-ui" data-i18n="settings.save">
-              保存设置
-            </button>
-            <button class="btn btn-subtle" id="btn-reset-ui" data-i18n="settings.reset">
-              恢复默认
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
+        </section>
+
+      </main><!-- /tab-panels -->
+    </div><!-- /app-shell -->
 
     <!-- Toast 容器 -->
     <div class="toast-container" id="toast-container"></div>
