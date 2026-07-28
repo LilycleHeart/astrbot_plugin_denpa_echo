@@ -1,5 +1,6 @@
 /* ============================================================
  * Fluent 2 主题与布局
+ * 灵感: fluent2-design-system skill (App Shell Layout / Card / TabList)
  * ============================================================ */
 
 *,
@@ -29,77 +30,83 @@ body {
   max-width: 1080px;
   margin: 0 auto;
   padding: var(--space-l);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
 }
 
-/* 背景模式（app.js 在 #app 上切换 class / 内联背景） */
+/* 背景模式 (app.js 在 #app 上切换 class / 内联 backgroundImage) */
 .bg-mode-custom {
   background: var(--color-app-bg);
 }
 .bg-mode-brand-gradient {
-  background: linear-gradient(135deg, var(--color-brand-tint), var(--color-bg-1) 60%);
+  background:
+    radial-gradient(1100px 380px at 100% 0, var(--color-brand-tint), transparent 60%),
+    linear-gradient(135deg, var(--color-brand-tint), var(--color-app-bg) 55%);
 }
-#app[data-theme] { /* placeholder */ }
 
 /* ============================================================
- * Hero（签名区域：标题 + 实时波形 canvas）
+ * Hero（签名区域：标题 + 实时波形 canvas + 状态）
+ * 使用 brand[160] 浅色底(brand-tint) 作为 Fluent 强调表面
  * ============================================================ */
 .hero {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "content wave"
+    "actions wave";
   align-items: center;
-  gap: var(--space-l);
+  column-gap: var(--space-xl);
+  row-gap: var(--space-s);
   padding: var(--space-xl) var(--space-2xl);
-  margin-bottom: var(--space-l);
-  background: var(--color-bg-1);
-  border: 1px solid var(--color-stroke-2);
+  background: var(--color-brand-tint);
   border-radius: var(--radius-large);
-  box-shadow: var(--shadow-4);
+  box-shadow: var(--shadow-8);
   position: relative;
   overflow: hidden;
   animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
 }
-
+.hero-content {
+  grid-area: content;
+}
 .hero-content h1 {
   margin: 0;
-  font-size: var(--font-size-title-lg);
-  line-height: var(--line-title-lg);
+  font-size: var(--font-size-display);
+  line-height: var(--line-display);
   font-weight: var(--font-weight-semibold);
   letter-spacing: -0.01em;
   color: var(--color-fg-1);
 }
-
 .hero .subtitle {
   margin: var(--space-2xs) 0 0;
-  color: var(--color-fg-3);
+  color: var(--color-fg-2);
   font-size: var(--font-size-body);
 }
-
-/* 波形 canvas：Fluent 品牌色线条，作为 hero 签名元素 */
 .hero-wave {
-  width: 220px;
-  height: 56px;
+  grid-area: wave;
+  width: 240px;
+  height: 64px;
   display: block;
   opacity: 0.95;
 }
-
 .hero-actions {
+  grid-area: actions;
   display: flex;
   align-items: center;
   gap: var(--space-s);
 }
 
 /* ============================================================
- * Tabs（Fluent 2 TabList：选中项 2px 品牌下划线）
+ * Tabs（Fluent 2 TabList：选中项 2px 品牌下划线, 44px 高）
  * ============================================================ */
 .tabs {
   display: flex;
   gap: var(--space-xs);
   border-bottom: 1px solid var(--color-stroke-2);
-  margin-bottom: var(--space-l);
   overflow-x: auto;
   scrollbar-width: thin;
 }
-
 .tab {
   appearance: none;
   border: none;
@@ -118,17 +125,14 @@ body {
   transition: color var(--motion-fast) var(--motion-ease),
     background var(--motion-fast) var(--motion-ease);
 }
-
 .tab:hover {
   background: var(--color-bg-3);
   color: var(--color-fg-1);
 }
-
 .tab.active {
   color: var(--color-brand);
   border-bottom-color: var(--color-brand);
 }
-
 .tab:focus-visible {
   outline: none;
   border-radius: var(--radius-small) var(--radius-small) 0 0;
@@ -141,7 +145,6 @@ body {
 .tab-panels {
   min-height: 320px;
 }
-
 .tab-content {
   display: none;
   animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
@@ -168,6 +171,7 @@ body {
 .flex-wrap { flex-wrap: wrap; }
 .gap-s { gap: var(--space-s); }
 .gap-m { gap: var(--space-m); }
+.gap-l { gap: var(--space-l); }
 
 /* 间距工具 */
 .mt-s { margin-top: var(--space-s); }
@@ -182,8 +186,7 @@ body {
 .text-bold { font-weight: var(--font-weight-semibold); }
 .text-sm { font-size: var(--font-size-caption); line-height: var(--line-caption); }
 .text-mono {
-  font-family: "Cascadia Code", "Consolas", ui-monospace, "SFMono-Regular",
-    "Menlo", monospace;
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-caption);
 }
 
@@ -194,22 +197,18 @@ body {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fluent-toast-in {
   from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-
 @keyframes fluent-toast-out {
   from { opacity: 1; transform: translateX(0); }
   to   { opacity: 0; transform: translateX(16px); }
 }
-
 @keyframes fluent-shimmer {
   0%   { background-position: -480px 0; }
   100% { background-position: 480px 0; }
 }
-
 @keyframes fluent-indeterminate {
   0%   { left: -40%; }
   100% { left: 100%; }
@@ -220,9 +219,14 @@ body {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .hero {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "content"
+      "wave"
+      "actions";
     gap: var(--space-m);
   }
-  .hero-wave { width: 100%; }
+  .hero-wave { width: 100%; height: 56px; }
 }
 @media (max-width: 560px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }

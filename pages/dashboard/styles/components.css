@@ -1,15 +1,16 @@
 /* ============================================================
- * Fluent 2 组件
+ * Fluent 2 组件 (v9 规范)
+ * 参考: fluent2-design-system skill → references/components.md
+ * 分层: 卡片 = colorNeutralBackground1(白) 浮起于 colorNeutralBackground2(灰) 画布
+ * 所有 class 名与 index.html / app.js 接线保持一致, 不改动 DOM
  * ============================================================ */
 
-/* —— Card —— */
+/* —— Card（白卡 + shadow4, 无描边, 4px 圆角）—— */
 .card {
   background: var(--color-bg-1);
   border-radius: var(--radius-medium);
   box-shadow: var(--shadow-4);
   padding: var(--space-m);
-  transition: box-shadow var(--motion-fast) var(--motion-ease),
-    border-color var(--motion-fast) var(--motion-ease);
   animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
 }
 .card:hover {
@@ -24,8 +25,8 @@
 }
 .card-title {
   margin: 0;
-  font-size: var(--font-size-subtitle);
-  line-height: var(--line-subtitle);
+  font-size: var(--font-size-title);
+  line-height: var(--line-title);
   font-weight: var(--font-weight-semibold);
   color: var(--color-fg-1);
 }
@@ -36,7 +37,7 @@
   color: var(--color-fg-3);
 }
 
-/* —— Stat Card —— */
+/* —— Stat Card（次级表面, shadow2）—— */
 .stat-card {
   background: var(--color-bg-1);
   border-radius: var(--radius-medium);
@@ -47,6 +48,10 @@
   gap: var(--space-2xs);
   min-height: 72px;
   justify-content: center;
+  transition: box-shadow var(--motion-fast) var(--motion-ease);
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-4);
 }
 .stat-label {
   font-size: var(--font-size-caption);
@@ -60,19 +65,19 @@
   color: var(--color-fg-1);
 }
 .stat-value-sm {
-  font-size: var(--font-size-subtitle);
-  line-height: var(--line-subtitle);
+  font-size: var(--font-size-title);
+  line-height: var(--line-title);
   font-weight: var(--font-weight-semibold);
   color: var(--color-fg-1);
 }
 
-/* —— Badge —— */
+/* —— Badge（Fluent 2: 圆角 4px, 语义底色）—— */
 .badge {
   display: inline-flex;
   align-items: center;
   height: 22px;
   padding: 0 var(--space-s);
-  border-radius: var(--radius-small);
+  border-radius: var(--radius-medium);
   font-size: var(--font-size-caption);
   line-height: 1;
   font-weight: var(--font-weight-semibold);
@@ -102,7 +107,7 @@
   color: var(--color-error-fg);
 }
 
-/* —— Button（Fluent 2：4px 圆角，2px 焦点环） —— */
+/* —— Button（Fluent 2: 32px 高, 4px 圆角, 2px 焦点环）—— */
 .btn {
   appearance: none;
   display: inline-flex;
@@ -121,12 +126,15 @@
   cursor: pointer;
   transition: background var(--motion-fast) var(--motion-ease),
     border-color var(--motion-fast) var(--motion-ease),
-    transform var(--motion-fast) var(--motion-ease);
+    color var(--motion-fast) var(--motion-ease);
 }
-.btn:hover { background: var(--color-bg-3); border-color: var(--color-stroke-2); }
+.btn:hover {
+  background: var(--color-bg-3);
+  border-color: var(--color-stroke-2);
+}
 .btn:active { background: var(--color-bg-4); }
 .btn:focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-stroke-accessible);
   outline-offset: 2px;
 }
 .btn:disabled,
@@ -137,6 +145,7 @@
   color: var(--color-fg-4);
 }
 
+/* primary: 品牌填充 (colorBrandBackground) */
 .btn-primary {
   background: var(--color-brand-bg);
   border-color: transparent;
@@ -144,7 +153,11 @@
 }
 .btn-primary:hover { background: var(--color-brand-bg-hover); }
 .btn-primary:active { background: var(--color-brand-bg-pressed); }
+.btn-primary:focus-visible {
+  outline-color: var(--color-stroke-accessible);
+}
 
+/* subtle: 透明底, 悬浮才显 */
 .btn-subtle {
   background: transparent;
   border-color: transparent;
@@ -152,13 +165,21 @@
 }
 .btn-subtle:hover { background: var(--color-bg-3); }
 
+/* outline: 透明底 + 描边 */
+.btn-outline {
+  background: transparent;
+  border-color: var(--color-stroke-1);
+  color: var(--color-fg-1);
+}
+.btn-outline:hover { background: var(--color-bg-3); }
+
 .btn-sm {
   height: 24px;
   padding: 0 var(--space-m);
   font-size: var(--font-size-caption);
 }
 
-/* —— Input / Textarea / Select —— */
+/* —— Input / Textarea / Select（appearance=outline）—— */
 .input,
 .textarea,
 .select {
@@ -204,13 +225,13 @@
 [data-theme="dark"] .select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2.5 4.5l3.5 3.5 3.5-3.5' fill='none' stroke='%23ABABAB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
 }
-/* 原生 color 输入：去掉默认内边距，保留色块 */
+/* 原生 color 输入：保留色块 */
 input[type="color"].input {
   padding: 4px;
   cursor: pointer;
 }
 
-/* —— Slider（Fluent 2 range） —— */
+/* —— Slider（Fluent 2 range）—— */
 .slider {
   -webkit-appearance: none;
   appearance: none;
@@ -241,7 +262,7 @@ input[type="color"].input {
   border: 2px solid var(--color-bg-1);
   box-shadow: var(--shadow-2);
 }
-.slider:focus-visible { box-shadow: 0 0 0 2px var(--color-brand); }
+.slider:focus-visible { box-shadow: var(--focus-ring); }
 
 /* —— Form —— */
 .form-row { margin-bottom: var(--space-m); }
@@ -286,10 +307,6 @@ input[type="color"].input {
 }
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: var(--color-bg-2); }
-.table td:first-child,
-.table th:first-child { border-top-left-radius: var(--radius-small); }
-.table td:last-child,
-.table th:last-child { border-top-right-radius: var(--radius-small); }
 
 /* —— File Drop —— */
 .file-drop {
@@ -304,7 +321,8 @@ input[type="color"].input {
   background: var(--color-bg-1);
   cursor: pointer;
   transition: border-color var(--motion-fast) var(--motion-ease),
-    background var(--motion-fast) var(--motion-ease);
+    background var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
   position: relative;
 }
 .file-drop:hover { border-color: var(--color-brand); color: var(--color-fg-2); }
@@ -345,7 +363,7 @@ input[type="color"].input {
 }
 .empty-state-icon { font-size: 32px; line-height: 1; }
 
-/* —— Progress —— */
+/* —— Progress（ProgressBar）—— */
 .progress {
   position: relative;
   height: 4px;
@@ -379,7 +397,7 @@ input[type="color"].input {
   border-radius: var(--radius-small);
 }
 
-/* —— Toast（Fluent MessageBar 风格） —— */
+/* —— Toast（Fluent MessageBar 风格: 左侧语义色条）—— */
 .toast-container {
   position: fixed;
   top: var(--space-l);

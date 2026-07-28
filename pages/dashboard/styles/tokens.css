@@ -1,89 +1,98 @@
 /* ============================================================
- * Fluent 2 设计令牌 (Fluent UI React v9 / microsoft/fluentui)
- * 来源: webLightTheme / webDarkTheme 别名表 + 官方 brand/grey 色阶 (rgb)
- * 核心: 品牌主色 brand[80] = #0F6CBD (Fluent 2 Web 实现)
- *       严禁使用旧版 Fluent UI v8 的 #0078D4
- * 变量命名与 app.js 注入契约保持一致:
- *   --color-brand* / --color-app-bg / --radius-large / --radius-xlarge
+ * Fluent 2 Design Tokens
+ * 来源: @fluentui/react-components v9 (microsoft/fluentui)
+ * 权威基准: fluent2-design-system skill → references/tokens.md
+ *
+ * 关键设计决策 (决定"像不像 Fluent 2"):
+ *  - 画布(canvas) = colorNeutralBackground2 (浅灰), 卡片(surface) = colorNeutralBackground1 (白)
+ *    → 这是 Fluent 2 最显著的"灰底白卡"分层特征, 与旧版(白底近白卡)截然不同
+ *  - 品牌主色 brand[80] = #0F6CBD (Fluent 2 Web 真值, 严禁旧版 v8 的 #0078D4)
+ *  - 圆角令牌: Small2 / Medium4 / Large6 / XLarge8 / Circular (v9 实现值)
+ *
+ * 与 app.js 桥接契约 (必须保留, 不得改名):
+ *  --color-brand* / --color-app-bg / --radius-large / --radius-xlarge
+ *  / bg-mode-* class / #app 背景图 / <html data-theme>
  * ============================================================ */
 
 :root,
 [data-theme="light"] {
-  /* —— 品牌色 (Communication Blue ramp) —— */
+  /* —— 品牌色 (Communication Blue ramp, brand[10..160]) —— */
   --color-brand: #0F6CBD;            /* colorBrandBackground / colorBrandForeground1 (brand[80]) */
   --color-brand-hover: #115EA3;      /* colorBrandBackgroundHover (brand[70]) */
   --color-brand-pressed: #0C3B5E;    /* colorBrandBackgroundPressed (brand[40]) */
-  --color-brand-fg: #0F6CBD;          /* 文字/链接用品牌色 */
-  --color-brand-fg-hover: #115EA3;
-  --color-brand-border: #0F6CBD;
-  --color-brand-bg: #0F6CBD;         /* 填充按钮底色 */
-  --color-brand-bg-hover: #115EA3;
-  --color-brand-bg-pressed: #0C3B5E;
-  --color-brand-fg-text: #FFFFFF;    /* 品牌按钮上的文字 */
-  --color-brand-tint: #EFF6FC;       /* brand[160] 浅色底 */
+  --color-brand-fg: #0F6CBD;          /* 文字/链接用品牌色 (colorBrandForeground1) */
+  --color-brand-border: #0F6CBD;     /* colorBrandStroke1 */
+  --color-brand-bg: #0F6CBD;         /* 填充按钮底色 (colorBrandBackground) */
+  --color-brand-bg-hover: #115EA3;   /* colorBrandBackgroundHover */
+  --color-brand-bg-pressed: #0C3B5E; /* colorBrandBackgroundPressed */
+  --color-brand-fg-text: #FFFFFF;    /* 品牌按钮上的文字 (colorNeutralForegroundOnBrand) */
+  --color-brand-tint: #EFF6FC;       /* brand[160] 浅色底, 用于强调表面 (accent surfaces) */
 
   /* —— 中性前景 (grey ramp) —— */
-  --color-fg-1: #242424;             /* grey[14] 主文本 */
-  --color-fg-2: #424242;             /* grey[26] */
-  --color-fg-3: #616161;             /* grey[38] 次要文本 */
-  --color-fg-4: #707070;             /* grey[44] 禁用/占位 */
+  --color-fg-1: #242424;             /* colorNeutralForeground1 (grey[14]) 主文本 */
+  --color-fg-2: #424242;             /* colorNeutralForeground2 (grey[26]) 次要文本 */
+  --color-fg-3: #616161;             /* colorNeutralForeground3 (grey[38]) 第三文本 */
+  --color-fg-4: #767676;             /* colorNeutralForeground4 (grey[44]) 占位/禁用 */
   --color-fg-inverted: #FFFFFF;
 
-  /* —— 中性背景 (light) —— */
-  --color-app-bg: #FFFFFF;           /* neutralBackground1 页面画布 */
-  --color-bg-1: #FAFAFA;             /* neutralBackground2 / grey[98] 卡片表面 */
-  --color-bg-2: #F5F5F5;             /* neutralBackground3 / grey[96] 嵌套表面 */
-  --color-bg-3: #F0F0F0;             /* neutralBackground4 / grey[94] */
-  --color-bg-4: #EBEBEB;             /* neutralBackground5 / grey[92] */
+  /* —— 中性背景: 画布浅灰, 卡片白 (Fluent 2 分层) —— */
+  --color-app-bg: #F5F5F5;           /* colorNeutralBackground2 画布/页面 */
+  --color-bg-1: #FFFFFF;             /* colorNeutralBackground1 卡片/浮起表面 */
+  --color-bg-2: #FAFAFA;             /* colorNeutralBackground3 嵌套表面 */
+  --color-bg-3: #F0F0F0;             /* colorNeutralBackground4 更深表面/hover */
+  --color-bg-4: #EDEDED;             /* colorNeutralBackground5 */
   --color-bg-inverted: #242424;
 
   /* —— 中性描边 —— */
-  --color-stroke-1: #D1D1D1;         /* grey[82] Stroke1 */
-  --color-stroke-2: #E0E0E0;         /* grey[88] Stroke2 */
-  --color-stroke-3: #F0F0F0;         /* grey[94] Stroke3 */
+  --color-stroke-1: #D1D1D1;         /* colorNeutralStroke1 (grey[82]) */
+  --color-stroke-2: #E0E0E0;         /* colorNeutralStroke2 (grey[88]) */
+  --color-stroke-3: #ECECEC;         /* colorNeutralStroke3 */
+  --color-stroke-accessible: #0F6CBD;/* colorNeutralStrokeAccessible 焦点环(3:1 对比) */
 
-  /* —— 状态色 —— */
-  --color-success-fg: #0E700E;
-  --color-success-bg: #DFF6DD;
-  --color-warning-fg: #8A6D00;
-  --color-warning-bg: #FFF4CE;
-  --color-error-fg: #B10E1C;
-  --color-error-bg: #FDE7E9;
+  /* —— 状态色 (Fluent 2 v9 colorStatus*) —— */
+  --color-success-fg: #0E700E;       /* colorStatusSuccessForeground1 */
+  --color-success-bg: #DFF6DD;       /* colorStatusSuccessBackground1 */
+  --color-warning-fg: #8C5B00;       /* colorStatusWarningForeground1 */
+  --color-warning-bg: #FFFCF5;       /* colorStatusWarningBackground1 */
+  --color-error-fg: #C8311B;         /* colorStatusDangerForeground1 */
+  --color-error-bg: #FDF3F2;         /* colorStatusDangerBackground1 */
   --color-info: #0F6CBD;             /* info 语义使用品牌蓝 */
 
-  /* —— 圆角 (Fluent 2 v9 tokens: None0 / Small2 / Medium4 / Large6 / XLarge8 / Circular10000) —— */
-  --radius-small: 2px;               /* Small badges, <32px 元素 */
-  --radius-medium: 4px;              /* 控件: Buttons, dropdown, Input, Card, Tab */
+  /* —— 圆角 (Fluent 2 v9: Small2 / Medium4 / Large6 / XLarge8 / Circular) —— */
+  --radius-small: 2px;               /* 小徽章 / <32px 元素 */
+  --radius-medium: 4px;              /* 控件: Button, Input, Card, Tab */
   --radius-large: 6px;               /* 大容器 / hero */
-  --radius-xlarge: 8px;              /* Button sheets, popovers */
-  --radius-circular: 999px;          /* Pill / slider track / avatar */
+  --radius-xlarge: 8px;              /* Button sheets, popovers, 背景预览 */
+  --radius-circular: 999px;          /* 胶囊 / 滑块 / 头像 */
 
   /* —— 字体 (Segoe UI Variable) —— */
   --font-family: "Segoe UI Variable Display", "Segoe UI", "Segoe UI Web (West European)",
     system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, Arial,
     "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-family-mono: Consolas, "Courier New", Courier, monospace;
-  --font-size-caption: 12px;         /* base200 */
+  --font-family-mono: "Cascadia Code", Consolas, "Courier New", Courier, monospace;
+  --font-size-caption: 12px;         /* fontSizeBase200 */
   --line-caption: 16px;
-  --font-size-body: 14px;            /* base300 */
+  --font-size-body: 14px;            /* fontSizeBase300 (Body 默认) */
   --line-body: 20px;
-  --font-size-subtitle: 20px;        /* base500 */
-  --line-subtitle: 28px;
-  --font-size-title: 24px;           /* base600 */
-  --line-title: 32px;
-  --font-size-title-lg: 28px;        /* hero700 */
+  --font-size-subtitle: 16px;        /* fontSizeBase400 */
+  --line-subtitle: 22px;
+  --font-size-title: 20px;           /* fontSizeBase500 */
+  --line-title: 28px;
+  --font-size-title-lg: 28px;        /* fontSizeHero700 */
   --line-title-lg: 36px;
-  --font-size-display: 32px;         /* hero800 */
+  --font-size-display: 32px;         /* fontSizeHero800 */
   --line-display: 40px;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  /* —— 间距 (4px base) —— */
+  /* —— 间距 (4px base: 2/4/6/8/10/12/16/20/24/32) —— */
   --space-2xs: 2px;
   --space-xs: 4px;
+  --space-snudge: 6px;
   --space-s: 8px;
+  --space-mnudge: 10px;
   --space-m: 12px;
   --space-l: 16px;
   --space-xl: 20px;
@@ -91,64 +100,68 @@
   --space-3xl: 32px;
   --space-4xl: 40px;
 
-  /* —— 阴影 (elevation: key + ambient, Fluent 2) —— */
+  /* —— 阴影 (elevation: key + ambient 两层, Fluent 2) —— */
   --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 1px rgba(0, 0, 0, 0.12);
   --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
   --shadow-8: 0 4px 8px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
   --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
   --shadow-28: 0 14px 28px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
 
-  /* —— 动效 —— */
-  --motion-fast: 150ms;
-  --motion-base: 200ms;
-  --motion-ease: cubic-bezier(0.33, 0, 0.67, 1);
-  --motion-ease-emphasized: cubic-bezier(0.3, 0, 0.8, 0.15);
+  /* —— 动效 (Fluent 2 duration + curve) —— */
+  --motion-ultrafast: 50ms;          /* durationUltraFast */
+  --motion-fast: 150ms;              /* durationFast */
+  --motion-base: 200ms;              /* durationNormal */
+  --motion-gentle: 250ms;            /* durationGentle */
+  --motion-slow: 300ms;              /* durationSlow */
+  --motion-ease: cubic-bezier(0.33, 0, 0.67, 1);            /* curveEasyEase */
+  --motion-ease-emphasized: cubic-bezier(0.3, 0, 0.8, 0.15);/* curveEasyEaseMax */
 
-  /* —— 焦点环 (Fluent 2px) —— */
-  --focus-ring: 0 0 0 2px var(--color-brand);
-  --focus-ring-inset: 0 0 0 1px var(--color-brand);
+  /* —— 焦点环 (2px brand = colorNeutralStrokeAccessible) —— */
+  --focus-ring: 0 0 0 2px var(--color-stroke-accessible);
+  --focus-ring-inset: inset 0 0 0 1px var(--color-stroke-accessible);
 
   color-scheme: light;
 }
 
 /* ============================================================
- * 暗色主题 (Fluent 2 web dark)
+ * 暗色主题 (Fluent 2 web dark, v9)
+ * 分层同构: 画布深灰(#1F1F1F) / 卡片略亮(#292929)
  * ============================================================ */
 [data-theme="dark"] {
-  --color-brand: #479EF5;            /* colorBrandForeground1 (brand[100]) */
+  --color-brand: #479EF5;            /* colorBrandForeground1 (brand[100]) 暗色品牌前景 */
   --color-brand-hover: #2886DE;      /* brand[90] */
   --color-brand-pressed: #115EA3;    /* brand[70] */
   --color-brand-fg: #479EF5;
-  --color-brand-fg-hover: #2886DE;
   --color-brand-border: #479EF5;
   --color-brand-bg: #115EA3;         /* colorBrandBackground (dark, brand[70]) */
   --color-brand-bg-hover: #0F6CBD;   /* brand[80] */
   --color-brand-bg-pressed: #0C3B5E; /* brand[40] */
   --color-brand-fg-text: #FFFFFF;
-  --color-brand-tint: #0B2944;
+  --color-brand-tint: #0B2944;       /* brand[160] 暗色浅底 */
 
-  --color-fg-1: #FFFFFF;
-  --color-fg-2: #D6D6D6;             /* grey[84] */
-  --color-fg-3: #ADADAD;             /* grey[68] */
-  --color-fg-4: #999999;             /* grey[60] */
+  --color-fg-1: #FFFFFF;             /* colorNeutralForeground1 */
+  --color-fg-2: #C8C8C8;             /* colorNeutralForeground2 */
+  --color-fg-3: #ABABAB;             /* colorNeutralForeground3 */
+  --color-fg-4: #919191;             /* colorNeutralForeground4 */
   --color-fg-inverted: #242424;
 
-  --color-app-bg: #1F1F1F;           /* grey[12] 暗色画布 */
-  --color-bg-1: #292929;             /* grey[16] 卡片表面（浮起） */
-  --color-bg-2: #1F1F1F;             /* grey[12] */
-  --color-bg-3: #141414;             /* grey[8] */
-  --color-bg-4: #0A0A0A;             /* grey[4] */
+  --color-app-bg: #1F1F1F;           /* colorNeutralBackground2 暗色画布 */
+  --color-bg-1: #292929;             /* colorNeutralBackground1 卡片 */
+  --color-bg-2: #1F1F1F;             /* colorNeutralBackground2 */
+  --color-bg-3: #141414;             /* colorNeutralBackground6 */
+  --color-bg-4: #0A0A0A;             /* colorNeutralBackground5 */
   --color-bg-inverted: #FFFFFF;
 
-  --color-stroke-1: #666666;         /* grey[40] */
-  --color-stroke-2: #525252;         /* grey[32] */
-  --color-stroke-3: #3D3D3D;         /* grey[24] */
+  --color-stroke-1: #3B3B3B;         /* colorNeutralStroke1 (dark) */
+  --color-stroke-2: #2E2E2E;         /* colorNeutralStroke2 (dark) */
+  --color-stroke-3: #3D3D3D;
+  --color-stroke-accessible: #479EF5;
 
-  --color-success-fg: #6CCB5F;
+  --color-success-fg: #6CCB5F;       /* colorStatusSuccessForeground1 (dark) */
   --color-success-bg: #0E380E;
-  --color-warning-fg: #FDE300;
+  --color-warning-fg: #F2B15A;       /* colorStatusWarningForeground1 (dark) */
   --color-warning-bg: #3B2E00;
-  --color-error-fg: #F1707B;
+  --color-error-fg: #F1707B;         /* colorStatusDangerForeground1 (dark) */
   --color-error-bg: #3B0A0C;
   --color-info: #479EF5;
 
@@ -164,7 +177,7 @@
   --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
   --shadow-28: 0 14px 28px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
 
-  --focus-ring: 0 0 0 2px var(--color-brand);
+  --focus-ring: 0 0 0 2px var(--color-stroke-accessible);
 
   color-scheme: dark;
 }
