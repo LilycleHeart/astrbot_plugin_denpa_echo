@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,19 +11,15 @@
   <body>
     <div class="app-shell" id="app">
 
-      <!-- ═══ Hero（签名区域：声波 canvas + 艺术图背景）═══ -->
+      <!-- ═══ Hero（签名区域：标题 + 实时波形 canvas）═══ -->
       <header class="hero">
-        <div class="hero-bg">
-          <!-- 静态声波制图艺术图 -->
-          <img src="./assets/soundfield.png" alt="" aria-hidden="true" />
-          <!-- 实时波形可视化器 -->
-          <canvas id="waveform-canvas"></canvas>
-        </div>
-
         <div class="hero-content">
           <h1 data-i18n="title">Minimax TTS</h1>
           <p class="subtitle" data-i18n="subtitle">语音合成 · 语音克隆 · 发音词典 · 运行状态</p>
         </div>
+
+        <!-- 实时波形可视化器（Fluent 品牌色线条） -->
+        <canvas id="waveform-canvas" class="hero-wave"></canvas>
 
         <div class="hero-actions">
           <span id="api-status-badge" class="badge badge-neutral">检测中</span>
@@ -268,8 +264,8 @@
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.brandColor">品牌色</label>
                 <div class="flex gap-s">
-                  <input type="color" class="input" id="ui-brand-color-picker" value="#2DD4BF" style="width:60px;padding:4px" />
-                  <input class="input" id="ui-brand-color" value="#2DD4BF" />
+                  <input type="color" class="input" id="ui-brand-color-picker" value="#0f6cbd" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-brand-color" value="#0f6cbd" />
                 </div>
               </div>
               <div class="form-row">
@@ -283,7 +279,7 @@
               </div>
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.radius">圆角大小（px）</label>
-                <input type="number" class="input" id="ui-radius" value="14" min="0" max="40" />
+                <input type="number" class="input" id="ui-radius" value="8" min="0" max="40" />
               </div>
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.customBg">自定义亮色背景</label>
@@ -295,8 +291,8 @@
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.customBgDark">自定义暗色背景</label>
                 <div class="flex gap-s">
-                  <input type="color" class="input" id="ui-custom-bg-dark-picker" value="#11151C" style="width:60px;padding:4px" />
-                  <input class="input" id="ui-custom-bg-dark" value="#11151C" />
+                  <input type="color" class="input" id="ui-custom-bg-dark-picker" value="#1f1f1f" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-custom-bg-dark" value="#1f1f1f" />
                 </div>
               </div>
             </div>
@@ -313,7 +309,7 @@
               </div>
               <div id="bg-preview-wrap" class="mt-s" style="display:none">
                 <img id="bg-preview" alt="背景预览"
-                     style="max-width:100%;max-height:160px;border-radius:var(--radius-md);border:1px solid var(--stroke)" />
+                     style="max-width:100%;max-height:160px;border-radius:var(--radius-large);border:1px solid var(--color-stroke-2)" />
               </div>
             </div>
             <div class="flex gap-s mt-m">

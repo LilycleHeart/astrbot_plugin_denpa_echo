@@ -1,6 +1,6 @@
 name: astrbot_plugin_minimax_tts
 display_name: Minimax TTS 语音合成
-desc: 接入 Minimax 官方 TTS API 的全功能语音合成插件，支持语音克隆、LLM 合成前润色、拦截/追加双发送模式、深色声波主线风格控制台面板（canvas 波形可视化器 + canvas-design 艺术图）。
+desc: 接入 Minimax 官方 TTS API 的全功能语音合成插件，支持语音克隆、LLM 合成前润色、拦截/追加双发送模式、Fluent UI 2 设计风格控制台面板（亮/暗双主题、品牌色取色、自定义背景与圆角、canvas 实时波形可视化器）。
 short_desc: Minimax 官方 TTS 全功能插件，含语音克隆、LLM 润色、Fluent UI 面板。
 version: v1.2.0
 author: LilycleHeart

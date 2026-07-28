@@ -756,7 +756,17 @@ const Waveform = (() => {
   let raf = null;
   let audioCtx = null, analyser = null, sourceNode = null;
   let idlePhase = 0;
-  const ACCENT = '#2DD4BF';
+
+  /** 读取 Fluent 品牌色（--color-brand），失败回退 Fluent 蓝 */
+  function brandRGB() {
+    const v = getComputedStyle(document.documentElement)
+      .getPropertyValue('--color-brand').trim() || '#0F6CBD';
+    const m = v.match(/^#?([0-9a-f]{6})$/i);
+    if (!m) return [15, 108, 189];
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
 
   function init() {
     canvas = document.getElementById('waveform-canvas');
@@ -799,6 +809,7 @@ const Waveform = (() => {
 
   function draw() {
     ctx.clearRect(0, 0, w, h);
+    const C = brandRGB();
 
     const binCount = analyser ? analyser.frequencyBinCount : 128;
     const freqData = new Uint8Array(binCount);
@@ -806,11 +817,11 @@ const Waveform = (() => {
 
     const hasSignal = freqData.some(v => v > 12);
 
-    hasSignal ? drawSpectrum(freqData) : drawIdle();
+    hasSignal ? drawSpectrum(freqData, C) : drawIdle(C);
   }
 
   /* ── 频谱柱状图（有音频播放时）── */
-  function drawSpectrum(data) {
+  function drawSpectrum(data, C) {
     const n = data.length;
     const barW = Math.max(1.5, w / n * 0.65);
     const gap = w / n - barW;
@@ -820,15 +831,15 @@ const Waveform = (() => {
       const barH = (data[i] / 255) * h * 0.72;
       const y = h - barH;
       const grad = ctx.createLinearGradient(x, y, x, h);
-      grad.addColorStop(0, ACCENT);
-      grad.addColorStop(1, 'rgba(45,212,191,0.08)');
+      grad.addColorStop(0, rgba(C, 1));
+      grad.addColorStop(1, rgba(C, 0.08));
       ctx.fillStyle = grad;
       ctx.fillRect(x, y, barW, barH);
     }
   }
 
   /* ── 环境波形动画（空闲态）── */
-  function drawIdle() {
+  function drawIdle(C) {
     idlePhase += 0.008;
     const cy = h / 2;
     const lines = 22;
@@ -841,7 +852,7 @@ const Waveform = (() => {
       const alpha = 0.08 + (1 - Math.abs(off)) * 0.22;
 
       ctx.beginPath();
-      ctx.strokeStyle = `rgba(45,212,191,${alpha.toFixed(3)})`;
+      ctx.strokeStyle = rgba(C, alpha);
       ctx.lineWidth = 1;
       for (let x = 0; x <= w; x += 3) {
         const n = Math.sin(freq * x + idlePhase + li * 0.75)
@@ -854,7 +865,7 @@ const Waveform = (() => {
 
     // 中央主波
     ctx.beginPath();
-    ctx.strokeStyle = 'rgba(94,234,212,0.50)';
+    ctx.strokeStyle = rgba(C, 0.5);
     ctx.lineWidth = 2;
     for (let x = 0; x <= w; x += 2) {
       const n = Math.sin(0.0105 * x + idlePhase * 0.58)

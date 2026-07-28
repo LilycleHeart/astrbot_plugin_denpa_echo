@@ -1,173 +1,157 @@
 /* ============================================================
-   Minimax TTS 控制台 — 主题层（深色 · 声波主线）
-   ============================================================ */
+ * Fluent 2 主题与布局
+ * ============================================================ */
 
-/* ── Reset & Base ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-html {
-  font-size: var(--text-base);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  font-family: var(--font-body);
-  color: var(--text-1);
-  background: var(--color-app-bg);
-  line-height: 1.55;
-  overflow-x: hidden;
+  background: var(--color-bg-2);
+  color: var(--color-fg-1);
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  line-height: var(--line-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ── App Shell ── */
+/* —— App Shell —— */
 .app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-1);
-  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-l);
 }
 
-/* ── Hero（签名区域：canvas 波形 + 标题）── */
+/* 背景模式（app.js 在 #app 上切换 class / 内联背景） */
+.bg-mode-custom {
+  background: var(--color-app-bg);
+}
+.bg-mode-brand-gradient {
+  background: linear-gradient(135deg, var(--color-brand-tint), var(--color-bg-1) 60%);
+}
+#app[data-theme] { /* placeholder */ }
+
+/* ============================================================
+ * Hero（签名区域：标题 + 实时波形 canvas）
+ * ============================================================ */
 .hero {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-l);
+  padding: var(--space-xl) var(--space-2xl);
+  margin-bottom: var(--space-l);
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-stroke-2);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-4);
   position: relative;
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: var(--space-xl) var(--space-xl) var(--space-l);
   overflow: hidden;
+  animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
 }
 
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-.hero-bg img,
-.hero-bg canvas {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.35;
-  pointer-events: none;
-}
-.hero-bg canvas {
-  opacity: 0.85;
-  mix-blend-mode: screen;
-}
-
-.hero::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to top, var(--bg-1), transparent);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-}
 .hero-content h1 {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-1);
+  margin: 0;
+  font-size: var(--font-size-title-lg);
+  line-height: var(--line-title-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+  color: var(--color-fg-1);
 }
-.hero-content .subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-2);
-  margin-top: var(--space-xs);
-  letter-spacing: 0.01em;
+
+.hero .subtitle {
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-fg-3);
+  font-size: var(--font-size-body);
+}
+
+/* 波形 canvas：Fluent 品牌色线条，作为 hero 签名元素 */
+.hero-wave {
+  width: 220px;
+  height: 56px;
+  display: block;
+  opacity: 0.95;
 }
 
 .hero-actions {
-  position: relative;
-  z-index: 2;
   display: flex;
   align-items: center;
-  gap: var(--space-m);
-  margin-top: var(--space-m);
+  gap: var(--space-s);
 }
 
-/* ── Tabs ── */
+/* ============================================================
+ * Tabs（Fluent 2 TabList：选中项 2px 品牌下划线）
+ * ============================================================ */
 .tabs {
   display: flex;
-  gap: 2px;
-  padding: 0 var(--space-l);
-  border-bottom: 1px solid var(--stroke);
-  background: var(--bg-0);
-  flex-shrink: 0;
+  gap: var(--space-xs);
+  border-bottom: 1px solid var(--color-stroke-2);
+  margin-bottom: var(--space-l);
   overflow-x: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
 }
-.tabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  padding: var(--space-s) var(--space-m);
+  appearance: none;
   border: none;
   background: transparent;
-  color: var(--text-3);
-  font-size: var(--text-sm);
-  font-family: var(--font-body);
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-fg-2);
+  padding: var(--space-s) var(--space-m);
   cursor: pointer;
-  white-space: nowrap;
   position: relative;
-  transition: color var(--transition-fast), background var(--transition-fast);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-}
-.tab:hover { color: var(--text-2); }
-.tab.active {
-  color: var(--accent);
-  font-weight: 600;
-}
-.tab.active::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 12%;
-  right: 12%;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 2px 2px 0 0;
-  box-shadow: 0 0 8px var(--accent-glow);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease);
 }
 
-/* ── Tab Panels ── */
+.tab:hover {
+  background: var(--color-bg-3);
+  color: var(--color-fg-1);
+}
+
+.tab.active {
+  color: var(--color-brand);
+  border-bottom-color: var(--color-brand);
+}
+
+.tab:focus-visible {
+  outline: none;
+  border-radius: var(--radius-small) var(--radius-small) 0 0;
+  box-shadow: var(--focus-ring);
+}
+
+/* ============================================================
+ * Tab Panels
+ * ============================================================ */
 .tab-panels {
-  flex: 1;
-  padding: var(--space-l);
-  overflow-y: auto;
+  min-height: 320px;
 }
 
 .tab-content {
   display: none;
-  animation: fade-in 200ms ease-out both;
+  animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
 }
-.tab-content.active { display: block; }
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+.tab-content.active {
+  display: block;
 }
 
-/* ── 背景模式 ── */
-.bg-mode-brand-gradient {
-  background-image:
-    linear-gradient(135deg, rgba(45,212,191,0.08) 0%, transparent 50%),
-    linear-gradient(225deg, rgba(56,189,248,0.06) 0%, transparent 50%);
-}
-.bg-mode-custom {
-  /* --color-app-bg 由 JS 注入 */
-}
-
-/* ── Grid ── */
+/* ============================================================
+ * 布局工具
+ * ============================================================ */
 .grid {
   display: grid;
   gap: var(--space-m);
@@ -176,35 +160,80 @@ body {
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
 
-@media (max-width: 768px) {
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .hero { min-height: 220px; padding: var(--space-l) var(--space-m); }
-  .tab-panels { padding: var(--space-m); }
-  .tabs { padding: 0 var(--space-m); }
+.flex {
+  display: flex;
+  align-items: center;
 }
+.flex-wrap { flex-wrap: wrap; }
+.gap-s { gap: var(--space-s); }
+.gap-m { gap: var(--space-m); }
 
-/* ── Flex utils ── */
-.flex       { display: flex; }
-.flex-wrap  { flex-wrap: wrap; }
-.gap-s      { gap: var(--space-s); }
-.gap-m      { gap: var(--space-m); }
-.flex-between { justify-content: space-between; align-items: center; }
-.items-center { align-items: center; }
-
+/* 间距工具 */
 .mt-s { margin-top: var(--space-s); }
 .mt-m { margin-top: var(--space-m); }
+.mt-l { margin-top: var(--space-l); }
 .mb-s { margin-bottom: var(--space-s); }
+.mb-m { margin-bottom: var(--space-m); }
+.ml-s { margin-left: var(--space-s); }
 
-.text-bold   { font-weight: 600; }
-.text-mono   { font-family: var(--font-mono); }
-.text-sm     { font-size: var(--text-sm); }
-.text-muted  { color: var(--text-3); }
-.truncate    { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 文本工具 */
+.text-muted { color: var(--color-fg-3); }
+.text-bold { font-weight: var(--font-weight-semibold); }
+.text-sm { font-size: var(--font-size-caption); line-height: var(--line-caption); }
+.text-mono {
+  font-family: "Cascadia Code", "Consolas", ui-monospace, "SFMono-Regular",
+    "Menlo", monospace;
+  font-size: var(--font-size-caption);
+}
 
-/* ── Reduced motion ── */
+/* ============================================================
+ * 动效
+ * ============================================================ */
+@keyframes fluent-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fluent-toast-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fluent-toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(16px); }
+}
+
+@keyframes fluent-shimmer {
+  0%   { background-position: -480px 0; }
+  100% { background-position: 480px 0; }
+}
+
+@keyframes fluent-indeterminate {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* 响应式 */
+@media (max-width: 880px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-m);
+  }
+  .hero-wave { width: 100%; }
+}
+@media (max-width: 560px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* 尊重减少动效偏好 */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
 }

@@ -1,82 +1,154 @@
 /* ============================================================
-   Minimax TTS 控制台 — 设计令牌（深色 · 声波主线）
-   ============================================================ */
+ * Fluent 2 设计令牌 (Fluent UI v9 Web theme tokens)
+ * 来源: microsoft/fluentui — Fluent 2 设计体系
+ * 亮色为默认；[data-theme="dark"] 由 AstrBot PluginPage bridge 维护
+ * 变量命名与 app.js 注入契约保持一致:
+ *   --color-brand* / --color-app-bg / --radius-large / --radius-xlarge
+ * ============================================================ */
 
-:root {
-  /* ── 背景层级 ── */
-  --bg-0: #0B0E13;       /* 最深底色 */
-  --bg-1: #11151C;       /* 外壳 */
-  --bg-2: #161B24;       /* 卡片 */
-  --bg-3: #1C2330;       /* 浮层 / hover */
-  --bg-4: #222A38;       /* 激活态 */
+:root,
+[data-theme="light"] {
+  /* —— 品牌色 (communication / brand ramp) —— */
+  --color-brand: #0F6CBD;            /* BrandForeground1 / BrandBackground */
+  --color-brand-hover: #115EA3;      /* BrandForeground2 */
+  --color-brand-pressed: #0C3B5E;    /* BrandForeground3 */
+  --color-brand-fg: #0F6CBD;         /* 文字/链接用品牌色 */
+  --color-brand-border: #0F6CBD;
+  --color-brand-bg: #0F6CBD;         /* 填充按钮底色 */
+  --color-brand-bg-hover: #115EA3;
+  --color-brand-bg-pressed: #0C3B5E;
+  --color-brand-fg-text: #FFFFFF;    /* 品牌按钮上的文字 */
+  --color-brand-tint: #EAF3FC;       /* Brand 60 浅色底 */
 
-  /* ── 描边 ── */
-  --stroke: #232B38;
-  --stroke-light: #2D3848;
-  --stroke-accent: rgba(45,212,191,0.25);
+  /* —— 中性色 (neutral ramp) —— */
+  --color-fg-1: #242424;             /* Foreground1 */
+  --color-fg-2: #424242;             /* Foreground2 */
+  --color-fg-3: #616161;            /* Foreground3 */
+  --color-fg-4: #707070;            /* Foreground4 (disabled) */
+  --color-fg-inverted: #FFFFFF;
 
-  /* ── 文本 ── */
-  --text-1: #E6EAF0;
-  --text-2: #9AA4B2;
-  --text-3: #5B6675;
+  --color-bg-1: #FFFFFF;            /* Background1 (card/surface) */
+  --color-bg-2: #F5F5F5;            /* Background2 (app canvas) */
+  --color-bg-3: #EDEDED;            /* Background3 */
+  --color-bg-4: #FAF9F8;            /* Background4 */
+  --color-bg-inverted: #242424;
+  --color-app-bg: #F5F5F5;
 
-  /* ── 声波 accent（唯一强调色）── */
-  --accent: #2DD4BF;
-  --accent-hover: #5EEAD4;
-  --accent-dim: rgba(45,212,191,0.12);
-  --accent-glow: rgba(45,212,191,0.18);
+  --color-stroke-1: #D1D1D1;        /* Stroke1 */
+  --color-stroke-2: #E0E0E0;        /* Stroke2 */
+  --color-stroke-3: #ECECEC;        /* Stroke3 */
 
-  /* ── 语义色 ── */
-  --danger: #F87171;
-  --danger-dim: rgba(248,113,113,0.12);
-  --success: #34D399;
-  --success-dim: rgba(52,211,153,0.12);
-  --warning: #FBBF24;
-  --warning-dim: rgba(251,191,36,0.12);
-  --info: #60A5FA;
-  --info-dim: rgba(96,165,250,0.12);
+  /* —— 状态色 (status) —— */
+  --color-success-fg: #0E700E;
+  --color-success-bg: #DFF6DD;
+  --color-warning-fg: #8A6D00;
+  --color-warning-bg: #FFF4CE;
+  --color-error-fg: #B10E1C;
+  --color-error-bg: #FDE7E9;
+  --color-info: #0F6CBD;
 
-  /* ── 圆角（由 UI 设置覆盖）── */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  /* —— 圆角 (Fluent 2: 控件 4px / 卡片 8px / 胶囊 999px) —— */
+  --radius-small: 4px;
+  --radius-medium: 8px;
+  --radius-large: 8px;              /* 用户「圆角」设置会覆盖此值 */
+  --radius-xlarge: 999px;           /* 用户「圆角」设置会覆盖此值 */
 
-  /* ── 间距 ── */
+  /* —— 字体 (Segoe UI Variable) —— */
+  --font-family: "Segoe UI Variable Display", "Segoe UI", system-ui,
+    -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-size-caption: 12px;
+  --line-caption: 16px;
+  --font-size-body: 14px;
+  --line-body: 20px;
+  --font-size-subtitle: 20px;
+  --line-subtitle: 28px;
+  --font-size-title: 24px;
+  --line-title: 32px;
+  --font-size-title-lg: 28px;
+  --line-title-lg: 36px;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* —— 间距 (4px base) —— */
+  --space-2xs: 2px;
   --space-xs: 4px;
   --space-s: 8px;
-  --space-m: 16px;
-  --space-l: 24px;
-  --space-xl: 32px;
-  --space-xxl: 48px;
+  --space-m: 12px;
+  --space-l: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 40px;
 
-  /* ── 字体 ── */
-  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC',
-               'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --font-mono: 'Consolas', 'SF Mono', 'Cascadia Code', 'JetBrains Mono',
-              'Fira Code', monospace;
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* —— 阴影 (elevation) —— */
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  --shadow-8: 0 3px 8px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.10);
+  --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  --shadow-28: 0 16px 28px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
 
-  /* ── 字号 ── */
-  --text-xs: 11px;
-  --text-sm: 13px;
-  --text-base: 15px;
-  --text-lg: 17px;
-  --text-xl: 22px;
-  --text-2xl: 28px;
+  /* —— 动效 —— */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-ease: cubic-bezier(0.33, 0, 0.67, 1);
+  --motion-ease-emphasized: cubic-bezier(0.3, 0, 0.8, 0.15);
 
-  /* ── 阴影 ── */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.35);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.40);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.45);
-  --shadow-glow: 0 0 20px var(--accent-glow), 0 0 50px var(--accent-dim);
+  /* —— 焦点环 (Fluent 2px) —— */
+  --focus-ring: 0 0 0 2px var(--color-brand);
+  --focus-ring-inset: 0 0 0 1px var(--color-brand);
 
-  /* ── 过渡 ── */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-fast: 120ms var(--ease-out);
-  --transition-base: 250ms var(--ease-out);
-  --transition-slow: 400ms var(--ease-out);
+  color-scheme: light;
+}
 
-  /* ── 应用背景（由 applyUiConfig 注入）── */
-  --color-app-bg: var(--bg-1);
+/* ============================================================
+ * 暗色主题 (Fluent 2 web dark)
+ * ============================================================ */
+[data-theme="dark"] {
+  --color-brand: #479EF5;            /* BrandForeground1 (dark) */
+  --color-brand-hover: #62B0E8;      /* BrandForeground2 (dark) */
+  --color-brand-pressed: #8EC6F5;    /* BrandForeground3 (dark) */
+  --color-brand-fg: #479EF5;
+  --color-brand-border: #479EF5;
+  --color-brand-bg: #0F6CBD;         /* 填充按钮底色保持品牌蓝 */
+  --color-brand-bg-hover: #115EA3;
+  --color-brand-bg-pressed: #0C3B5E;
+  --color-brand-fg-text: #FFFFFF;
+  --color-brand-tint: #0B2944;
+
+  --color-fg-1: #FFFFFF;
+  --color-fg-2: #C8C8C8;
+  --color-fg-3: #ABABAB;
+  --color-fg-4: #8A8A8A;
+  --color-fg-inverted: #242424;
+
+  --color-bg-1: #292929;            /* Background1 (dark) */
+  --color-bg-2: #1F1F1F;            /* Background2 (dark) */
+  --color-bg-3: #141414;            /* Background3 (dark) */
+  --color-bg-4: #0E0E0E;            /* Background4 (dark) */
+  --color-bg-inverted: #FFFFFF;
+  --color-app-bg: #1F1F1F;
+
+  --color-stroke-1: #3D3D3D;
+  --color-stroke-2: #2E2E2E;
+  --color-stroke-3: #262626;
+
+  --color-success-fg: #6CCB5F;
+  --color-success-bg: #0E360E;
+  --color-warning-fg: #FDE300;
+  --color-warning-bg: #3B2E00;
+  --color-error-fg: #F1707B;
+  --color-error-bg: #3B0A0C;
+  --color-info: #479EF5;
+
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+  --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+  --shadow-8: 0 3px 8px rgba(0, 0, 0, 0.26), 0 1px 2px rgba(0, 0, 0, 0.22);
+  --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+  --shadow-28: 0 16px 28px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+
+  --focus-ring: 0 0 0 2px var(--color-brand);
+
+  color-scheme: dark;
 }

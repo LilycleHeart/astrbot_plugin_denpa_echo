@@ -7,15 +7,15 @@
 ## [1.2.0] - 2026-07-29
 
 ### Added
-- **面板全面重做（深色 · 声波主线风格）**：基于 canvas-design + frontend-design 双 skill 驱动。
-  - 设计哲学「声波制图学」(Sonic Cartography)：canvas-design 生成的声波主题艺术图 `soundfield.png`（64 层波形线 + 频谱热图副图 + 稀疏临床标注）作为 hero 主视觉。
-  - **HTML5 `<canvas>` 实时波形可视化器**（签名元素）：空闲态播放环境波形动画；试听/调试/克隆音频播放时通过 WebAudio `AnalyserNode` 真实分析同源音频驱动频谱柱状图。3 处接线点全覆盖（音色试听 / 调试合成 / 克隆结果）。
-  - 全新深色设计系统：near-black 背景层级、teal/cyan 声波 accent（`#2DD4BF`）、完整令牌体系（tokens/theme/components 三层分离）。
-  - 重写全部组件样式（card / stat-card / badge / button / form / table / toast / file-drop / progress / audio-player 等 15+ 组件），含 focus-visible 键盘焦点环与 `prefers-reduced-motion` 降级。
+- **面板按 Fluent 2 设计体系还原重做**：依据 microsoft/fluentui（Fluent 2 设计语言）实现真实设计令牌，彻底替代上一版的深色自定义风格。
+  - 完整 Fluent 2 令牌系统（tokens.css）：品牌色 `#0F6CBD`（及 hover/pressed、暗色 `#479EF5`）、中性色 4 层、描边、状态色、圆角（控件 4px / 卡片 8px / 胶囊 999px）、Segoe UI 字体阶梯、4px 间距、阴影层级、2px 焦点环。
+  - **亮 / 暗双主题**：`[data-theme="light"]` 与 `[data-theme="dark"]`（由 AstrBot PluginPage bridge 维护），默认跟随宿主主题。
+  - **HTML5 `<canvas>` 实时波形可视化器**（签名元素，Fluent 品牌色线条）：空闲态播放环境波形动画；试听/调试/克隆音频播放时通过 WebAudio `AnalyserNode` 真实分析同源音频驱动频谱柱状图。3 处接线点全覆盖（音色试听 / 调试合成 / 克隆结果）。
+  - 15+ 组件按 Fluent 2 规范重写（card / stat-card / badge / button(primary·secondary·subtle) / input / select / slider / table / toast / file-drop / progress / audio-player / skeleton），含 focus-visible 焦点环与 `prefers-reduced-motion` 降级。
 
 ### Changed
-- 默认品牌色从 `#0f6cbd` 改为 `#2DD4BF`（teal）；默认圆角从 `10px` 改为 `14px`。
-- HTML 布局重构为 hero → tabs → panels 三段式，保留全部 62 个功能 DOM ID 不变，逻辑层零破坏。
+- 默认品牌色恢复 Fluent 品牌蓝 `#0F6CBD`；默认圆角恢复 Fluent 卡片 8px（用户「圆角」设置仍可调，覆盖 `--radius-large/xlarge`）。
+- HTML 布局重构为 hero（标题 + 波形 canvas）→ tabs → panels 三段式，保留全部 62 个功能 DOM ID 与 `app.js` 变量契约（`--color-brand*` / `--color-app-bg` / `--radius-large/xlarge` / `bg-mode-*`）不变，逻辑层零破坏。
 
 ## [1.1.0] - 2026-07-29
 
