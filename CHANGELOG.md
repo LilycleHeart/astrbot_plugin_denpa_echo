@@ -4,7 +4,7 @@
 
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [1.1.0] - 2026-07-29
 
 ### Added
 - **LLM 自动情绪识别**（`auto_emotion` 配置组）：从 AstrBot 已配置模型中选择 Provider，自动判断朗读情绪并应用到合成；带超时 / 降级 / 容错，旧接口 `text_chat` 兜底。
