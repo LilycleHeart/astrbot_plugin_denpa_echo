@@ -28,17 +28,45 @@ class MessageSender:
     ):
         self.tts_engine = tts_engine
         self.context = context
+        # 持有 config 引用；send_mode 相关配置在每次事件时【实时读取】，
+        # 不再在 __init__ 缓存，避免面板/配置 UI 修改模式后运行时仍不生效。
         self.config = config
 
-        sm = config.get("send_mode", {}) or {}
-        self.mode = sm.get("mode", "intercept")
-        self.keep_text = bool(sm.get("keep_text", True))
-        self.use_sync = bool(sm.get("use_sync", True))
-        self.append_silent = bool(sm.get("append_silent", False))
-        self.min_length = int(sm.get("min_length", 1))
-        self.max_length = int(sm.get("max_length", 5000))
-        self.trigger_scope = sm.get("trigger_scope", "all")
-        self.whitelist_groups = set(sm.get("whitelist_groups", []) or [])
+    # —— send_mode 配置实时读取（不缓存）——
+    def _sm(self) -> dict:
+        return self.config.get("send_mode", {}) or {}
+
+    @property
+    def mode(self) -> str:
+        return self._sm().get("mode", "intercept")
+
+    @property
+    def keep_text(self) -> bool:
+        return bool(self._sm().get("keep_text", True))
+
+    @property
+    def use_sync(self) -> bool:
+        return bool(self._sm().get("use_sync", True))
+
+    @property
+    def append_silent(self) -> bool:
+        return bool(self._sm().get("append_silent", False))
+
+    @property
+    def min_length(self) -> int:
+        return int(self._sm().get("min_length", 1))
+
+    @property
+    def max_length(self) -> int:
+        return int(self._sm().get("max_length", 5000))
+
+    @property
+    def trigger_scope(self) -> str:
+        return self._sm().get("trigger_scope", "all")
+
+    @property
+    def whitelist_groups(self) -> set:
+        return set(self._sm().get("whitelist_groups", []) or [])
 
     def should_process(self, event: AstrMessageEvent) -> bool:
         """判断是否应处理此事件。"""

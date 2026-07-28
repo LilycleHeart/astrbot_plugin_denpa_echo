@@ -247,7 +247,6 @@ class Main(Star):
                 "无效模式，可选：intercept / append / disabled"
             )
             return
-        self.sender.mode = mode
         self.config.setdefault("send_mode", {})["mode"] = mode
         try:
             self.config.save_config()
@@ -528,11 +527,14 @@ class Main(Star):
         return json_response(cfg)
 
     async def _api_config_save(self):
-        """保存配置（仅允许保存非敏感 UI 相关字段）。"""
+        """保存配置（仅允许保存非敏感 UI / 发送模式相关字段）。"""
         payload = await request.json(default={})
-        ui_new = payload.get("ui", {})
+        ui_new = payload.get("ui")
         if ui_new:
             self.config["ui"] = ui_new
+        sm_new = payload.get("send_mode")
+        if sm_new:
+            self.config["send_mode"] = sm_new
         try:
             self.config.save_config()
             return json_response({"saved": True})
