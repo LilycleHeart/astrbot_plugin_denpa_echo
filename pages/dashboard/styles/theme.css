@@ -15,7 +15,7 @@ body {
 }
 
 body {
-  background: var(--color-bg-2);
+  background: var(--color-app-bg);
   color: var(--color-fg-1);
   font-family: var(--font-family);
   font-size: var(--font-size-body);

@@ -9,7 +9,13 @@
   border-radius: var(--radius-large);
   box-shadow: var(--shadow-2);
   padding: var(--space-l);
+  transition: box-shadow var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
   animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
+}
+.card:hover {
+  box-shadow: var(--shadow-8);
+  border-color: var(--color-stroke-1);
 }
 .card-header {
   display: flex;
