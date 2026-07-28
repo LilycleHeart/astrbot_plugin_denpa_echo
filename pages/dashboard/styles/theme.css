@@ -52,7 +52,7 @@ body {
   margin-bottom: var(--space-l);
   background: var(--color-bg-1);
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-xlarge);
   box-shadow: var(--shadow-4);
   position: relative;
   overflow: hidden;

@@ -760,7 +760,7 @@ const Waveform = (() => {
   /** 读取 Fluent 品牌色（--color-brand），失败回退 Fluent 蓝 */
   function brandRGB() {
     const v = getComputedStyle(document.documentElement)
-      .getPropertyValue('--color-brand').trim() || '#0078D4';
+      .getPropertyValue('--color-brand').trim() || '#0F6CBD';
     const m = v.match(/^#?([0-9a-f]{6})$/i);
     if (!m) return [15, 108, 189];
     const n = parseInt(m[1], 16);

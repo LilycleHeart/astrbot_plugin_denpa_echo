@@ -6,7 +6,7 @@
 .card {
   background: var(--color-bg-1);
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-xlarge);
   box-shadow: var(--shadow-2);
   padding: var(--space-l);
   transition: box-shadow var(--motion-fast) var(--motion-ease),
@@ -42,7 +42,7 @@
 .stat-card {
   background: var(--color-bg-1);
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-xlarge);
   box-shadow: var(--shadow-2);
   padding: var(--space-m) var(--space-l);
   display: flex;
@@ -117,7 +117,7 @@
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
-  border-radius: var(--radius-small);
+  border-radius: var(--radius-medium);
   border: 1px solid var(--color-stroke-1);
   background: var(--color-bg-1);
   color: var(--color-fg-1);
@@ -171,7 +171,7 @@
   color: var(--color-fg-1);
   background: var(--color-bg-1);
   border: 1px solid var(--color-stroke-1);
-  border-radius: var(--radius-small);
+  border-radius: var(--radius-medium);
   padding: 0 var(--space-m);
   height: 32px;
   transition: border-color var(--motion-fast) var(--motion-ease),
@@ -219,7 +219,7 @@ input[type="color"].input {
   appearance: none;
   width: 100%;
   height: 4px;
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-circular);
   background: var(--color-stroke-2);
   outline: none;
   cursor: pointer;
@@ -266,7 +266,7 @@ input[type="color"].input {
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-xlarge);
 }
 .table {
   width: 100%;
@@ -302,7 +302,7 @@ input[type="color"].input {
   text-align: center;
   padding: var(--space-l);
   border: 1px dashed var(--color-stroke-1);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-xlarge);
   color: var(--color-fg-3);
   background: var(--color-bg-1);
   cursor: pointer;
@@ -327,7 +327,7 @@ input[type="color"].input {
 .audio-player {
   background: var(--color-bg-2);
   border: 1px solid var(--color-stroke-2);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-xlarge);
   padding: var(--space-s) var(--space-m);
 }
 .audio-player audio {
@@ -354,13 +354,13 @@ input[type="color"].input {
   height: 4px;
   width: 100%;
   background: var(--color-stroke-2);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-circular);
   overflow: hidden;
 }
 .progress-bar {
   height: 100%;
   background: var(--color-brand-bg);
-  border-radius: var(--radius-xlarge);
+  border-radius: var(--radius-circular);
   transition: width var(--motion-base) var(--motion-ease);
 }
 .progress-bar.indeterminate {
@@ -401,7 +401,7 @@ input[type="color"].input {
   background: var(--color-bg-1);
   border: 1px solid var(--color-stroke-2);
   border-left: 3px solid var(--color-stroke-1);
-  border-radius: var(--radius-large);
+  border-radius: var(--radius-xlarge);
   box-shadow: var(--shadow-16);
   font-size: var(--font-size-body);
   color: var(--color-fg-1);

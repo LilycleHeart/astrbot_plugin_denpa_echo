@@ -1,59 +1,63 @@
 /* ============================================================
- * Fluent 2 设计令牌 (Fluent UI v9 Web theme tokens)
- * 来源: microsoft/fluentui master — packages/tokens/src/alias|global
- * 全部 hex / px 取自官方 token 源码（brand[80]=#0078D4 等）
- * 亮色为默认；[data-theme="dark"] 由 AstrBot PluginPage bridge 维护
+ * Fluent 2 设计令牌 (Fluent UI React v9 / microsoft/fluentui)
+ * 来源: webLightTheme / webDarkTheme 别名表 + 官方 brand/grey 色阶 (rgb)
+ * 核心: 品牌主色 brand[80] = #0F6CBD (Fluent 2 Web 实现)
+ *       严禁使用旧版 Fluent UI v8 的 #0078D4
  * 变量命名与 app.js 注入契约保持一致:
  *   --color-brand* / --color-app-bg / --radius-large / --radius-xlarge
  * ============================================================ */
 
 :root,
 [data-theme="light"] {
-  /* —— 品牌色 (Fluent 2 brand ramp, brand[80]=#0078D4) —— */
-  --color-brand: #0078D4;            /* BrandForeground1 / BrandBackground */
-  --color-brand-hover: #106EBE;      /* BrandForeground2 (brand70) */
-  --color-brand-pressed: #004578;    /* BrandForeground3 (brand40) */
-  --color-brand-fg: #0078D4;         /* 文字/链接用品牌色 */
-  --color-brand-border: #0078D4;
-  --color-brand-bg: #0078D4;         /* 填充按钮底色 */
-  --color-brand-bg-hover: #106EBE;
-  --color-brand-bg-pressed: #004578;
+  /* —— 品牌色 (Communication Blue ramp) —— */
+  --color-brand: #0F6CBD;            /* colorBrandBackground / colorBrandForeground1 (brand[80]) */
+  --color-brand-hover: #115EA3;      /* colorBrandBackgroundHover (brand[70]) */
+  --color-brand-pressed: #0C3B5E;    /* colorBrandBackgroundPressed (brand[40]) */
+  --color-brand-fg: #0F6CBD;          /* 文字/链接用品牌色 */
+  --color-brand-fg-hover: #115EA3;
+  --color-brand-border: #0F6CBD;
+  --color-brand-bg: #0F6CBD;         /* 填充按钮底色 */
+  --color-brand-bg-hover: #115EA3;
+  --color-brand-bg-pressed: #0C3B5E;
   --color-brand-fg-text: #FFFFFF;    /* 品牌按钮上的文字 */
-  --color-brand-tint: #EFF6FC;       /* Brand 160 浅色底 */
+  --color-brand-tint: #EFF6FC;       /* brand[160] 浅色底 */
 
-  /* —— 中性色 (neutral ramp) —— */
-  --color-fg-1: #242424;             /* Foreground1 (主文本) */
-  --color-fg-2: #424242;             /* Foreground2 */
-  --color-fg-3: #616161;             /* Foreground3 (次要文本) */
-  --color-fg-4: #707070;             /* Foreground4 (禁用/占位) */
+  /* —— 中性前景 (grey ramp) —— */
+  --color-fg-1: #242424;             /* grey[14] 主文本 */
+  --color-fg-2: #424242;             /* grey[26] */
+  --color-fg-3: #616161;             /* grey[38] 次要文本 */
+  --color-fg-4: #707070;             /* grey[44] 禁用/占位 */
   --color-fg-inverted: #FFFFFF;
 
-  --color-app-bg: #FFFFFF;           /* 页面画布 (Background1) */
-  --color-bg-1: #FAFAFA;             /* 卡片表面 (NeutralCardBackground / Background2) */
-  --color-bg-2: #F5F5F5;             /* 嵌套表面 (Background3) */
-  --color-bg-3: #F0F0F0;             /* 更深表面 (Background4) */
-  --color-bg-4: #EDEDED;
+  /* —— 中性背景 (light) —— */
+  --color-app-bg: #FFFFFF;           /* neutralBackground1 页面画布 */
+  --color-bg-1: #FAFAFA;             /* neutralBackground2 / grey[98] 卡片表面 */
+  --color-bg-2: #F5F5F5;             /* neutralBackground3 / grey[96] 嵌套表面 */
+  --color-bg-3: #F0F0F0;             /* neutralBackground4 / grey[94] */
+  --color-bg-4: #EBEBEB;             /* neutralBackground5 / grey[92] */
   --color-bg-inverted: #242424;
 
-  --color-stroke-1: #D1D1D1;         /* Stroke1 (grey82) */
-  --color-stroke-2: #E0E0E0;         /* Stroke2 (grey88) — 卡片描边 */
-  --color-stroke-3: #F0F0F0;         /* Stroke3 (grey94) */
+  /* —— 中性描边 —— */
+  --color-stroke-1: #D1D1D1;         /* grey[82] Stroke1 */
+  --color-stroke-2: #E0E0E0;         /* grey[88] Stroke2 */
+  --color-stroke-3: #F0F0F0;         /* grey[94] Stroke3 */
 
-  /* —— 状态色 (status) —— */
+  /* —— 状态色 —— */
   --color-success-fg: #0E700E;
   --color-success-bg: #DFF6DD;
   --color-warning-fg: #8A6D00;
   --color-warning-bg: #FFF4CE;
   --color-error-fg: #B10E1C;
   --color-error-bg: #FDE7E9;
-  --color-info: #0078D4;
+  --color-info: #0F6CBD;             /* info 语义使用品牌蓝 */
 
-  /* —— 圆角 (Fluent 2: 控件 4px / 卡片 8px / 大卡 12-16px / 胶囊 999px) —— */
-  --radius-small: 2px;
-  --radius-medium: 4px;              /* 控件 (borderRadiusMedium) */
-  --radius-large: 8px;               /* 卡片 (borderRadiusXLarge) — 用户「圆角」设置会覆盖 */
-  --radius-xlarge: 999px;            /* 胶囊 (用户「圆角」设置会覆盖) */
-  --radius-2xlarge: 12px;           /* 大卡 / hero */
+  /* —— 圆角 (Fluent 2: small 2 / medium 4 / large 6 / xlarge 8 / circular 999) —— */
+  --radius-small: 2px;               /* badge / 小元素 */
+  --radius-medium: 4px;              /* 控件 (input/button/select) */
+  --radius-large: 6px;               /* 次要容器 */
+  --radius-xlarge: 8px;              /* 卡片 / 大容器 */
+  --radius-circular: 999px;          /* 胶囊 / 滑块 / 头像 */
+  --radius-2xlarge: 12px;           /* hero / 大卡 */
   --radius-3xlarge: 16px;
 
   /* —— 字体 (Segoe UI Variable) —— */
@@ -89,15 +93,15 @@
   --space-3xl: 32px;
   --space-4xl: 40px;
 
-  /* —— 阴影 (elevation, 基于 colorNeutralShadowAmbient=0.12 / Key=0.14) —— */
-  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  /* —— 阴影 (elevation: key + ambient, Fluent 2) —— */
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 1px rgba(0, 0, 0, 0.12);
   --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
   --shadow-8: 0 4px 8px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
   --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
-  --shadow-28: 0 16px 28px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  --shadow-28: 0 14px 28px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
 
   /* —— 动效 —— */
-  --motion-fast: 120ms;
+  --motion-fast: 150ms;
   --motion-base: 200ms;
   --motion-ease: cubic-bezier(0.33, 0, 0.67, 1);
   --motion-ease-emphasized: cubic-bezier(0.3, 0, 0.8, 0.15);
@@ -113,54 +117,56 @@
  * 暗色主题 (Fluent 2 web dark)
  * ============================================================ */
 [data-theme="dark"] {
-  --color-brand: #2899F5;            /* BrandForeground1 (brand100) */
-  --color-brand-hover: #3AA0F3;      /* BrandForeground2 (brand110) */
-  --color-brand-pressed: #EFF6FC;    /* BrandForeground3 (brand160) */
-  --color-brand-fg: #2899F5;
-  --color-brand-border: #2899F5;
-  --color-brand-bg: #106EBE;         /* BrandBackground (brand70) */
-  --color-brand-bg-hover: #0078D4;   /* BrandBackgroundHover (brand80) */
-  --color-brand-bg-pressed: #004578; /* BrandBackgroundPressed (brand40) */
+  --color-brand: #479EF5;            /* colorBrandForeground1 (brand[100]) */
+  --color-brand-hover: #2886DE;      /* brand[90] */
+  --color-brand-pressed: #115EA3;    /* brand[70] */
+  --color-brand-fg: #479EF5;
+  --color-brand-fg-hover: #2886DE;
+  --color-brand-border: #479EF5;
+  --color-brand-bg: #115EA3;         /* colorBrandBackground (dark, brand[70]) */
+  --color-brand-bg-hover: #0F6CBD;   /* brand[80] */
+  --color-brand-bg-pressed: #0C3B5E; /* brand[40] */
   --color-brand-fg-text: #FFFFFF;
   --color-brand-tint: #0B2944;
 
   --color-fg-1: #FFFFFF;
-  --color-fg-2: #D6D6D6;             /* grey84 */
-  --color-fg-3: #ADADAD;             /* grey68 */
-  --color-fg-4: #999999;             /* grey60 */
+  --color-fg-2: #D6D6D6;             /* grey[84] */
+  --color-fg-3: #ADADAD;             /* grey[68] */
+  --color-fg-4: #999999;             /* grey[60] */
   --color-fg-inverted: #242424;
 
-  --color-app-bg: #1F1F1F;           /* Background2 (dark canvas) */
-  --color-bg-1: #333333;             /* NeutralCardBackground (dark) */
-  --color-bg-2: #292929;             /* Background1 (dark) */
-  --color-bg-3: #1F1F1F;             /* Background2 (dark) */
-  --color-bg-4: #141414;             /* Background3 (dark) */
+  --color-app-bg: #1F1F1F;           /* grey[12] 暗色画布 */
+  --color-bg-1: #292929;             /* grey[16] 卡片表面（浮起） */
+  --color-bg-2: #1F1F1F;             /* grey[12] */
+  --color-bg-3: #141414;             /* grey[8] */
+  --color-bg-4: #0A0A0A;             /* grey[4] */
   --color-bg-inverted: #FFFFFF;
 
-  --color-stroke-1: #666666;         /* Stroke1 (grey40) */
-  --color-stroke-2: #525252;         /* Stroke2 (grey32) */
-  --color-stroke-3: #3D3D3D;         /* Stroke3 (grey24) */
+  --color-stroke-1: #666666;         /* grey[40] */
+  --color-stroke-2: #525252;         /* grey[32] */
+  --color-stroke-3: #3D3D3D;         /* grey[24] */
 
   --color-success-fg: #6CCB5F;
-  --color-success-bg: #0E360E;
+  --color-success-bg: #0E380E;
   --color-warning-fg: #FDE300;
   --color-warning-bg: #3B2E00;
   --color-error-fg: #F1707B;
   --color-error-bg: #3B0A0C;
-  --color-info: #2899F5;
+  --color-info: #479EF5;
 
   --radius-small: 2px;
   --radius-medium: 4px;
-  --radius-large: 8px;
-  --radius-xlarge: 999px;
+  --radius-large: 6px;
+  --radius-xlarge: 8px;
+  --radius-circular: 999px;
   --radius-2xlarge: 12px;
   --radius-3xlarge: 16px;
 
-  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.28), 0 0 1px rgba(0, 0, 0, 0.24);
   --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
   --shadow-8: 0 4px 8px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
   --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
-  --shadow-28: 0 16px 28px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+  --shadow-28: 0 14px 28px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
 
   --focus-ring: 0 0 0 2px var(--color-brand);
 
