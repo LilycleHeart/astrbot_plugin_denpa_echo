@@ -557,9 +557,10 @@ class Main(Star):
             os.path.abspath(self.plugin_data_dir),
             os.path.abspath(tempfile.gettempdir()),
         ]
-        allowed_prefixes = [p for p in allowed_prefixes if p]
+        allowed_prefixes = [os.path.normcase(p) for p in allowed_prefixes if p]
         abs_path = os.path.abspath(path)
-        if not any(abs_path.startswith(p) for p in allowed_prefixes):
+        # normcase: Windows 下统一小写 + 正斜杠→反斜杠, 避免大小写不一致导致 403
+        if not any(os.path.normcase(abs_path).startswith(p) for p in allowed_prefixes):
             return error_response("路径不在允许范围内", status_code=403)
         if not os.path.isfile(abs_path):
             return error_response("文件不存在", status_code=404)

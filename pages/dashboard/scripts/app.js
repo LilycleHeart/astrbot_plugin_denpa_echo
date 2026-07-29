@@ -589,13 +589,28 @@ function bindEvents() {
 
   // 调试
   document.getElementById("btn-debug-synth").onclick = doDebugSynth;
-  document.getElementById("debug-speed").oninput = (e) => {
+  document.getElementById("debug-speed").addEventListener("input", (e) => {
     document.getElementById("debug-speed-val").textContent = parseFloat(e.target.value).toFixed(1);
-  };
+  });
 
   // 设置
   document.getElementById("btn-save-ui").onclick = saveUiConfig;
   document.getElementById("btn-reset-ui").onclick = resetUiConfig;
+
+  // 滑动条数值即时显示（独立于 previewUiConfig，确保拖动时数值始终同步）
+  const _sliderPairs = [
+    ["ui-material", "ui-material-val", (v) => `${v}%`],
+    ["ui-blur", "ui-blur-val", (v) => `${v}px`],
+    ["ui-glow", "ui-glow-val", (v) => `${v}%`],
+    ["ui-shadow", "ui-shadow-val", (v) => `${v}%`],
+  ];
+  _sliderPairs.forEach(([sliderId, valId, fmt]) => {
+    const slider = document.getElementById(sliderId);
+    const valEl = document.getElementById(valId);
+    if (slider && valEl) {
+      slider.addEventListener("input", () => { valEl.textContent = fmt(slider.value); });
+    }
+  });
 
   // 颜色选择器与文本框联动
   linkColorPicker("ui-brand-color-picker", "ui-brand-color");
@@ -878,7 +893,7 @@ async function doClone() {
       let audioHtml = "";
       if (cloneResp.audio_path) {
         audioHtml = `<div class="audio-player mt-s">
-          <audio controls src="./audio?path=${encodeURIComponent(cloneResp.audio_path)}"></audio>
+          <audio controls preload="metadata" src="./audio?path=${encodeURIComponent(cloneResp.audio_path)}"></audio>
         </div>`;
       }
       resultEl.innerHTML = `
@@ -890,6 +905,8 @@ async function doClone() {
       const cloneAudio = resultEl.querySelector('audio');
       if (cloneAudio) Waveform.attachAudio(cloneAudio);
       showToast("语音克隆成功！", "success");
+      // 刷新音色列表与调试下拉，让新克隆音色立即可选
+      loadStaticVoices();
     } else {
       throw new Error("克隆未成功");
     }
@@ -1057,7 +1074,7 @@ async function doDebugSynth() {
     });
     resultEl.innerHTML = `
       <div class="audio-player">
-        <audio controls src="./audio?path=${encodeURIComponent(result.audio_path)}"></audio>
+        <audio controls preload="metadata" src="./audio?path=${encodeURIComponent(result.audio_path)}"></audio>
       </div>
       <p class="text-sm text-muted mt-s">
         耗时 ${result.elapsed_ms}ms · 字符 ${result.usage_chars}
@@ -1152,7 +1169,7 @@ function playAudio(path, label) {
   container.style.cssText = "min-width:320px;padding:12px";
   container.innerHTML = `
     <div class="text-sm text-bold mb-s">${label || "试听"}</div>
-    <audio controls autoplay src="./audio?path=${encodeURIComponent(path)}" style="width:100%"></audio>
+    <audio controls autoplay preload="metadata" src="./audio?path=${encodeURIComponent(path)}" style="width:100%"></audio>
   `;
   // 接入波形可视化器（同源 ./audio 可用 WebAudio 分析）
   const audioEl = container.querySelector('audio');
@@ -1220,11 +1237,11 @@ const Waveform = (() => {
     // 延迟到下一帧布局稳定后再测量，避免初始化时尺寸未定（视口切换/全宽布局）导致
     // backing store 过期 → 画布被 CSS 拉伸 → 线条变细、出现锯齿
     requestAnimationFrame(() => resize());
-    // 布局变化（全宽侧栏改造 / 切 tab）时 canvas 父容器尺寸会变，
+    // 布局变化（全宽侧栏改造 / 切 tab）时 canvas 尺寸会变，
     // 仅 window.resize 不够，用 ResizeObserver 兜底重测
     if (window.ResizeObserver) {
       const ro = new ResizeObserver(() => resize());
-      ro.observe(canvas.parentElement);
+      ro.observe(canvas);
     }
     window.addEventListener('resize', resize);
     loop();
@@ -1236,10 +1253,13 @@ const Waveform = (() => {
   }
 
   function resize() {
-    const rect = canvas.parentElement.getBoundingClientRect();
-    let cw = rect.width, ch = rect.height;
-    if (cw < 2 || ch < 2) { cw = canvas.clientWidth; ch = canvas.clientHeight; }
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    // 使用 canvas 自身的 CSS 渲染尺寸（非父容器），确保 backing store 与显示区域 1:1
+    // 父容器 .hero 含标题/按钮/padding 远高于 canvas 的 188px，用父尺寸会导致
+    // backing store 过大 → CSS 缩小 → 线条变细、锯齿（与本地 preview.html 的差异根因）
+    let cw = canvas.clientWidth, ch = canvas.clientHeight;
+    if (cw < 2 || ch < 2) { const r = canvas.getBoundingClientRect(); cw = r.width; ch = r.height; }
+    if (cw < 2 || ch < 2) return;  // 不可见时跳过，等下次 ResizeObserver 触发
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = cw; h = ch;
     canvas.width = Math.max(1, Math.round(w * dpr));
     canvas.height = Math.max(1, Math.round(h * dpr));
