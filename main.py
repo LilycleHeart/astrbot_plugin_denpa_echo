@@ -553,14 +553,16 @@ class Main(Star):
         return json_response(cfg)
 
     async def _api_config_save(self):
-        """保存配置（仅允许保存非敏感 UI / 发送模式相关字段）。"""
+        """保存配置（UI 视觉 / TTS / 音频 / 发送模式 / 高级）。"""
         payload = await request.json(default={})
         ui_new = payload.get("ui")
         if ui_new:
             self.config["ui"] = ui_new
-        sm_new = payload.get("send_mode")
-        if sm_new:
-            self.config["send_mode"] = sm_new
+        # 插件功能配置段（面板「保存插件配置」按钮提交）
+        for section in ("tts", "audio", "send_mode", "advanced"):
+            data = payload.get(section)
+            if data and isinstance(data, dict):
+                self.config.setdefault(section, {}).update(data)
         try:
             self.config.save_config()
             return json_response({"saved": True})

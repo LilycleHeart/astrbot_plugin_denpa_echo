@@ -608,6 +608,7 @@ function bindEvents() {
   // 设置
   document.getElementById("btn-save-ui").onclick = saveUiConfig;
   document.getElementById("btn-reset-ui").onclick = resetUiConfig;
+  document.getElementById("btn-save-plugin-cfg").onclick = savePluginConfig;
 
   // 滑动条数值即时显示（独立于 previewUiConfig，确保拖动时数值始终同步）
   const _sliderPairs = [
@@ -714,6 +715,7 @@ function switchTab(name) {
   if (name === "logs") loadLogs();
   if (name === "overview") loadOverview();
   if (name === "voices") loadVoices();   // 进入音色页自动拉取（含克隆音色）
+  if (name === "settings") loadPluginConfig();  // 进入设置页加载插件配置
   // 切到含声纹画布的视图变为可见后, 重新测量画布尺寸, 消除过期 backing store 造成的锯齿/细线
   if (window.Waveform && typeof Waveform.refresh === "function") Waveform.refresh();
 }
@@ -1177,6 +1179,85 @@ function resetUiConfig() {
   };
   applyUiConfig();
   showToast("已恢复默认（需点击保存生效）", "info");
+}
+
+// ========== 插件配置（TTS / 音频 / 发送 / 高级）==========
+async function loadPluginConfig() {
+  try {
+    const cfg = await bridge.apiGet("config/full");
+    const tts = cfg.tts || {};
+    const audio = cfg.audio || {};
+    const sm = cfg.send_mode || {};
+    const adv = cfg.advanced || {};
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+    const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+    set("cfg-tts-model", tts.model || "speech-02-hd");
+    set("cfg-tts-voice-id", tts.voice_id || "female-shaonv");
+    set("cfg-tts-speed", tts.speed ?? 1.0);
+    set("cfg-tts-vol", tts.vol ?? 1.0);
+    set("cfg-tts-pitch", tts.pitch ?? 0);
+    set("cfg-tts-emotion", tts.emotion || "");
+    set("cfg-tts-lang", tts.language_boost || "auto");
+    set("cfg-audio-format", audio.format || "mp3");
+    set("cfg-audio-rate", String(audio.sample_rate || 32000));
+    set("cfg-audio-bitrate", String(audio.bitrate || 128000));
+    set("cfg-audio-channel", String(audio.channel || 1));
+    set("cfg-send-mode", sm.mode || "intercept");
+    set("cfg-send-scope", sm.trigger_scope || "all");
+    setChk("cfg-send-keep-text", sm.keep_text !== false);
+    setChk("cfg-send-sync", sm.use_sync !== false);
+    set("cfg-send-min", sm.min_length ?? 1);
+    set("cfg-send-max", sm.max_length ?? 5000);
+    set("cfg-adv-timeout", adv.request_timeout ?? 60);
+    set("cfg-adv-retry", adv.retry_times ?? 2);
+    set("cfg-adv-cache-mb", adv.cache_max_size_mb ?? 500);
+    set("cfg-adv-log", adv.log_level || "INFO");
+  } catch (e) {
+    console.warn("加载插件配置失败", e);
+  }
+}
+
+async function savePluginConfig() {
+  const val = (id) => document.getElementById(id)?.value;
+  const num = (id, fallback) => { const v = parseFloat(val(id)); return Number.isNaN(v) ? fallback : v; };
+  const chk = (id) => document.getElementById(id)?.checked ?? false;
+  const payload = {
+    tts: {
+      model: val("cfg-tts-model"),
+      voice_id: val("cfg-tts-voice-id"),
+      speed: num("cfg-tts-speed", 1.0),
+      vol: num("cfg-tts-vol", 1.0),
+      pitch: parseInt(val("cfg-tts-pitch"), 10) || 0,
+      emotion: val("cfg-tts-emotion"),
+      language_boost: val("cfg-tts-lang"),
+    },
+    audio: {
+      format: val("cfg-audio-format"),
+      sample_rate: parseInt(val("cfg-audio-rate"), 10) || 32000,
+      bitrate: parseInt(val("cfg-audio-bitrate"), 10) || 128000,
+      channel: parseInt(val("cfg-audio-channel"), 10) || 1,
+    },
+    send_mode: {
+      mode: val("cfg-send-mode"),
+      trigger_scope: val("cfg-send-scope"),
+      keep_text: chk("cfg-send-keep-text"),
+      use_sync: chk("cfg-send-sync"),
+      min_length: parseInt(val("cfg-send-min"), 10) || 1,
+      max_length: parseInt(val("cfg-send-max"), 10) || 5000,
+    },
+    advanced: {
+      request_timeout: parseInt(val("cfg-adv-timeout"), 10) || 60,
+      retry_times: parseInt(val("cfg-adv-retry"), 10) || 2,
+      cache_max_size_mb: parseInt(val("cfg-adv-cache-mb"), 10) || 500,
+      log_level: val("cfg-adv-log"),
+    },
+  };
+  try {
+    await bridge.apiPost("config/save", payload);
+    showToast("插件配置已保存", "success");
+  } catch (e) {
+    showToast(`保存失败: ${e.message}`, "error");
+  }
 }
 
 /** 将后端返回的 base64 音频转为 Blob URL（绕开插件页相对路径路由问题） */

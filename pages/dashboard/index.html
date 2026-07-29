@@ -410,6 +410,201 @@
               <button class="btn btn-subtle" id="btn-reset-ui" data-i18n="settings.reset">恢复默认</button>
             </div>
           </div>
+
+          <!-- ── 语音合成设置 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">语音合成</h2>
+                <p class="card-subtitle">Minimax T2A 核心参数</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row">
+                <label class="form-label">模型版本</label>
+                <select class="select" id="cfg-tts-model">
+                  <option value="speech-02-hd">speech-02-hd</option>
+                  <option value="speech-02-turbo">speech-02-turbo</option>
+                  <option value="speech-2.8-hd">speech-2.8-hd</option>
+                  <option value="speech-2.8-turbo">speech-2.8-turbo</option>
+                  <option value="speech-2.6-hd">speech-2.6-hd</option>
+                  <option value="speech-2.6-turbo">speech-2.6-turbo</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">音色 ID</label>
+                <input class="input" id="cfg-tts-voice-id" value="female-shaonv" placeholder="系统或克隆音色 ID" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">语速 [0.5, 2.0]</label>
+                <input type="number" class="input" id="cfg-tts-speed" value="1.0" min="0.5" max="2" step="0.1" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">音量 (0, 10]</label>
+                <input type="number" class="input" id="cfg-tts-vol" value="1.0" min="0.1" max="10" step="0.1" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">语调 [-12, 12]</label>
+                <input type="number" class="input" id="cfg-tts-pitch" value="0" min="-12" max="12" step="1" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">情绪</label>
+                <select class="select" id="cfg-tts-emotion">
+                  <option value="">不设置</option>
+                  <option value="happy">happy</option>
+                  <option value="sad">sad</option>
+                  <option value="angry">angry</option>
+                  <option value="fearful">fearful</option>
+                  <option value="disgusted">disgusted</option>
+                  <option value="surprised">surprised</option>
+                  <option value="calm">calm</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">语言增强</label>
+                <select class="select" id="cfg-tts-lang">
+                  <option value="auto">auto</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Chinese,Yue">Chinese,Yue</option>
+                  <option value="English">English</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                  <option value="">不增强</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 音频输出 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">音频输出</h2>
+                <p class="card-subtitle">合成音频的格式与采样参数</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row">
+                <label class="form-label">音频格式</label>
+                <select class="select" id="cfg-audio-format">
+                  <option value="mp3">mp3（推荐）</option>
+                  <option value="wav">wav</option>
+                  <option value="flac">flac</option>
+                  <option value="pcm">pcm</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">采样率</label>
+                <select class="select" id="cfg-audio-rate">
+                  <option value="32000">32000</option>
+                  <option value="24000">24000</option>
+                  <option value="22050">22050</option>
+                  <option value="16000">16000</option>
+                  <option value="44100">44100</option>
+                  <option value="8000">8000</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">比特率（仅 mp3）</label>
+                <select class="select" id="cfg-audio-bitrate">
+                  <option value="128000">128 kbps</option>
+                  <option value="256000">256 kbps</option>
+                  <option value="64000">64 kbps</option>
+                  <option value="32000">32 kbps</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">声道</label>
+                <select class="select" id="cfg-audio-channel">
+                  <option value="1">单声道</option>
+                  <option value="2">立体声</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 发送模式 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">发送模式</h2>
+                <p class="card-subtitle">语音消息的触发与发送策略</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row">
+                <label class="form-label">模式</label>
+                <select class="select" id="cfg-send-mode">
+                  <option value="intercept">拦截（与文本一起发）</option>
+                  <option value="append">追加（先发文本后追加语音）</option>
+                  <option value="disabled">关闭</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">触发范围</label>
+                <select class="select" id="cfg-send-scope">
+                  <option value="all">全部</option>
+                  <option value="group">仅群聊</option>
+                  <option value="private">仅私聊</option>
+                  <option value="none">手动 /tts 触发</option>
+                </select>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-send-keep-text" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">拦截模式保留文本</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-send-sync" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">使用同步合成</label>
+              </div>
+              <div class="form-row">
+                <label class="form-label">最短合成长度（字符）</label>
+                <input type="number" class="input" id="cfg-send-min" value="1" min="0" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">最长合成长度（字符）</label>
+                <input type="number" class="input" id="cfg-send-max" value="5000" min="1" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 高级设置 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">高级设置</h2>
+                <p class="card-subtitle">超时、重试与缓存</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row">
+                <label class="form-label">API 请求超时（秒）</label>
+                <input type="number" class="input" id="cfg-adv-timeout" value="60" min="5" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">失败重试次数</label>
+                <input type="number" class="input" id="cfg-adv-retry" value="2" min="0" max="10" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">缓存上限（MB）</label>
+                <input type="number" class="input" id="cfg-adv-cache-mb" value="500" min="0" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">日志级别</label>
+                <select class="select" id="cfg-adv-log">
+                  <option value="INFO">INFO</option>
+                  <option value="DEBUG">DEBUG</option>
+                  <option value="WARNING">WARNING</option>
+                  <option value="ERROR">ERROR</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 插件配置保存按钮 -->
+          <div class="flex gap-s mt-m mb-m">
+            <button class="btn btn-primary" id="btn-save-plugin-cfg">保存插件配置</button>
+          </div>
         </section>
 
       </main><!-- /tab-panels -->
