@@ -715,7 +715,7 @@ function switchTab(name) {
   if (name === "logs") loadLogs();
   if (name === "overview") loadOverview();
   if (name === "voices") loadVoices();   // 进入音色页自动拉取（含克隆音色）
-  if (name === "settings") loadPluginConfig();  // 进入设置页加载插件配置
+  if (["settings", "synth", "send", "ai", "advanced"].includes(name)) loadPluginConfig();
   // 切到含声纹画布的视图变为可见后, 重新测量画布尺寸, 消除过期 backing store 造成的锯齿/细线
   if (window.Waveform && typeof Waveform.refresh === "function") Waveform.refresh();
 }
@@ -1569,6 +1569,9 @@ const Waveform = (() => {
 
   return { init, attachAudio, refresh };
 })();
+
+// 暴露给 HTML inline onclick（ES module 不自动挂全局）
+window.savePluginConfig = savePluginConfig;
 
 // 启动
 init();
