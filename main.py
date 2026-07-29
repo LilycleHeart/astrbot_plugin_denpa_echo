@@ -553,13 +553,20 @@ class Main(Star):
         return json_response(cfg)
 
     async def _api_config_save(self):
-        """保存配置（UI 视觉 / TTS / 音频 / 发送模式 / 高级）。"""
+        """保存配置（全部配置段）。"""
         payload = await request.json(default={})
+        # 顶层标量字段
+        for k in ("api_key", "group_id", "api_region"):
+            if k in payload:
+                self.config[k] = payload[k]
+        # UI 视觉配置（整体替换）
         ui_new = payload.get("ui")
         if ui_new:
             self.config["ui"] = ui_new
-        # 插件功能配置段（面板「保存插件配置」按钮提交）
-        for section in ("tts", "audio", "send_mode", "advanced"):
+        # 插件功能配置段（合并更新，保留未提交的子键）
+        for section in ("tts", "audio", "send_mode", "advanced",
+                        "voice_modify", "text_processing", "polish",
+                        "auto_emotion", "pronunciation_dict"):
             data = payload.get(section)
             if data and isinstance(data, dict):
                 self.config.setdefault(section, {}).update(data)

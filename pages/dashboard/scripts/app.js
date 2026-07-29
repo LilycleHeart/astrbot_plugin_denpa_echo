@@ -1189,8 +1189,18 @@ async function loadPluginConfig() {
     const audio = cfg.audio || {};
     const sm = cfg.send_mode || {};
     const adv = cfg.advanced || {};
+    const vm = cfg.voice_modify || {};
+    const tp = cfg.text_processing || {};
+    const pl = cfg.polish || {};
+    const emo = cfg.auto_emotion || {};
+    const pd = cfg.pronunciation_dict || {};
     const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
     const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+    // API
+    set("cfg-api-key", cfg.api_key || "");
+    set("cfg-group-id", cfg.group_id || "");
+    set("cfg-api-region", cfg.api_region || "china");
+    // TTS
     set("cfg-tts-model", tts.model || "speech-02-hd");
     set("cfg-tts-voice-id", tts.voice_id || "female-shaonv");
     set("cfg-tts-speed", tts.speed ?? 1.0);
@@ -1198,20 +1208,50 @@ async function loadPluginConfig() {
     set("cfg-tts-pitch", tts.pitch ?? 0);
     set("cfg-tts-emotion", tts.emotion || "");
     set("cfg-tts-lang", tts.language_boost || "auto");
+    setChk("cfg-tts-latex", !!tts.latex_read);
+    setChk("cfg-tts-normalize", !!tts.text_normalization);
+    // Audio
     set("cfg-audio-format", audio.format || "mp3");
     set("cfg-audio-rate", String(audio.sample_rate || 32000));
     set("cfg-audio-bitrate", String(audio.bitrate || 128000));
     set("cfg-audio-channel", String(audio.channel || 1));
+    // Send mode
     set("cfg-send-mode", sm.mode || "intercept");
     set("cfg-send-scope", sm.trigger_scope || "all");
     setChk("cfg-send-keep-text", sm.keep_text !== false);
     setChk("cfg-send-sync", sm.use_sync !== false);
     set("cfg-send-min", sm.min_length ?? 1);
     set("cfg-send-max", sm.max_length ?? 5000);
+    // Advanced
     set("cfg-adv-timeout", adv.request_timeout ?? 60);
     set("cfg-adv-retry", adv.retry_times ?? 2);
     set("cfg-adv-cache-mb", adv.cache_max_size_mb ?? 500);
     set("cfg-adv-log", adv.log_level || "INFO");
+    // Voice modify
+    setChk("cfg-vm-on", !!vm.enabled);
+    set("cfg-vm-fx", vm.sound_effects || "");
+    set("cfg-vm-pitch", vm.pitch ?? 0);
+    set("cfg-vm-intensity", vm.intensity ?? 0);
+    set("cfg-vm-timbre", vm.timbre ?? 0);
+    // Text processing
+    setChk("cfg-tp-markdown", tp.markdown_filter !== false);
+    setChk("cfg-tp-emoji", tp.emoji_filter !== false);
+    setChk("cfg-tp-url", tp.url_filter !== false);
+    setChk("cfg-tp-ws", tp.normalize_whitespace !== false);
+    // Polish
+    setChk("cfg-polish-on", !!pl.enabled);
+    setChk("cfg-polish-fallback", pl.fallback_on_error !== false);
+    set("cfg-polish-tokens", pl.max_tokens ?? 2048);
+    set("cfg-polish-timeout", pl.timeout ?? 15);
+    // Auto emotion
+    setChk("cfg-emo-on", !!emo.enabled);
+    setChk("cfg-emo-fallback", emo.fallback_on_error !== false);
+    set("cfg-emo-default", emo.default_emotion || "");
+    set("cfg-emo-timeout", emo.timeout ?? 10);
+    // Pronunciation dict
+    setChk("cfg-pd-on", !!pd.enabled);
+    const entries = (pd.tone || []).map(t => t.entry || "").filter(Boolean).join("\n");
+    set("cfg-pd-entries", entries);
   } catch (e) {
     console.warn("加载插件配置失败", e);
   }
@@ -1220,36 +1260,73 @@ async function loadPluginConfig() {
 async function savePluginConfig() {
   const val = (id) => document.getElementById(id)?.value;
   const num = (id, fallback) => { const v = parseFloat(val(id)); return Number.isNaN(v) ? fallback : v; };
+  const int = (id, fallback) => { const v = parseInt(val(id), 10); return Number.isNaN(v) ? fallback : v; };
   const chk = (id) => document.getElementById(id)?.checked ?? false;
+  const pdText = val("cfg-pd-entries") || "";
+  const pdEntries = pdText.split("\n").map(s => s.trim()).filter(Boolean).map(entry => ({ entry }));
   const payload = {
+    api_key: val("cfg-api-key"),
+    group_id: val("cfg-group-id"),
+    api_region: val("cfg-api-region"),
     tts: {
       model: val("cfg-tts-model"),
       voice_id: val("cfg-tts-voice-id"),
       speed: num("cfg-tts-speed", 1.0),
       vol: num("cfg-tts-vol", 1.0),
-      pitch: parseInt(val("cfg-tts-pitch"), 10) || 0,
+      pitch: int("cfg-tts-pitch", 0),
       emotion: val("cfg-tts-emotion"),
       language_boost: val("cfg-tts-lang"),
+      latex_read: chk("cfg-tts-latex"),
+      text_normalization: chk("cfg-tts-normalize"),
     },
     audio: {
       format: val("cfg-audio-format"),
-      sample_rate: parseInt(val("cfg-audio-rate"), 10) || 32000,
-      bitrate: parseInt(val("cfg-audio-bitrate"), 10) || 128000,
-      channel: parseInt(val("cfg-audio-channel"), 10) || 1,
+      sample_rate: int("cfg-audio-rate", 32000),
+      bitrate: int("cfg-audio-bitrate", 128000),
+      channel: int("cfg-audio-channel", 1),
     },
     send_mode: {
       mode: val("cfg-send-mode"),
       trigger_scope: val("cfg-send-scope"),
       keep_text: chk("cfg-send-keep-text"),
       use_sync: chk("cfg-send-sync"),
-      min_length: parseInt(val("cfg-send-min"), 10) || 1,
-      max_length: parseInt(val("cfg-send-max"), 10) || 5000,
+      min_length: int("cfg-send-min", 1),
+      max_length: int("cfg-send-max", 5000),
     },
     advanced: {
-      request_timeout: parseInt(val("cfg-adv-timeout"), 10) || 60,
-      retry_times: parseInt(val("cfg-adv-retry"), 10) || 2,
-      cache_max_size_mb: parseInt(val("cfg-adv-cache-mb"), 10) || 500,
+      request_timeout: int("cfg-adv-timeout", 60),
+      retry_times: int("cfg-adv-retry", 2),
+      cache_max_size_mb: int("cfg-adv-cache-mb", 500),
       log_level: val("cfg-adv-log"),
+    },
+    voice_modify: {
+      enabled: chk("cfg-vm-on"),
+      sound_effects: val("cfg-vm-fx"),
+      pitch: int("cfg-vm-pitch", 0),
+      intensity: int("cfg-vm-intensity", 0),
+      timbre: int("cfg-vm-timbre", 0),
+    },
+    text_processing: {
+      markdown_filter: chk("cfg-tp-markdown"),
+      emoji_filter: chk("cfg-tp-emoji"),
+      url_filter: chk("cfg-tp-url"),
+      normalize_whitespace: chk("cfg-tp-ws"),
+    },
+    polish: {
+      enabled: chk("cfg-polish-on"),
+      fallback_on_error: chk("cfg-polish-fallback"),
+      max_tokens: int("cfg-polish-tokens", 2048),
+      timeout: int("cfg-polish-timeout", 15),
+    },
+    auto_emotion: {
+      enabled: chk("cfg-emo-on"),
+      fallback_on_error: chk("cfg-emo-fallback"),
+      default_emotion: val("cfg-emo-default"),
+      timeout: num("cfg-emo-timeout", 10),
+    },
+    pronunciation_dict: {
+      enabled: chk("cfg-pd-on"),
+      tone: pdEntries,
     },
   };
   try {

@@ -411,6 +411,33 @@
             </div>
           </div>
 
+          <!-- ── API 连接 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">API 连接</h2>
+                <p class="card-subtitle">Minimax 开放平台密钥与区域</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row">
+                <label class="form-label">API Key</label>
+                <input class="input" id="cfg-api-key" type="password" placeholder="Minimax API Key" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">Group ID（国内平台必填）</label>
+                <input class="input" id="cfg-group-id" placeholder="国际平台留空" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">API 区域</label>
+                <select class="select" id="cfg-api-region">
+                  <option value="china">china（api.minimaxi.com）</option>
+                  <option value="international">international（api.minimax.io）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <!-- ── 语音合成设置 ── -->
           <div class="card mt-m">
             <div class="card-header">
@@ -471,6 +498,14 @@
                   <option value="Korean">Korean</option>
                   <option value="">不增强</option>
                 </select>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-tts-latex" style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">朗读 LaTeX 公式</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-tts-normalize" style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">文本规范化（数字优化）</label>
               </div>
             </div>
           </div>
@@ -597,6 +632,154 @@
                   <option value="WARNING">WARNING</option>
                   <option value="ERROR">ERROR</option>
                 </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 声音效果器 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">声音效果器</h2>
+                <p class="card-subtitle">对合成结果做后处理调整</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-vm-on" style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用声音效果器</label>
+              </div>
+              <div class="form-row">
+                <label class="form-label">音效</label>
+                <select class="select" id="cfg-vm-fx">
+                  <option value="">无</option>
+                  <option value="spacious_echo">空旷回声</option>
+                  <option value="auditorium_echo">礼堂回声</option>
+                  <option value="lofi_telephone">电话质感</option>
+                  <option value="robotic">机器人</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">音高 [-100, 100]</label>
+                <input type="number" class="input" id="cfg-vm-pitch" value="0" min="-100" max="100" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">强度 [-100, 100]</label>
+                <input type="number" class="input" id="cfg-vm-intensity" value="0" min="-100" max="100" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">音色 [-100, 100]</label>
+                <input type="number" class="input" id="cfg-vm-timbre" value="0" min="-100" max="100" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 文本预处理 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">文本预处理</h2>
+                <p class="card-subtitle">合成前的规则清洗开关</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-tp-markdown" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">过滤 markdown 标记</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-tp-emoji" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">过滤 emoji</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-tp-url" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">过滤 URL 链接</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-tp-ws" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">规范化空白</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── LLM 润色 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">LLM 润色</h2>
+                <p class="card-subtitle">合成前调用 LLM 清洗润色文本</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-polish-on" style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用 LLM 润色</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-polish-fallback" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">失败时使用原文继续</label>
+              </div>
+              <div class="form-row">
+                <label class="form-label">最大 token</label>
+                <input type="number" class="input" id="cfg-polish-tokens" value="2048" min="256" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">超时（秒）</label>
+                <input type="number" class="input" id="cfg-polish-timeout" value="15" min="3" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 自动情绪识别 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">自动情绪识别</h2>
+                <p class="card-subtitle">由 LLM 根据文本自动判断朗读情绪</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-emo-on" style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用自动情绪识别</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-emo-fallback" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">失败时降级</label>
+              </div>
+              <div class="form-row">
+                <label class="form-label">兜底情绪</label>
+                <select class="select" id="cfg-emo-default">
+                  <option value="">neutral（不设置）</option>
+                  <option value="happy">happy</option>
+                  <option value="sad">sad</option>
+                  <option value="angry">angry</option>
+                  <option value="calm">calm</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">超时（秒）</label>
+                <input type="number" class="input" id="cfg-emo-timeout" value="10" min="3" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 发音词典 ── -->
+          <div class="card mt-m">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">发音词典</h2>
+                <p class="card-subtitle">格式：文字/注音，例 omg/oh my god</p>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="cfg-pd-on" style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用发音词典</label>
+              </div>
+              <div class="form-row" style="grid-column:1/-1">
+                <label class="form-label">词条（每行一条，格式 文字/注音）</label>
+                <textarea class="input" id="cfg-pd-entries" rows="4" placeholder="omg/oh my god&#10;yyds/永远的神" style="font-family:var(--font-mono);resize:vertical"></textarea>
               </div>
             </div>
           </div>
