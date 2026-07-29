@@ -22,6 +22,7 @@ const state = {
     custom_background: "#F5F6F8",
     custom_background_dark: "#0C0E13",
     background_image: "",
+    background_accent: "",
     corner_radius: 14,
     acrylic_enabled: true,
     material_opacity: 45,
@@ -105,36 +106,41 @@ function applyUiConfig() {
     applyPalette(ui.brand_color, isDark);
   } else if (ui.color_mode === "dynamic") {
     if (ui.background_mode === "image" && ui.background_image) {
-      applyDynamicAccent(ui.background_image);
+      // 已有提取结果 → 同步套用，跳过取色（持久化后瞬时完成、不再卡）
+      if (ui.background_accent) {
+        applyPalette(ui.background_accent, isDark);
+      } else {
+        applyDynamicAccent(ui.background_image);
+      }
     } else {
       applyPalette(DEFAULT_SOURCE, isDark);
     }
   }
 
-  // 背景
-  const app = document.getElementById("app");
-  app.classList.remove("bg-mode-brand-gradient", "bg-mode-custom");
-  app.style.backgroundImage = "";
-  app.style.backgroundSize = "";
-  app.style.backgroundPosition = "";
-  app.style.backgroundAttachment = "";
+  // 背景（挂在 body 上，铺满视口；#app 是限宽内容列，挂在它上面铺不满）
+  const body = document.body;
+  body.classList.remove("bg-mode-brand-gradient", "bg-mode-custom");
+  body.style.backgroundImage = "";
+  body.style.backgroundSize = "";
+  body.style.backgroundPosition = "";
+  body.style.backgroundAttachment = "";
   if (ui.background_mode === "brand_gradient") {
-    app.classList.add("bg-mode-brand-gradient");
+    body.classList.add("bg-mode-brand-gradient");
   } else if (ui.background_mode === "custom") {
     const bg = isDark
       ? ui.custom_background_dark || "#1a1a1a"
       : ui.custom_background || "#f5f5f5";
     root.style.setProperty("--color-app-bg", bg);
-    app.classList.add("bg-mode-custom");
+    body.classList.add("bg-mode-custom");
   } else if (ui.background_mode === "image" && ui.background_image) {
     // data: 前缀表示 base64 内联存储，直接使用；否则走 /bg 端点兼容旧路径配置
     const bgSrc = ui.background_image.startsWith("data:")
       ? ui.background_image
       : `./bg?t=${Date.now()}`;
-    app.style.backgroundImage = `url('${bgSrc}')`;
-    app.style.backgroundSize = "cover";
-    app.style.backgroundPosition = "center";
-    app.style.backgroundAttachment = "fixed";
+    body.style.backgroundImage = `url('${bgSrc}')`;
+    body.style.backgroundSize = "cover";
+    body.style.backgroundPosition = "center";
+    body.style.backgroundAttachment = "fixed";
   }
 
   // 圆角（同时驱动 large/xlarge/medium/small，确保整页可见生效；始终应用，避免配置缺失时静默失效）
@@ -433,6 +439,11 @@ function applyDynamicAccent(imageSrc) {
       const ui = state.uiConfig;
       if (ui.color_mode === "dynamic" && ui.background_mode === "image") {
         applyPalette(hex, currentIsDark());
+        // 持久化提取结果，避免每次重进都重新取色（值未变则不写，避免反复落盘）
+        if (ui.background_accent !== hex) {
+          ui.background_accent = hex;
+          bridge.apiPost("config/save", { ui: state.uiConfig }).catch(() => {});
+        }
       }
     } catch (e) {
       console.warn("动态取色失败，使用默认色", e);
@@ -926,6 +937,7 @@ async function uploadBgImage() {
   try {
     const resp = await bridge.upload("bg/upload", file);
     state.uiConfig.background_image = resp.data;
+    state.uiConfig.background_accent = ""; // 新图重置取色，下次进入会重新提取并持久化
     document.getElementById("bg-file-name").textContent = resp.filename || file.name;
     updateBgPreview();
     // 自动切换到图片背景模式并预览
@@ -944,6 +956,7 @@ async function removeBgImage() {
   try {
     await bridge.apiPost("bg/remove");
     state.uiConfig.background_image = "";
+    state.uiConfig.background_accent = "";
     document.getElementById("bg-file-name").textContent =
       "点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤20MB）";
     document.getElementById("bg-image-file").value = "";
@@ -1062,6 +1075,7 @@ function resetUiConfig() {
     custom_background: "#F5F6F8",
     custom_background_dark: "#0C0E13",
     background_image: "",
+    background_accent: "",
     corner_radius: 14,
     acrylic_enabled: true,
     material_opacity: 45,

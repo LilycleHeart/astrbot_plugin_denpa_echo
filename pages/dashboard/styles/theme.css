@@ -50,7 +50,7 @@ body {
   gap: var(--space-m);
 }
 
-/* 背景模式 (app.js 在 #app 上切换 class / 内联 backgroundImage) */
+/* 背景模式 (app.js 在 body 上切换 class / 内联 backgroundImage，铺满视口) */
 .bg-mode-custom {
   background-image:
     radial-gradient(120% 60% at 50% -10%, var(--color-bg-2), transparent 55%),
