@@ -56,56 +56,32 @@ class Main(Star):
             pass
         os.makedirs(self.plugin_data_dir, exist_ok=True)
 
-        # ── 配置迁移：旧版顶层 key → 统一归入 config["ui"] ──
-        _MIGRATE_KEYS = (
-            "api_key", "group_id", "api_region", "tts", "audio",
-            "voice_modify", "pronunciation_dict", "send_mode",
-            "text_processing", "polish", "auto_emotion", "advanced",
-        )
-        ui_cfg = config.setdefault("ui", {})
-        migrated = False
-        for k in _MIGRATE_KEYS:
-            if k in config and k not in ui_cfg:
-                ui_cfg[k] = config[k]
-                migrated = True
-        if migrated:
-            # 清除旧顶层 key（保留 ui 本身）
-            for k in _MIGRATE_KEYS:
-                config.pop(k, None)
-            try:
-                config.save_config()
-                logger.info("[Denpa Echo] 配置已迁移至 ui 结构")
-            except Exception:
-                pass
-        # 便捷引用（指向 config["ui"] 的同一对象，修改即生效）
-        self.cfg = ui_cfg
-
         # 初始化 Minimax 客户端
-        adv = self.cfg.get("advanced", {}) or {}
+        adv = config.get("advanced", {}) or {}
         self.client = MinimaxClient(
-            api_key=self.cfg.get("api_key", ""),
-            group_id=self.cfg.get("group_id", ""),
-            region=self.cfg.get("api_region", "china"),
+            api_key=config.get("api_key", ""),
+            group_id=config.get("group_id", ""),
+            region=config.get("api_region", "china"),
             timeout=int(adv.get("request_timeout", 60)),
             retry_times=int(adv.get("retry_times", 2)),
             retry_backoff=float(adv.get("retry_backoff", 1.5)),
         )
 
         # 初始化各模块
-        self.polisher = TextPolisher(context, self.cfg.get("polish", {}) or {})
+        self.polisher = TextPolisher(context, config.get("polish", {}) or {})
         self.converter = AudioConverter()
         self.tts_engine = TTSEngine(
             client=self.client,
             polisher=self.polisher,
             converter=self.converter,
-            config=self.cfg,
+            config=config,
             plugin_data_dir=self.plugin_data_dir,
             context=context,
         )
         self.sender = MessageSender(
             tts_engine=self.tts_engine,
             context=context,
-            config=self.cfg,
+            config=config,
         )
 
         # 注册 Plugin Page 后端 API
@@ -113,7 +89,7 @@ class Main(Star):
 
         logger.info(
             f"[Denpa Echo] 插件已加载，模式={self.sender.mode}, "
-            f"模型={self.cfg.get('tts', {}).get('model', 'speech-02-hd')}"
+            f"模型={config.get('tts', {}).get('model', 'speech-02-hd')}"
         )
 
     def _register_web_apis(self, context: Context) -> None:
@@ -146,7 +122,7 @@ class Main(Star):
 
     async def initialize(self) -> None:
         """异步初始化：检测 API 连通性。"""
-        if not self.cfg.get("api_key"):
+        if not self.config.get("api_key"):
             logger.warning("[Denpa Echo] 未配置 API Key，插件功能不可用")
             self._api_ok = False
             return
@@ -186,7 +162,7 @@ class Main(Star):
     @filter.on_llm_response()
     async def on_llm_response(self, event: AstrMessageEvent, resp):
         """LLM 回复生成后回调（可选记录）。"""
-        if (self.cfg.get("advanced", {}) or {}).get("log_level") == "DEBUG":
+        if (self.config.get("advanced", {}) or {}).get("log_level") == "DEBUG":
             text = getattr(resp, "completion_text", str(resp))
             logger.debug(
                 f"[Denpa Echo] LLM 回复: {text[:100]}..."
@@ -272,7 +248,7 @@ class Main(Star):
                 "无效模式，可选：intercept / append / disabled"
             )
             return
-        self.cfg.setdefault("send_mode", {})["mode"] = mode
+        self.config.setdefault("send_mode", {})["mode"] = mode
         try:
             self.config.save_config()
         except Exception:
@@ -300,8 +276,8 @@ class Main(Star):
             "today_count": self._today_count,
             "cache_size_mb": round(self.tts_engine.cache_size_mb(), 2),
             "mode": self.sender.mode,
-            "model": (self.cfg.get("tts", {}) or {}).get("model", ""),
-            "voice_id": (self.cfg.get("tts", {}) or {}).get("voice_id", ""),
+            "model": (self.config.get("tts", {}) or {}).get("model", ""),
+            "voice_id": (self.config.get("tts", {}) or {}).get("voice_id", ""),
             "ffmpeg_available": self.converter.available,
         })
 
@@ -345,7 +321,7 @@ class Main(Star):
         speed = payload.get("speed", 1.0)
         emotion = payload.get("emotion", "")
         if not voice_id:
-            voice_id = (self.cfg.get("tts", {}) or {}).get(
+            voice_id = (self.config.get("tts", {}) or {}).get(
                 "voice_id", "female-shaonv"
             )
         try:
@@ -512,7 +488,7 @@ class Main(Star):
         if not voice_id:
             return error_response("缺少 voice_id", status_code=400)
         try:
-            self.cfg.setdefault("tts", {})["voice_id"] = voice_id
+            self.config.setdefault("tts", {})["voice_id"] = voice_id
             self.config.save_config()
             return json_response({"saved": True, "voice_id": voice_id})
         except Exception as e:
@@ -565,19 +541,13 @@ class Main(Star):
             return error_response(f"调试合成失败: {e}", status_code=500)
 
     async def _api_config_ui(self):
-        """返回 UI 视觉配置（供面板读取取色等，不含 tts/audio 合成参数）。"""
-        _UI_KEYS = (
-            "color_mode", "brand_color", "background_mode", "background_image",
-            "custom_background", "custom_background_dark", "corner_radius",
-            "acrylic_enabled", "material_opacity", "material_blur",
-            "material_type", "font_mode", "glow_enabled", "glow_intensity",
-            "shadow_enabled", "shadow_intensity",
-        )
-        return json_response({k: self.cfg[k] for k in _UI_KEYS if k in self.cfg})
+        """返回 UI 配置（供面板读取取色等）。"""
+        ui = self.config.get("ui", {}) or {}
+        return json_response(ui)
 
     async def _api_config_full(self):
         """返回完整配置（敏感字段脱敏）。"""
-        cfg = dict(self.cfg)
+        cfg = dict(self.config)
         if cfg.get("api_key"):
             cfg["api_key"] = cfg["api_key"][:4] + "***" + cfg["api_key"][-4:]
         return json_response(cfg)
@@ -586,13 +556,11 @@ class Main(Star):
         """保存配置（仅允许保存非敏感 UI / 发送模式相关字段）。"""
         payload = await request.json(default={})
         ui_new = payload.get("ui")
-        if ui_new and isinstance(ui_new, dict):
-            # 合并视觉 UI 字段到 cfg（不覆盖 tts/audio 等合成参数）
-            for k, v in ui_new.items():
-                self.cfg[k] = v
+        if ui_new:
+            self.config["ui"] = ui_new
         sm_new = payload.get("send_mode")
         if sm_new:
-            self.cfg["send_mode"] = sm_new
+            self.config["send_mode"] = sm_new
         try:
             self.config.save_config()
             return json_response({"saved": True})
@@ -660,7 +628,7 @@ class Main(Star):
         }.get(ext, "application/octet-stream")
         data_uri = f"data:{mime};base64," + base64.b64encode(body).decode("ascii")
 
-        self.cfg["background_image"] = data_uri
+        self.config.setdefault("ui", {})["background_image"] = data_uri
         try:
             self.config.save_config()
         except Exception as e:
@@ -674,7 +642,8 @@ class Main(Star):
 
     async def _api_bg(self):
         """返回当前背景图文件。"""
-        path = self.cfg.get("background_image", "")
+        ui = self.config.get("ui", {}) or {}
+        path = ui.get("background_image", "")
         if not path:
             return error_response("未设置背景图", status_code=404)
         abs_path = os.path.abspath(path)
@@ -692,7 +661,7 @@ class Main(Star):
 
     async def _api_bg_remove(self):
         """移除背景图配置。"""
-        self.cfg["background_image"] = ""
+        self.config.setdefault("ui", {})["background_image"] = ""
         try:
             self.config.save_config()
         except Exception:

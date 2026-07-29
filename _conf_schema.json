@@ -1,446 +1,407 @@
 {
-  "ui": {
-    "description": "插件配置（全部设置项）",
-    "type": "object",
-    "hint": "所有配置统一在此管理，也可通过 WebUI 控制台面板操作",
-    "items": {
-      "api_key": {
-        "description": "Minimax API Key",
-        "type": "string",
-        "hint": "在 Minimax 开放平台 > 账户管理 > 接口密钥 获取",
-        "obvious_hint": true,
-        "default": ""
-      },
-      "group_id": {
-        "description": "Group ID（国内平台必填，国际平台留空）",
-        "type": "string",
-        "hint": "国内平台 platform.minimaxi.com 需要 GroupId 拼接在 URL 末尾；国际平台 api.minimax.io 无需填写",
-        "default": ""
-      },
-      "api_region": {
-        "description": "API 区域",
-        "type": "string",
-        "options": ["china", "international"],
-        "default": "china",
-        "hint": "china → api.minimaxi.com（需 GroupId）；international → api.minimax.io"
-      },
+  "api_key": {
+    "description": "Minimax API Key",
+    "type": "string",
+    "hint": "在 Minimax 开放平台 > 账户管理 > 接口密钥 获取",
+    "obvious_hint": true,
+    "default": ""
+  },
+  "group_id": {
+    "description": "Group ID（国内平台必填，国际平台留空）",
+    "type": "string",
+    "hint": "国内平台 platform.minimaxi.com 需要 GroupId 拼接在 URL 末尾；国际平台 api.minimax.io 无需填写",
+    "default": ""
+  },
+  "api_region": {
+    "description": "API 区域",
+    "type": "string",
+    "options": ["china", "international"],
+    "default": "china",
+    "hint": "china → api.minimaxi.com（需 GroupId）；international → api.minimax.io"
+  },
 
-      "tts": {
-        "description": "语音合成设置",
-        "type": "object",
-        "hint": "Minimax T2A 核心参数，可在 WebUI 控制台面板试听各音色",
+  "tts": {
+    "description": "语音合成设置",
+    "type": "object",
+    "hint": "Minimax T2A 核心参数，可在 WebUI 控制台面板试听各音色",
+    "items": {
+      "model": {
+        "description": "模型版本",
+        "type": "string",
+        "options": [
+          "speech-2.8-hd",
+          "speech-2.8-turbo",
+          "speech-2.6-hd",
+          "speech-2.6-turbo",
+          "speech-02-hd",
+          "speech-02-turbo"
+        ],
+        "default": "speech-02-hd",
+        "hint": "2.8 系列支持语气词标签 (laughs)/(sighs) 等；02 系列稳定性好"
+      },
+      "voice_id": {
+        "description": "音色 ID",
+        "type": "string",
+        "default": "female-shaonv",
+        "hint": "系统音色或克隆音色 ID；与「混音权重」二选一。可在控制台面板试听后复制"
+      },
+      "use_timbre_weights": {
+        "description": "启用混音权重（多音色混合）",
+        "type": "bool",
+        "default": false,
+        "hint": "启用后忽略 voice_id，使用下方 timbre_weights 最多混合 4 种音色"
+      },
+      "timbre_weights": {
+        "description": "混音权重列表",
+        "type": "list",
+        "default": [],
         "items": {
-          "model": {
-            "description": "模型版本",
-            "type": "string",
-            "options": [
-              "speech-2.8-hd",
-              "speech-2.8-turbo",
-              "speech-2.6-hd",
-              "speech-2.6-turbo",
-              "speech-02-hd",
-              "speech-02-turbo"
-            ],
-            "default": "speech-02-hd",
-            "hint": "2.8 系列支持语气词标签 (laughs)/(sighs) 等；02 系列稳定性好"
-          },
           "voice_id": {
             "description": "音色 ID",
             "type": "string",
-            "default": "female-shaonv",
-            "hint": "系统音色或克隆音色 ID；与「混音权重」二选一。可在控制台面板试听后复制"
+            "default": ""
           },
-          "use_timbre_weights": {
-            "description": "启用混音权重（多音色混合）",
-            "type": "bool",
-            "default": false,
-            "hint": "启用后忽略 voice_id，使用下方 timbre_weights 最多混合 4 种音色"
-          },
-          "timbre_weights": {
-            "description": "混音权重列表",
-            "type": "list",
-            "default": [],
-            "items": {
-              "voice_id": {
-                "description": "音色 ID",
-                "type": "string",
-                "default": ""
-              },
-              "weight": {
-                "description": "权重 [1, 100]",
-                "type": "int",
-                "default": 50
-              }
-            }
-          },
-          "speed": {
-            "description": "语速 [0.5, 2.0]",
-            "type": "float",
-            "default": 1.0
-          },
-          "vol": {
-            "description": "音量 (0, 10]",
-            "type": "float",
-            "default": 1.0
-          },
-          "pitch": {
-            "description": "语调 [-12, 12] 整数",
+          "weight": {
+            "description": "权重 [1, 100]",
             "type": "int",
-            "default": 0
-          },
-          "emotion": {
-            "description": "情绪",
-            "type": "string",
-            "options": ["", "happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm"],
-            "default": "",
-            "hint": "留空表示不设置；仅 2.5+/02/01 系列支持"
-          },
-          "language_boost": {
-            "description": "语言增强",
-            "type": "string",
-            "options": ["auto", "Chinese", "Chinese,Yue", "English", "Japanese", "Korean", ""],
-            "default": "auto",
-            "hint": "auto 自动判断；留空不增强"
-          },
-          "latex_read": {
-            "description": "朗读 LaTeX 公式",
-            "type": "bool",
-            "default": false
-          },
-          "text_normalization": {
-            "description": "文本规范化",
-            "type": "bool",
-            "default": false,
-            "hint": "中英文数字优化，略微增加延迟"
+            "default": 50
           }
         }
       },
+      "speed": {
+        "description": "语速 [0.5, 2.0]",
+        "type": "float",
+        "default": 1.0
+      },
+      "vol": {
+        "description": "音量 (0, 10]",
+        "type": "float",
+        "default": 1.0
+      },
+      "pitch": {
+        "description": "语调 [-12, 12] 整数",
+        "type": "int",
+        "default": 0
+      },
+      "emotion": {
+        "description": "情绪",
+        "type": "string",
+        "options": ["", "happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm"],
+        "default": "",
+        "hint": "留空表示不设置；仅 2.5+/02/01 系列支持"
+      },
+      "language_boost": {
+        "description": "语言增强",
+        "type": "string",
+        "options": ["auto", "Chinese", "Chinese,Yue", "English", "Japanese", "Korean", ""],
+        "default": "auto",
+        "hint": "auto 自动判断；留空不增强"
+      },
+      "latex_read": {
+        "description": "朗读 LaTeX 公式",
+        "type": "bool",
+        "default": false
+      },
+      "text_normalization": {
+        "description": "文本规范化",
+        "type": "bool",
+        "default": false,
+        "hint": "中英文数字优化，略微增加延迟"
+      }
+    }
+  },
 
-      "auto_emotion": {
-        "description": "自动情绪识别",
-        "type": "object",
-        "hint": "开启后由 LLM 根据文本自动判断朗读情绪并应用到合成；开启时忽略上方 tts.emotion 的固定值；与『LLM 润色』同时开启时自动合并为单次 LLM 调用（使用润色配置的模型），解析失败自动回退为两次独立调用",
+  "auto_emotion": {
+    "description": "自动情绪识别",
+    "type": "object",
+    "hint": "开启后由 LLM 根据文本自动判断朗读情绪并应用到合成；开启时忽略上方 tts.emotion 的固定值；与『LLM 润色』同时开启时自动合并为单次 LLM 调用（使用润色配置的模型），解析失败自动回退为两次独立调用",
+    "items": {
+      "enabled": {
+        "description": "启用自动情绪识别",
+        "type": "bool",
+        "default": false,
+        "hint": "关闭则使用 tts.emotion 的固定情绪（或不设置）"
+      },
+      "provider_id": {
+        "description": "情绪识别所用 LLM",
+        "type": "string",
+        "_special": "select_provider",
+        "default": "",
+        "hint": "从 AstrBot 已配置的模型中选择一个用于情绪分类；留空则用当前会话默认模型"
+      },
+      "default_emotion": {
+        "description": "兜底情绪",
+        "type": "string",
+        "options": ["", "happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm"],
+        "default": "",
+        "hint": "识别失败或文本无明确情绪时的兜底值；留空表示 neutral（不设置）"
+      },
+      "timeout": {
+        "description": "LLM 调用超时（秒）",
+        "type": "float",
+        "default": 10,
+        "hint": "超时将回退到兜底情绪，不阻塞合成"
+      },
+      "fallback_on_error": {
+        "description": "失败时降级",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭时情绪识别异常也不报错，仅以 neutral 合成"
+      }
+    }
+  },
+
+  "audio": {
+    "description": "音频输出设置",
+    "type": "object",
+    "hint": "AstrBot 发送语音需要 wav 格式，插件会自动转换。建议保持 mp3 以减小体积",
+    "items": {
+      "format": {
+        "description": "音频格式",
+        "type": "string",
+        "options": ["mp3", "wav", "flac", "pcm"],
+        "default": "mp3",
+        "hint": "mp3 体积小推荐；wav 体积大但无需 ffmpeg；pcm 自加 wav 头"
+      },
+      "sample_rate": {
+        "description": "采样率",
+        "type": "int",
+        "options": [8000, 16000, 22050, 24000, 32000, 44100],
+        "default": 32000
+      },
+      "bitrate": {
+        "description": "比特率（仅 mp3）",
+        "type": "int",
+        "options": [32000, 64000, 128000, 256000],
+        "default": 128000
+      },
+      "channel": {
+        "description": "声道",
+        "type": "int",
+        "options": [1, 2],
+        "default": 1
+      }
+    }
+  },
+
+  "voice_modify": {
+    "description": "声音效果器（可选）",
+    "type": "object",
+    "hint": "对合成结果做后处理调整，仅 mp3/wav/flac 支持",
+    "items": {
+      "enabled": {
+        "description": "启用声音效果器",
+        "type": "bool",
+        "default": false
+      },
+      "pitch": {
+        "description": "音高 [-100, 100]",
+        "type": "int",
+        "default": 0,
+        "hint": "-100 更低沉；100 更明亮"
+      },
+      "intensity": {
+        "description": "强度 [-100, 100]",
+        "type": "int",
+        "default": 0,
+        "hint": "-100 更刚劲；100 更轻柔"
+      },
+      "timbre": {
+        "description": "音色 [-100, 100]",
+        "type": "int",
+        "default": 0,
+        "hint": "-100 更浑厚；100 更清脆"
+      },
+      "sound_effects": {
+        "description": "音效",
+        "type": "string",
+        "options": ["", "spacious_echo", "auditorium_echo", "lofi_telephone", "robotic"],
+        "default": ""
+      }
+    }
+  },
+
+  "pronunciation_dict": {
+    "description": "发音词典",
+    "type": "object",
+    "hint": "格式：文字/注音。例 omg/oh my god。声调用数字：1阴平 2阳平 3上声 4去声 5轻声",
+    "items": {
+      "enabled": {
+        "description": "启用发音词典",
+        "type": "bool",
+        "default": false
+      },
+      "tone": {
+        "description": "词条列表",
+        "type": "list",
+        "default": [],
         "items": {
-          "enabled": {
-            "description": "启用自动情绪识别",
-            "type": "bool",
-            "default": false,
-            "hint": "关闭则使用 tts.emotion 的固定情绪（或不设置）"
-          },
-          "provider_id": {
-            "description": "情绪识别所用 LLM",
+          "entry": {
+            "description": "文字/注音",
             "type": "string",
-            "_special": "select_provider",
-            "default": "",
-            "hint": "从 AstrBot 已配置的模型中选择一个用于情绪分类；留空则用当前会话默认模型"
-          },
-          "default_emotion": {
-            "description": "兜底情绪",
-            "type": "string",
-            "options": ["", "happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm"],
-            "default": "",
-            "hint": "识别失败或文本无明确情绪时的兜底值；留空表示 neutral（不设置）"
-          },
-          "timeout": {
-            "description": "LLM 调用超时（秒）",
-            "type": "float",
-            "default": 10,
-            "hint": "超时将回退到兜底情绪，不阻塞合成"
-          },
-          "fallback_on_error": {
-            "description": "失败时降级",
-            "type": "bool",
-            "default": true,
-            "hint": "关闭时情绪识别异常也不报错，仅以 neutral 合成"
+            "default": ""
           }
         }
-      },
+      }
+    }
+  },
 
-      "audio": {
-        "description": "音频输出设置",
-        "type": "object",
-        "hint": "AstrBot 发送语音需要 wav 格式，插件会自动转换。建议保持 mp3 以减小体积",
+  "send_mode": {
+    "description": "发送模式",
+    "type": "object",
+    "hint": "intercept 拦截 bot 回复与语音一起发；append 先发文本再追加语音；disabled 关闭",
+    "items": {
+      "mode": {
+        "description": "模式选择",
+        "type": "string",
+        "options": ["intercept", "append", "disabled"],
+        "default": "intercept"
+      },
+      "keep_text": {
+        "description": "拦截模式下保留文本",
+        "type": "bool",
+        "default": true,
+        "hint": "true 同时发文本+语音；false 仅发语音"
+      },
+      "use_sync": {
+        "description": "拦截模式使用同步合成",
+        "type": "bool",
+        "default": true,
+        "hint": "true 同步 t2a_v2（首字快，<10000字符）；false 异步 t2a_async_v2（支持超长文本）"
+      },
+      "append_silent": {
+        "description": "追加模式静默发送",
+        "type": "bool",
+        "default": false,
+        "hint": "true 合成失败时不提示；false 失败时发送提示"
+      },
+      "min_length": {
+        "description": "最短合成长度（字符）",
+        "type": "int",
+        "default": 1,
+        "hint": "短于此长度的回复不合成语音"
+      },
+      "max_length": {
+        "description": "最长合成长度（字符）",
+        "type": "int",
+        "default": 5000,
+        "hint": "超过此长度截断"
+      },
+      "trigger_scope": {
+        "description": "触发范围",
+        "type": "string",
+        "options": ["all", "group", "private", "none"],
+        "default": "all",
+        "hint": "all 全部；group 仅群聊；private 仅私聊；none 需手动 /tts 指令触发"
+      },
+      "whitelist_groups": {
+        "description": "群聊白名单（trigger_scope=group 时生效，留空表示所有群）",
+        "type": "list",
+        "default": [],
         "items": {
-          "format": {
-            "description": "音频格式",
+          "group_id": {
+            "description": "群 ID",
             "type": "string",
-            "options": ["mp3", "wav", "flac", "pcm"],
-            "default": "mp3",
-            "hint": "mp3 体积小推荐；wav 体积大但无需 ffmpeg；pcm 自加 wav 头"
-          },
-          "sample_rate": {
-            "description": "采样率",
-            "type": "int",
-            "options": [8000, 16000, 22050, 24000, 32000, 44100],
-            "default": 32000
-          },
-          "bitrate": {
-            "description": "比特率（仅 mp3）",
-            "type": "int",
-            "options": [32000, 64000, 128000, 256000],
-            "default": 128000
-          },
-          "channel": {
-            "description": "声道",
-            "type": "int",
-            "options": [1, 2],
-            "default": 1
+            "default": ""
           }
         }
-      },
+      }
+    }
+  },
 
-      "voice_modify": {
-        "description": "声音效果器（可选）",
-        "type": "object",
-        "hint": "对合成结果做后处理调整，仅 mp3/wav/flac 支持",
+  "text_processing": {
+    "description": "文本预处理（规则清洗）",
+    "type": "object",
+    "hint": "合成前对文本的规则清洗开关，每一项可独立开启/关闭；关闭某项则保留该内容进入语音合成。custom_rules 为始终生效的自定义正则删除规则（不受润色开关影响）",
+    "items": {
+      "markdown_filter": {
+        "description": "过滤 markdown 标记",
+        "type": "bool",
+        "default": true,
+        "hint": "去除 **、#、`、[] 等 markdown 符号"
+      },
+      "emoji_filter": {
+        "description": "过滤 emoji",
+        "type": "bool",
+        "default": true,
+        "hint": "去除表情符号（不影响中文/英文/数字）"
+      },
+      "url_filter": {
+        "description": "过滤 URL 链接",
+        "type": "bool",
+        "default": true,
+        "hint": "去除 http(s):// 链接及其包裹的 markdown"
+      },
+      "custom_rules": {
+        "description": "自定义正则清洗规则",
+        "type": "list",
+        "default": [],
+        "hint": "逐条填写正则表达式，匹配到的内容会从朗读文本中删除（如 \"\\\\(.*?\\\\)\" 删除圆括号及其内容）。无效正则会自动忽略并告警；该规则始终生效，不受润色开关影响",
         "items": {
-          "enabled": {
-            "description": "启用声音效果器",
-            "type": "bool",
-            "default": false
-          },
-          "pitch": {
-            "description": "音高 [-100, 100]",
-            "type": "int",
-            "default": 0,
-            "hint": "-100 更低沉；100 更明亮"
-          },
-          "intensity": {
-            "description": "强度 [-100, 100]",
-            "type": "int",
-            "default": 0,
-            "hint": "-100 更刚劲；100 更轻柔"
-          },
-          "timbre": {
-            "description": "音色 [-100, 100]",
-            "type": "int",
-            "default": 0,
-            "hint": "-100 更浑厚；100 更清脆"
-          },
-          "sound_effects": {
-            "description": "音效",
+          "pattern": {
+            "description": "正则表达式",
             "type": "string",
-            "options": ["", "spacious_echo", "auditorium_echo", "lofi_telephone", "robotic"],
             "default": ""
           }
         }
       },
+      "normalize_whitespace": {
+        "description": "规范化空白",
+        "type": "bool",
+        "default": true,
+        "hint": "合并多余空格、去除首尾空白、清理全角空格"
+      }
+    }
+  },
 
-      "pronunciation_dict": {
-        "description": "发音词典",
-        "type": "object",
-        "hint": "格式：文字/注音。例 omg/oh my god。声调用数字：1阴平 2阳平 3上声 4去声 5轻声",
-        "items": {
-          "enabled": {
-            "description": "启用发音词典",
-            "type": "bool",
-            "default": false
-          },
-          "tone": {
-            "description": "词条列表",
-            "type": "list",
-            "default": [],
-            "items": {
-              "entry": {
-                "description": "文字/注音",
-                "type": "string",
-                "default": ""
-              }
-            }
-          }
-        }
+  "polish": {
+    "description": "LLM 润色（合成前）",
+    "type": "object",
+    "hint": "调用 LLM 对将朗读的文本清洗润色，去除 markdown/emoji/代码块，调整语气；与『自动情绪识别』同时开启时，两者会自动合并为单次 LLM 调用（由润色模型承担），减少一次调用延迟",
+    "items": {
+      "enabled": {
+        "description": "启用 LLM 润色",
+        "type": "bool",
+        "default": false
       },
-
-      "send_mode": {
-        "description": "发送模式",
-        "type": "object",
-        "hint": "intercept 拦截 bot 回复与语音一起发；append 先发文本再追加语音；disabled 关闭",
-        "items": {
-          "mode": {
-            "description": "模式选择",
-            "type": "string",
-            "options": ["intercept", "append", "disabled"],
-            "default": "intercept"
-          },
-          "keep_text": {
-            "description": "拦截模式下保留文本",
-            "type": "bool",
-            "default": true,
-            "hint": "true 同时发文本+语音；false 仅发语音"
-          },
-          "use_sync": {
-            "description": "拦截模式使用同步合成",
-            "type": "bool",
-            "default": true,
-            "hint": "true 同步 t2a_v2（首字快，<10000字符）；false 异步 t2a_async_v2（支持超长文本）"
-          },
-          "append_silent": {
-            "description": "追加模式静默发送",
-            "type": "bool",
-            "default": false,
-            "hint": "true 合成失败时不提示；false 失败时发送提示"
-          },
-          "min_length": {
-            "description": "最短合成长度（字符）",
-            "type": "int",
-            "default": 1,
-            "hint": "短于此长度的回复不合成语音"
-          },
-          "max_length": {
-            "description": "最长合成长度（字符）",
-            "type": "int",
-            "default": 5000,
-            "hint": "超过此长度截断"
-          },
-          "trigger_scope": {
-            "description": "触发范围",
-            "type": "string",
-            "options": ["all", "group", "private", "none"],
-            "default": "all",
-            "hint": "all 全部；group 仅群聊；private 仅私聊；none 需手动 /tts 指令触发"
-          },
-          "whitelist_groups": {
-            "description": "群聊白名单（trigger_scope=group 时生效，留空表示所有群）",
-            "type": "list",
-            "default": [],
-            "items": {
-              "group_id": {
-                "description": "群 ID",
-                "type": "string",
-                "default": ""
-              }
-            }
-          }
-        }
+      "provider_id": {
+        "description": "润色使用的 LLM Provider",
+        "type": "string",
+        "default": "",
+        "_special": "select_provider",
+        "hint": "留空则使用当前会话默认 Provider"
       },
-
-      "text_processing": {
-        "description": "文本预处理（规则清洗）",
-        "type": "object",
-        "hint": "合成前对文本的规则清洗开关，每一项可独立开启/关闭；关闭某项则保留该内容进入语音合成。custom_rules 为始终生效的自定义正则删除规则（不受润色开关影响）",
-        "items": {
-          "markdown_filter": {
-            "description": "过滤 markdown 标记",
-            "type": "bool",
-            "default": true,
-            "hint": "去除 **、#、`、[] 等 markdown 符号"
-          },
-          "emoji_filter": {
-            "description": "过滤 emoji",
-            "type": "bool",
-            "default": true,
-            "hint": "去除表情符号（不影响中文/英文/数字）"
-          },
-          "url_filter": {
-            "description": "过滤 URL 链接",
-            "type": "bool",
-            "default": true,
-            "hint": "去除 http(s):// 链接及其包裹的 markdown"
-          },
-          "custom_rules": {
-            "description": "自定义正则清洗规则",
-            "type": "list",
-            "default": [],
-            "hint": "逐条填写正则表达式，匹配到的内容会从朗读文本中删除（如 \"\\\\(.*?\\\\)\" 删除圆括号及其内容）。无效正则会自动忽略并告警；该规则始终生效，不受润色开关影响",
-            "items": {
-              "pattern": {
-                "description": "正则表达式",
-                "type": "string",
-                "default": ""
-              }
-            }
-          },
-          "normalize_whitespace": {
-            "description": "规范化空白",
-            "type": "bool",
-            "default": true,
-            "hint": "合并多余空格、去除首尾空白、清理全角空格"
-          }
-        }
+      "prompt": {
+        "description": "润色提示词",
+        "type": "text",
+        "editor_mode": true,
+        "editor_language": "markdown",
+        "default": "你是一个语音朗读文本润色助手。请将输入文本转换为适合语音朗读的形式：\n1. 去除所有 markdown 标记（**、#、`、[] 等）\n2. 去除 emoji 和特殊符号\n3. 去除代码块、URL 链接（可保留可读描述）\n4. 将英文缩写转为可读全称（如 omg -> oh my god）\n5. 保留原文语义和语气，不要添加新内容\n6. 直接输出润色后的纯文本，不要任何解释\n\n原文：\n{text}",
+        "hint": "使用 {text} 占位符表示原文本"
       },
-
-      "polish": {
-        "description": "LLM 润色（合成前）",
-        "type": "object",
-        "hint": "调用 LLM 对将朗读的文本清洗润色，去除 markdown/emoji/代码块，调整语气；与『自动情绪识别』同时开启时，两者会自动合并为单次 LLM 调用（由润色模型承担），减少一次调用延迟",
-        "items": {
-          "enabled": {
-            "description": "启用 LLM 润色",
-            "type": "bool",
-            "default": false
-          },
-          "provider_id": {
-            "description": "润色使用的 LLM Provider",
-            "type": "string",
-            "default": "",
-            "_special": "select_provider",
-            "hint": "留空则使用当前会话默认 Provider"
-          },
-          "prompt": {
-            "description": "润色提示词",
-            "type": "text",
-            "editor_mode": true,
-            "editor_language": "markdown",
-            "default": "你是一个语音朗读文本润色助手。请将输入文本转换为适合语音朗读的形式：\n1. 去除所有 markdown 标记（**、#、`、[] 等）\n2. 去除 emoji 和特殊符号\n3. 去除代码块、URL 链接（可保留可读描述）\n4. 将英文缩写转为可读全称（如 omg -> oh my god）\n5. 保留原文语义和语气，不要添加新内容\n6. 直接输出润色后的纯文本，不要任何解释\n\n原文：\n{text}",
-            "hint": "使用 {text} 占位符表示原文本"
-          },
-          "max_tokens": {
-            "description": "润色最大 token",
-            "type": "int",
-            "default": 2048
-          },
-          "timeout": {
-            "description": "润色超时（秒）",
-            "type": "int",
-            "default": 15
-          },
-          "fallback_on_error": {
-            "description": "润色失败时使用原文继续合成",
-            "type": "bool",
-            "default": true
-          }
-        }
+      "max_tokens": {
+        "description": "润色最大 token",
+        "type": "int",
+        "default": 2048
       },
-
-      "advanced": {
-        "description": "高级设置",
-        "type": "object",
-        "items": {
-          "request_timeout": {
-            "description": "API 请求超时（秒）",
-            "type": "int",
-            "default": 60
-          },
-          "retry_times": {
-            "description": "失败重试次数",
-            "type": "int",
-            "default": 2
-          },
-          "retry_backoff": {
-            "description": "重试退避基数（秒）",
-            "type": "float",
-            "default": 1.5
-          },
-          "cache_dir": {
-            "description": "缓存目录（留空禁用缓存）",
-            "type": "string",
-            "default": "",
-            "hint": "绝对路径或相对于插件数据目录的路径；留空则不缓存合成结果"
-          },
-          "cache_max_size_mb": {
-            "description": "缓存最大体积（MB）",
-            "type": "int",
-            "default": 500
-          },
-          "log_level": {
-            "description": "日志级别",
-            "type": "string",
-            "options": ["DEBUG", "INFO", "WARNING", "ERROR"],
-            "default": "INFO"
-          }
-        }
+      "timeout": {
+        "description": "润色超时（秒）",
+        "type": "int",
+        "default": 15
       },
+      "fallback_on_error": {
+        "description": "润色失败时使用原文继续合成",
+        "type": "bool",
+        "default": true
+      }
+    }
+  },
 
+  "ui": {
+    "description": "UI 面板设置",
+    "type": "object",
+    "hint": "Fluent UI 2 控制台面板的取色与背景设置",
+    "items": {
       "color_mode": {
         "description": "取色模式",
         "type": "string",
@@ -482,6 +443,39 @@
         "type": "int",
         "default": 10,
         "hint": "Fluent UI 2 默认 4/6/8；本插件推荐 10"
+      }
+    }
+  },
+
+  "advanced": {
+    "description": "高级设置",
+    "type": "object",
+    "items": {
+      "request_timeout": {
+        "description": "API 请求超时（秒）",
+        "type": "int",
+        "default": 60
+      },
+      "retry_times": {
+        "description": "失败重试次数",
+        "type": "int",
+        "default": 2
+      },
+      "retry_backoff": {
+        "description": "重试退避基数（秒）",
+        "type": "float",
+        "default": 1.5
+      },
+      "cache_max_size_mb": {
+        "description": "缓存最大体积（MB）",
+        "type": "int",
+        "default": 500
+      },
+      "log_level": {
+        "description": "日志级别",
+        "type": "string",
+        "options": ["DEBUG", "INFO", "WARNING", "ERROR"],
+        "default": "INFO"
       }
     }
   }
