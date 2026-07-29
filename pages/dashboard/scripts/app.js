@@ -481,14 +481,33 @@ function bindEvents() {
   document.getElementById("btn-refresh-all").onclick = loadOverview;
   document.getElementById("btn-refresh-logs").onclick = loadLogs;
 
-  // 主题切换（手动亮/暗, 与侧边栏 logo / 选中项统一为品牌色）
+  // 主题切换：从点击位置生成圆形遮罩外扩，View Transitions 让新旧主题同帧渲染
   const themeBtn = document.getElementById("btn-theme");
   if (themeBtn) {
-    themeBtn.addEventListener("click", () => {
+    themeBtn.addEventListener("click", (e) => {
       const html = document.documentElement;
-      html.dataset.theme = html.dataset.theme === "dark" ? "light" : "dark";
-      syncThemeIcon();
-      applyUiConfig(); // 重新套用动态取色 / 静态色
+      const switchTheme = () => {
+        html.dataset.theme = html.dataset.theme === "dark" ? "light" : "dark";
+        syncThemeIcon();
+        applyUiConfig(); // 重新套用动态取色 / 静态色
+      };
+      // 原点取指针位置；取不到（键盘触发等）时回退到屏幕中心
+      const x = e.clientX || window.innerWidth / 2;
+      const y = e.clientY || window.innerHeight / 2;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (document.startViewTransition && !reduce) {
+        // 计算到最远角的半径，确保圆形遮罩能完整覆盖整个视口
+        const r = Math.hypot(
+          Math.max(x, window.innerWidth - x),
+          Math.max(y, window.innerHeight - y)
+        );
+        html.style.setProperty("--vt-x", x + "px");
+        html.style.setProperty("--vt-y", y + "px");
+        html.style.setProperty("--vt-r", r + "px");
+        document.startViewTransition(switchTheme);
+      } else {
+        switchTheme(); // 不支持 View Transitions 或减少动效时直接切换
+      }
     });
   }
 

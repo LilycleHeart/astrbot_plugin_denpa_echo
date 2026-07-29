@@ -159,6 +159,25 @@ body {
 }
 #btn-theme svg { color: var(--color-brand); }
 
+/* 主题切换圆形遮罩外扩（View Transitions API）
+ * 旧主题快照保持满屏作底层，新主题快照从点击点圆形 clip-path 外扩露出 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  animation: none;                 /* 旧主题静止，作为底层 */
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2;                      /* 新主题在上层，从圆形区露出 */
+  animation: vt-circle-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes vt-circle-reveal {
+  from { clip-path: circle(0px at var(--vt-x, 50%) var(--vt-y, 50%)); }
+  to   { clip-path: circle(var(--vt-r, 150%) at var(--vt-x, 50%) var(--vt-y, 50%)); }
+}
+
 /* ============================================================
  * Sidebar（可收缩侧边导航: 亚克力面板 + Material 图标）
  * 收起时仅显示图标(64px), 展开显示图标+文字(224px)
