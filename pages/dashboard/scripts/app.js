@@ -29,8 +29,8 @@ const state = {
     material_blur: 5,
     material_type: "acrylic",
     font_mode: "misans",
-    glow_enabled: false,
-    glow_intensity: 15,
+    glow_enabled: true,
+    glow_intensity: 40,
     shadow_enabled: true,
     shadow_intensity: 60,
   },
@@ -199,6 +199,8 @@ function syncSettingsInputs() {
   set("ui-brand-color-picker", ui.brand_color);
   set("ui-bg-mode", ui.background_mode);
   set("ui-radius", ui.corner_radius);
+  const radiusVal = document.getElementById("ui-radius-val");
+  if (radiusVal) radiusVal.textContent = `${ui.corner_radius ?? 14}px`;
   set("ui-custom-bg", ui.custom_background);
   set("ui-custom-bg-picker", ui.custom_background);
   set("ui-custom-bg-dark", ui.custom_background_dark);
@@ -358,7 +360,11 @@ function derivePalette(sourceHex, isDark) {
   return pal;
 }
 
+let _paletteCache = "";
 function applyPalette(sourceHex, isDark) {
+  const key = `${sourceHex}|${isDark}`;
+  if (key === _paletteCache) return;   // 颜色/明暗未变则跳过整段 MCU 重算，避免拖动非颜色滑块时重复计算卡顿
+  _paletteCache = key;
   const p = derivePalette(sourceHex, isDark);
   const st = statusColors(isDark);
   const root = document.documentElement;
@@ -608,12 +614,15 @@ function bindEvents() {
 function linkColorPicker(pickerId, textId) {
   const picker = document.getElementById(pickerId);
   const text = document.getElementById(textId);
-  picker.addEventListener("input", () => { text.value = picker.value; });
+  if (!picker || !text) return;
+  // 取色器拖动也要实时触发预览（否则只有文本框直接输入才生效，静态色/品牌主题色不会实时变化）
+  picker.addEventListener("input", () => { text.value = picker.value; previewUiConfig(); });
   text.addEventListener("input", () => {
-    if (/^#[0-9a-fA-F]{6}$/.test(text.value)) picker.value = text.value;
+    if (/^#[0-9a-fA-F]{6}$/.test(text.value)) { picker.value = text.value; previewUiConfig(); }
   });
 }
 
+let _applyRaf = null;
 function previewUiConfig() {
   const mat = document.getElementById("ui-material");
   const blur = document.getElementById("ui-blur");
@@ -628,13 +637,15 @@ function previewUiConfig() {
   const soEl = document.getElementById("ui-shadow-on");
   const siEl = document.getElementById("ui-shadow");
   const soVal = document.getElementById("ui-shadow-val");
+  const radiusEl = document.getElementById("ui-radius");
+  const radiusVal = document.getElementById("ui-radius-val");
   // 解析: 0 是合法值, 不能用 || 回退(否则拖到最左会跳回默认值)
   let matV = parseInt(mat ? mat.value : "", 10); if (Number.isNaN(matV)) matV = 45;
   let blurV = parseInt(blur ? blur.value : "", 10); if (Number.isNaN(blurV)) blurV = 5;
-  let radiusV = parseInt(document.getElementById("ui-radius").value, 10);
-  if (Number.isNaN(radiusV)) radiusV = 14;
+  let radiusV = parseInt(radiusEl ? radiusEl.value : "", 10); if (Number.isNaN(radiusV)) radiusV = 14;
   if (matVal) matVal.textContent = `${matV}%`;
   if (blurVal) blurVal.textContent = `${blurV}px`;
+  if (radiusVal) radiusVal.textContent = `${radiusV}px`;   // 圆角数值实时显示（修复：原缺 -val span）
   if (goVal) goVal.textContent = `${giEl ? giEl.value : 15}%`;
   if (soVal) soVal.textContent = `${siEl ? siEl.value : 50}%`;
   state.uiConfig = {
@@ -655,7 +666,9 @@ function previewUiConfig() {
     shadow_enabled: soEl ? soEl.checked : false,
     shadow_intensity: siEl ? (parseInt(siEl.value, 10) || 0) : 60,
   };
-  applyUiConfig();
+  // 数值即时更新；重计算（含 MCU 调色板推导）用 rAF 合并到下一帧，拖动顺滑、首帧不再卡
+  if (_applyRaf) cancelAnimationFrame(_applyRaf);
+  _applyRaf = requestAnimationFrame(() => { _applyRaf = null; applyUiConfig(); });
 }
 
 function switchTab(name) {
@@ -667,6 +680,7 @@ function switchTab(name) {
   });
   if (name === "logs") loadLogs();
   if (name === "overview") loadOverview();
+  if (name === "voices") loadVoices();   // 进入音色页自动拉取（含克隆音色）
 }
 
 // ========== 状态总览 ==========
@@ -708,14 +722,22 @@ async function loadOverview() {
 
 // ========== 音色管理 ==========
 async function loadStaticVoices() {
+  // 加载全部音色（含系统/克隆/生成），让合成下拉与试听都能选到克隆音色
   try {
-    const data = await bridge.apiGet("voices/static");
+    const data = await bridge.apiGet("voices");
     state.voices = data.voices || [];
     fillDebugVoiceSelect();
     if (document.getElementById("voice-list").querySelector(".empty-state")) {
       renderVoices(state.voices);
     }
-  } catch (_) {}
+  } catch (_) {
+    // 兜底：仅内置系统音色
+    try {
+      const data = await bridge.apiGet("voices/static");
+      state.voices = data.voices || [];
+      fillDebugVoiceSelect();
+    } catch (__) {}
+  }
 }
 
 async function loadVoices() {
@@ -1101,8 +1123,8 @@ function resetUiConfig() {
     material_blur: 5,
     material_type: "acrylic",
     font_mode: "misans",
-    glow_enabled: false,
-    glow_intensity: 15,
+    glow_enabled: true,
+    glow_intensity: 40,
     shadow_enabled: true,
     shadow_intensity: 60,
   };
@@ -1171,6 +1193,12 @@ const Waveform = (() => {
     if (!canvas) return;
     ctx = canvas.getContext('2d');
     resize();
+    // 布局变化（如全宽侧栏改造）或 tab 切到含画布视图时尺寸会变，
+    // 仅监听 window.resize 会导致 backing store 过期 → 拉伸锯齿、线条变细。用 ResizeObserver 兜底
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => resize());
+      ro.observe(canvas.parentElement);
+    }
     window.addEventListener('resize', resize);
     loop();
   }
@@ -1179,8 +1207,12 @@ const Waveform = (() => {
     const rect = canvas.parentElement.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = rect.width; h = rect.height;
-    canvas.width = w * dpr; canvas.height = h * dpr;
+    canvas.width = Math.max(1, Math.round(w * dpr));
+    canvas.height = Math.max(1, Math.round(h * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
   }
 
   /** 将 HTMLAudioElement 接入 WebAudio 分析（同源 ./audio 可用） */
@@ -1190,6 +1222,13 @@ const Waveform = (() => {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioCtx.createAnalyser();
         analyser.fftSize = 256;
+      }
+      // 关键修复：上下文常在用户手势外（await 之后）创建而处于 suspended，
+      // 音频经 MediaElementSource 重路由进挂起上下文会静音 → 必须 resume 才能出声
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume().then(() => audioEl.play().catch(() => {})).catch(() => {});
+      } else {
+        audioEl.play().catch(() => {});
       }
       if (sourceNode) { try { sourceNode.disconnect(); } catch (_) {} }
       sourceNode = audioCtx.createMediaElementSource(audioEl);

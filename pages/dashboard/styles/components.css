@@ -711,3 +711,17 @@ input[type="color"].input {
   --font-family: var(--font-stack-builtin);
   --font-family-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
 }
+
+/* ===== 全组件统一动效（hover / active / focus 过渡，顺滑且克制） ===== */
+.btn, .select, .input, .textarea, .tab, .chip, .badge, .card, .stat-card,
+.voice-card, .file-drop, .audio-player, .toggle {
+  transition: background-color .18s ease, color .18s ease,
+              border-color .18s ease, box-shadow .22s ease,
+              transform .18s ease, opacity .18s ease;
+}
+/* 按下微缩，强化可点反馈（仅作用于自身变换，不破坏亚克力 backdrop-filter） */
+.btn:active, .chip:active, .tab:active, .voice-card:active { transform: translateY(0) scale(0.97); }
+/* 范围滑块拖动顺滑 */
+input[type="range"].slider { transition: background .18s ease; }
+/* 链接悬停 */
+a, .link { transition: color .18s ease; }
