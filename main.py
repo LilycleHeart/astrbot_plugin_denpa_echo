@@ -549,14 +549,17 @@ class Main(Star):
         path = request.query.get("path", "")
         if not path:
             return error_response("缺少 path 参数", status_code=400)
-        # 安全校验：路径必须在缓存目录或插件数据目录下
-        cache_dir = self.tts_engine.cache_dir or ""
+        # 安全校验：路径必须在缓存目录 / 插件数据目录 / 系统临时目录下
+        # (未配置 cache_dir 时合成临时 wav 落在系统临时目录, 必须放行否则 403 空响应 → 音频时长 0)
+        import tempfile
         allowed_prefixes = [
-            os.path.abspath(cache_dir),
+            os.path.abspath(self.tts_engine.cache_dir) if self.tts_engine.cache_dir else "",
             os.path.abspath(self.plugin_data_dir),
+            os.path.abspath(tempfile.gettempdir()),
         ]
+        allowed_prefixes = [p for p in allowed_prefixes if p]
         abs_path = os.path.abspath(path)
-        if not any(abs_path.startswith(p) for p in allowed_prefixes if p):
+        if not any(abs_path.startswith(p) for p in allowed_prefixes):
             return error_response("路径不在允许范围内", status_code=403)
         if not os.path.isfile(abs_path):
             return error_response("文件不存在", status_code=404)

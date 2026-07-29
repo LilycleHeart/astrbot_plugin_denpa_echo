@@ -616,9 +616,24 @@ function linkColorPicker(pickerId, textId) {
   const text = document.getElementById(textId);
   if (!picker || !text) return;
   // 取色器拖动也要实时触发预览（否则只有文本框直接输入才生效，静态色/品牌主题色不会实时变化）
-  picker.addEventListener("input", () => { text.value = picker.value; previewUiConfig(); });
+  picker.addEventListener("input", () => {
+    text.value = picker.value;
+    // 拖动品牌色时强制切到静态模式, 否则 dynamic 模式下品牌色被背景图取色覆盖、看起来"没生效"
+    if (pickerId === "ui-brand-color-picker") {
+      const modeSel = document.getElementById("ui-color-mode");
+      if (modeSel) modeSel.value = "static";
+    }
+    previewUiConfig();
+  });
   text.addEventListener("input", () => {
-    if (/^#[0-9a-fA-F]{6}$/.test(text.value)) { picker.value = text.value; previewUiConfig(); }
+    if (/^#[0-9a-fA-F]{6}$/.test(text.value)) {
+      picker.value = text.value;
+      if (pickerId === "ui-brand-color-picker") {
+        const modeSel = document.getElementById("ui-color-mode");
+        if (modeSel) modeSel.value = "static";
+      }
+      previewUiConfig();
+    }
   });
 }
 
@@ -681,6 +696,8 @@ function switchTab(name) {
   if (name === "logs") loadLogs();
   if (name === "overview") loadOverview();
   if (name === "voices") loadVoices();   // 进入音色页自动拉取（含克隆音色）
+  // 切到含声纹画布的视图变为可见后, 重新测量画布尺寸, 消除过期 backing store 造成的锯齿/细线
+  if (window.Waveform && typeof Waveform.refresh === "function") Waveform.refresh();
 }
 
 // ========== 状态总览 ==========
@@ -1056,7 +1073,12 @@ async function doDebugSynth() {
       </p>
     `;
     const dbgAudio = resultEl.querySelector('audio');
-    if (dbgAudio) Waveform.attachAudio(dbgAudio);
+    if (dbgAudio) {
+      dbgAudio.addEventListener('error', () => {
+        showToast('音频加载失败：可能是缓存目录未配置被服务端拦截（403），请检查插件设置后刷新重试', 'error');
+      });
+      Waveform.attachAudio(dbgAudio);
+    }
     showToast("合成成功", "success");
   } catch (e) {
     resultEl.innerHTML = `<span class="badge badge-danger">合成失败</span>
@@ -1143,7 +1165,12 @@ function playAudio(path, label) {
   `;
   // 接入波形可视化器（同源 ./audio 可用 WebAudio 分析）
   const audioEl = container.querySelector('audio');
-  if (audioEl) Waveform.attachAudio(audioEl);
+  if (audioEl) {
+    audioEl.addEventListener('error', () => {
+      showToast('音频加载失败，无法播放', 'error');
+    });
+    Waveform.attachAudio(audioEl);
+  }
   document.getElementById("toast-container").appendChild(container);
   setTimeout(() => {
     container.style.animation = "toast-out 0.25s forwards";
@@ -1187,14 +1214,23 @@ const Waveform = (() => {
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
   function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+  function lighten(c, amt) {
+    return [
+      Math.round(c[0] + (255 - c[0]) * amt),
+      Math.round(c[1] + (255 - c[1]) * amt),
+      Math.round(c[2] + (255 - c[2]) * amt),
+    ];
+  }
 
   function init() {
     canvas = document.getElementById('waveform-canvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    resize();
-    // 布局变化（如全宽侧栏改造）或 tab 切到含画布视图时尺寸会变，
-    // 仅监听 window.resize 会导致 backing store 过期 → 拉伸锯齿、线条变细。用 ResizeObserver 兜底
+    // 延迟到下一帧布局稳定后再测量，避免初始化时尺寸未定（视口切换/全宽布局）导致
+    // backing store 过期 → 画布被 CSS 拉伸 → 线条变细、出现锯齿
+    requestAnimationFrame(() => resize());
+    // 布局变化（全宽侧栏改造 / 切 tab）时 canvas 父容器尺寸会变，
+    // 仅 window.resize 不够，用 ResizeObserver 兜底重测
     if (window.ResizeObserver) {
       const ro = new ResizeObserver(() => resize());
       ro.observe(canvas.parentElement);
@@ -1203,10 +1239,17 @@ const Waveform = (() => {
     loop();
   }
 
+  // 切到含画布的视图变为可见后重新测量尺寸，消除过期 backing store 造成的锯齿/细线
+  function refresh() {
+    if (canvas) resize();
+  }
+
   function resize() {
     const rect = canvas.parentElement.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    w = rect.width; h = rect.height;
+    let cw = rect.width, ch = rect.height;
+    if (cw < 2 || ch < 2) { cw = canvas.clientWidth; ch = canvas.clientHeight; }
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    w = cw; h = ch;
     canvas.width = Math.max(1, Math.round(w * dpr));
     canvas.height = Math.max(1, Math.round(h * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1282,11 +1325,12 @@ const Waveform = (() => {
 
   /* ── 环境波形动画（空闲态）── */
   function drawIdle(C, dark) {
+    const lineC = dark ? lighten(C, 0.35) : C;   // 暗色提亮, 与本地预览一致（否则发虚、质量低）
     idlePhase += 0.008;
     const cy = h / 2;
     const lines = 22;
-    if (dark) { ctx.shadowColor = rgba(C, 0.80); ctx.shadowBlur = 10; }
-    else { ctx.shadowColor = rgba(C, 0.35); ctx.shadowBlur = 4; }
+    if (dark) { ctx.shadowColor = rgba(lineC, 0.80); ctx.shadowBlur = 10; }
+    else { ctx.shadowColor = rgba(lineC, 0.35); ctx.shadowBlur = 4; }
 
     for (let li = 0; li < lines; li++) {
       const off = li / lines - 0.5;
@@ -1297,7 +1341,7 @@ const Waveform = (() => {
       const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32);
 
       ctx.beginPath();
-      ctx.strokeStyle = rgba(C, alpha);
+      ctx.strokeStyle = rgba(lineC, alpha);
       ctx.lineWidth = 1;
       for (let x = 0; x <= w; x += 3) {
         const n = Math.sin(freq * x + idlePhase + li * 0.75)
@@ -1309,9 +1353,10 @@ const Waveform = (() => {
     }
 
     // 中央主波
-    ctx.shadowBlur = dark ? 18 : 6;
+    ctx.shadowColor = rgba(lineC, dark ? 0.90 : 0.45);
+    ctx.shadowBlur = dark ? 20 : 6;
     ctx.beginPath();
-    ctx.strokeStyle = rgba(C, dark ? 0.85 : 0.65);
+    ctx.strokeStyle = rgba(lineC, dark ? 1.0 : 0.70);
     ctx.lineWidth = 2;
     for (let x = 0; x <= w; x += 2) {
       const n = Math.sin(0.0105 * x + idlePhase * 0.58)
@@ -1323,7 +1368,7 @@ const Waveform = (() => {
     ctx.stroke();
   }
 
-  return { init, attachAudio };
+  return { init, attachAudio, refresh };
 })();
 
 // 启动
