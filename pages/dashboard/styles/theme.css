@@ -35,8 +35,9 @@ body {
 
 /* —— App Shell: 侧边栏 + 主内容 双列 —— */
 .app-shell {
-  max-width: 1280px;
-  margin: 0 auto;
+  /* 取消 1280 居中限宽：侧边栏贴窗口左缘（保留左 padding 呼吸位），主区 flex:1 占满剩余宽度并动态布局 */
+  max-width: none;
+  margin: 0;
   padding: var(--space-l);
   display: flex;
   align-items: flex-start;
