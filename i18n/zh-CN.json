@@ -59,7 +59,10 @@
   },
   "settings": {
     "title": "界面设置",
-    "subtitle": "Fluent UI 2 取色与背景设置",
+    "subtitle": "外观、取色与背景设置",
+    "acrylicOn": "启用亚克力材质",
+    "material": "材质不透明度",
+    "blur": "模糊强度",
     "colorMode": "取色模式",
     "dynamic": "动态（跟随主题）",
     "static": "静态（自定义）",
@@ -81,7 +84,7 @@
   },
   "pages": {
     "dashboard": {
-      "title": "Minimax TTS 控制台",
+      "title": "Denpa Echo 控制台",
       "description": "语音合成、语音克隆、试听与运行状态管理"
     }
   }

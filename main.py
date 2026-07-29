@@ -1,11 +1,11 @@
-"""AstrBot Minimax TTS 插件主入口。
+"""AstrBot Denpa Echo 插件主入口。
 
 接入 Minimax 官方 TTS API 的全功能语音合成插件：
 - 同步/异步/流式语音合成
 - 语音克隆与音色管理
 - LLM 合成前润色
 - 拦截/追加双发送模式
-- Fluent UI 2 自定义面板（10px 圆角，动/静态取色）
+- Signal 声场控制台（亚克力/Mica 材质，动/静态取色）
 """
 import os
 import time
@@ -26,11 +26,11 @@ from .minimax.client import MinimaxAPIError, MinimaxClient
 from .minimax.voice_clone import VoiceCloneService
 from .minimax.voice_manage import VoiceManageService
 
-PLUGIN_NAME = "astrbot_plugin_minimax_tts"
+PLUGIN_NAME = "astrbot_plugin_denpa_echo"
 
 
 class Main(Star):
-    """Minimax TTS 插件主类。"""
+    """Denpa Echo 插件主类。"""
 
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -88,7 +88,7 @@ class Main(Star):
         self._register_web_apis(context)
 
         logger.info(
-            f"[Minimax TTS] 插件已加载，模式={self.sender.mode}, "
+            f"[Denpa Echo] 插件已加载，模式={self.sender.mode}, "
             f"模型={config.get('tts', {}).get('model', 'speech-02-hd')}"
         )
 
@@ -123,17 +123,17 @@ class Main(Star):
     async def initialize(self) -> None:
         """异步初始化：检测 API 连通性。"""
         if not self.config.get("api_key"):
-            logger.warning("[Minimax TTS] 未配置 API Key，插件功能不可用")
+            logger.warning("[Denpa Echo] 未配置 API Key，插件功能不可用")
             self._api_ok = False
             return
         try:
             vm = VoiceManageService(self.client)
             await vm.list_voices("system")
             self._api_ok = True
-            logger.info("[Minimax TTS] API 连通性检测通过")
+            logger.info("[Denpa Echo] API 连通性检测通过")
         except Exception as e:
             self._api_ok = False
-            logger.error(f"[Minimax TTS] API 连通性检测失败: {e}")
+            logger.error(f"[Denpa Echo] API 连通性检测失败: {e}")
 
     # ===== 事件钩子 =====
 
@@ -165,7 +165,7 @@ class Main(Star):
         if (self.config.get("advanced", {}) or {}).get("log_level") == "DEBUG":
             text = getattr(resp, "completion_text", str(resp))
             logger.debug(
-                f"[Minimax TTS] LLM 回复: {text[:100]}..."
+                f"[Denpa Echo] LLM 回复: {text[:100]}..."
             )
 
     # ===== 指令 =====
@@ -415,7 +415,7 @@ class Main(Star):
                     await vc.get_clone_preview_audio(result, preview_path)
                     audio_url = preview_path
                 except Exception as e:
-                    logger.warning(f"[Minimax TTS] 下载克隆试听失败: {e}")
+                    logger.warning(f"[Denpa Echo] 下载克隆试听失败: {e}")
             return json_response({
                 "success": True,
                 "voice_id": voice_id,
@@ -591,8 +591,8 @@ class Main(Star):
                 except Exception:
                     pass
 
-        if len(body) > 5 * 1024 * 1024:
-            return error_response("图片不能超过 5MB", status_code=400)
+        if len(body) > 20 * 1024 * 1024:
+            return error_response("图片不能超过 20MB", status_code=400)
 
         mime = {
             ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
@@ -605,8 +605,8 @@ class Main(Star):
         try:
             self.config.save_config()
         except Exception as e:
-            logger.warning(f"[Minimax TTS] 保存背景图配置失败: {e}")
-        logger.info(f"[Minimax TTS] 背景图已上传（base64 内联，{len(body)} 字节）")
+            logger.warning(f"[Denpa Echo] 保存背景图配置失败: {e}")
+        logger.info(f"[Denpa Echo] 背景图已上传（base64 内联，{len(body)} 字节）")
         return json_response({
             "saved": True,
             "data": data_uri,
@@ -685,4 +685,4 @@ class Main(Star):
     async def terminate(self):
         """插件卸载时清理资源。"""
         await self.client.close()
-        logger.info("[Minimax TTS] 插件已卸载")
+        logger.info("[Denpa Echo] 插件已卸载")

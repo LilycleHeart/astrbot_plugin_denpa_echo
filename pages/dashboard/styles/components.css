@@ -1,34 +1,49 @@
 /* ============================================================
- * Fluent 2 组件 (v9 规范)
- * 参考: fluent2-design-system skill → references/components.md
- * 分层: 卡片 = colorNeutralBackground1(白) 浮起于 colorNeutralBackground2(灰) 画布
+ * Signal 组件
+ * 视觉语言: 白卡浮起(克制阴影) + 信号靛蓝(唯一强调) + 等宽数字
  * 所有 class 名与 index.html / app.js 接线保持一致, 不改动 DOM
  * ============================================================ */
 
-/* —— Card（白卡 + shadow4, 无描边, 4px 圆角）—— */
+/* —— Card（亚克力卡: 半透明 + 背景模糊 + 噪点; 无边缘处理, 立体感靠泛光+阴影）—— */
 .card {
-  background: var(--color-bg-1);
-  border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-4);
-  padding: var(--space-m);
-  animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
+  background: var(--surface-bg);
+  -webkit-backdrop-filter: var(--surface-blur);
+          backdrop-filter: var(--surface-blur);
+  border: none;
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-4), var(--glow-brand);
+  padding: var(--space-2xl);
+  transition:
+    box-shadow var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+  animation: signal-fade-in var(--motion-base) var(--motion-ease) both;
 }
+/* 高亮被着色: hover 时品牌泛光增强 + 表面染上一层品牌色 */
 .card:hover {
-  box-shadow: var(--shadow-8);
+  box-shadow: var(--shadow-8), var(--glow-brand-strong);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--color-brand) 5%, transparent),
+                    color-mix(in srgb, var(--color-brand) 5%, transparent)),
+    var(--material-noise);
+  transform: translateY(-1px);
 }
 .card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-m);
-  margin-bottom: var(--space-m);
+  margin-bottom: var(--space-l);
 }
 .card-title {
   margin: 0;
+  font-family: var(--font-family-display);
   font-size: var(--font-size-title);
   line-height: var(--line-title);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-fg-1);
+  color: var(--color-fg-1);                /* 标题: 中性 onSurface (Material 低强调) */
+  letter-spacing: -0.2px;
+  text-shadow: var(--text-depth), var(--glow-text);  /* 立体感 + 泛光 */
 }
 .card-subtitle {
   margin: var(--space-2xs) 0 0;
@@ -37,50 +52,115 @@
   color: var(--color-fg-3);
 }
 
-/* —— Stat Card（次级表面, shadow2）—— */
+/* —— Stat Card（次级亚克力表面）—— */
 .stat-card {
-  background: var(--color-bg-1);
+  background: var(--surface-bg);
+  -webkit-backdrop-filter: var(--surface-blur);
+          backdrop-filter: var(--surface-blur);
+  border: none;
   border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--shadow-2), var(--glow-brand);
   padding: var(--space-m) var(--space-l);
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
   min-height: 72px;
   justify-content: center;
-  transition: box-shadow var(--motion-fast) var(--motion-ease);
+  font-feature-settings: "tnum" 1;
+  transition:
+    box-shadow var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
 }
 .stat-card:hover {
-  box-shadow: var(--shadow-4);
+  box-shadow: var(--shadow-4), var(--glow-brand-strong);
+  transform: translateY(-1px);
 }
+/* 内容面板即唯一玻璃/实底表面(与侧边栏同配方); 内部 .card 只负责内容编排,
+   自身退化为完全透明的内容容器, 避免出现"卡片套卡片"的嵌套重影 */
+.tab-content .card {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  animation: none;
+}
+.tab-content .card:hover {
+  box-shadow: none;
+  background-image: none;
+  transform: none;
+}
+
+/* stat-card 在内容面板内退化为带内边距的内容块(无玻璃/圆角/动效),
+   保留 padding 保证标签数值可读, 但不单独成卡 */
+.tab-content .stat-card {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  animation: none;
+}
+.tab-content .stat-card:hover {
+  box-shadow: none;
+  background-image: none;
+  transform: none;
+}
+
+/* 玻璃面板内的控件本身不再做成 mini 玻璃卡, 改用 control-bg 平铺,
+   避免"玻璃上叠玻璃"读出第二层卡片 */
+.tab-content .input,
+.tab-content .select,
+.tab-content .textarea,
+.tab-content .file-drop,
+.tab-content .audio-player,
+.tab-content .pv-select-trigger,
+.tab-content .pv-select-menu {
+  background: var(--control-bg);
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+}
+
 .stat-label {
-  font-size: var(--font-size-caption);
-  line-height: var(--line-caption);
-  color: var(--color-fg-3);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-fg-3);                /* 标签: 中性三级文字 */
 }
 .stat-value {
+  font-family: var(--font-family-display);
   font-size: var(--font-size-title-lg);
   line-height: var(--line-title-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-fg-1);
+  color: var(--color-fg-1);                /* 数值: 中性 onSurface */
+  letter-spacing: -0.5px;
+  font-feature-settings: "tnum" 1;
+  text-shadow: var(--text-depth), var(--glow-text);  /* 立体感 + 泛光 */
 }
 .stat-value-sm {
   font-size: var(--font-size-title);
   line-height: var(--line-title);
   font-weight: var(--font-weight-semibold);
   color: var(--color-fg-1);
+  font-feature-settings: "tnum" 1;
+  text-shadow: var(--text-depth);
 }
 
-/* —— Badge（Fluent 2: 圆角 4px, 语义底色）—— */
+/* —— Badge（圆角胶囊, 语义底色）—— */
 .badge {
   display: inline-flex;
   align-items: center;
   height: 22px;
   padding: 0 var(--space-s);
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-circular);
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-caption);
   line-height: 1;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   border: 1px solid transparent;
   white-space: nowrap;
 }
@@ -92,32 +172,74 @@
 .badge-brand {
   background: var(--color-brand-tint);
   color: var(--color-brand);
-  border-color: var(--color-brand-border);
+  border-color: var(--color-brand-line);
 }
-.badge-success {
-  background: var(--color-success-bg);
-  color: var(--color-success-fg);
-}
-.badge-warning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-fg);
-}
-.badge-error {
-  background: var(--color-error-bg);
-  color: var(--color-error-fg);
+.badge-success { background: var(--color-success-bg); color: var(--color-success-fg); }
+.badge-warning { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.badge-error,
+.badge-danger { background: var(--color-error-bg); color: var(--color-error-fg); }
+.badge-info { background: var(--color-brand-weak); color: var(--color-brand); }
+.badge-feature,
+.badge-tertiary {
+  background: var(--color-tertiary-container);
+  color: var(--color-on-tertiary-container);
+  border-color: var(--color-tertiary);
 }
 
-/* —— Button（Fluent 2: 32px 高, 4px 圆角, 2px 焦点环）—— */
+/* —— Filter Chip（M3 secondaryContainer: 低强调度填充, 克制不抢焦点）——
+ * 选中态用 primaryContainer 表达「已选」，未选中用 secondaryContainer */
+.chip {
+  display: inline-flex; align-items: center; gap: var(--space-xs);
+  height: 32px; padding: 0 var(--space-m);
+  border-radius: var(--radius-circular);
+  background: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+  border: none; cursor: pointer;
+  font-size: var(--font-size-caption); font-weight: var(--font-weight-medium);
+  transition: background var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+}
+.chip:hover { box-shadow: var(--shadow-2), var(--glow-brand); }
+.chip .chip-icon { width: 16px; height: 16px; }
+.chip.selected {
+  background: var(--color-brand-surface);
+  color: var(--color-on-brand-surface);
+}
+
+/* —— Segmented Control（M3: 选中段 = secondaryContainer + onSecondaryContainer）——
+ * 轨道用高抬升表面(bg-3)，选中段浮起一层 secondaryContainer */
+.segmented {
+  display: inline-flex; padding: 4px; gap: 4px;
+  border-radius: var(--radius-medium);
+  background: var(--color-bg-3);
+}
+.segmented-option {
+  appearance: none; border: none; cursor: pointer;
+  padding: 6px 14px; border-radius: var(--radius-small);
+  background: transparent; color: var(--color-fg-2);
+  font: inherit; font-size: var(--font-size-body); font-weight: var(--font-weight-medium);
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+.segmented-option:hover { color: var(--color-fg-1); }
+.segmented-option.active {
+  background: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+  box-shadow: var(--shadow-2);
+}
+
+/* —— 三级色内联文字（M3 tertiary: 视觉差异化点缀, 如特惠/特征标签的强调文字） —— */
+.text-tertiary { color: var(--color-tertiary); }
+
+/* —— Button（36px 高, 10px 圆角, 3px 焦点环）—— */
 .btn {
   appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
+  height: 36px;
   padding: 0 var(--space-l);
   font-family: inherit;
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   line-height: 1;
   border-radius: var(--radius-medium);
   border: 1px solid var(--color-stroke-1);
@@ -126,16 +248,21 @@
   cursor: pointer;
   transition: background var(--motion-fast) var(--motion-ease),
     border-color var(--motion-fast) var(--motion-ease),
-    color var(--motion-fast) var(--motion-ease);
+    color var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
 }
 .btn:hover {
-  background: var(--color-bg-3);
-  border-color: var(--color-stroke-2);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
 }
-.btn:active { background: var(--color-bg-4); }
+.btn:active {
+  background: var(--color-bg-3);
+  transform: scale(0.98);
+}
 .btn:focus-visible {
-  outline: 2px solid var(--color-stroke-accessible);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 .btn:disabled,
 .btn[disabled] {
@@ -145,16 +272,25 @@
   color: var(--color-fg-4);
 }
 
-/* primary: 品牌填充 (colorBrandBackground) */
+/* primary: 品牌填充 + 泛光（文字用 M3 onPrimary, 亮深/暗浅自动翻转保证对比） */
 .btn-primary {
   background: var(--color-brand-bg);
   border-color: transparent;
-  color: var(--color-brand-fg-text);
+  color: var(--color-brand-on);
+  box-shadow: var(--shadow-2), var(--glow-brand);
+  text-shadow: var(--text-depth);
 }
-.btn-primary:hover { background: var(--color-brand-bg-hover); }
-.btn-primary:active { background: var(--color-brand-bg-pressed); }
+.btn-primary:hover {
+  background: var(--color-brand-bg-hover);
+  color: var(--color-brand-on);
+  box-shadow: var(--shadow-4), var(--glow-brand-strong);
+}
+.btn-primary:active {
+  background: var(--color-brand-bg-pressed);
+  transform: scale(0.98);
+}
 .btn-primary:focus-visible {
-  outline-color: var(--color-stroke-accessible);
+  box-shadow: var(--focus-ring);
 }
 
 /* subtle: 透明底, 悬浮才显 */
@@ -163,7 +299,11 @@
   border-color: transparent;
   color: var(--color-fg-1);
 }
-.btn-subtle:hover { background: var(--color-bg-3); }
+.btn-subtle:hover {
+  background: var(--color-bg-3);
+  color: var(--color-brand);
+  border-color: transparent;
+}
 
 /* outline: 透明底 + 描边 */
 .btn-outline {
@@ -171,15 +311,19 @@
   border-color: var(--color-stroke-1);
   color: var(--color-fg-1);
 }
-.btn-outline:hover { background: var(--color-bg-3); }
+.btn-outline:hover {
+  background: var(--color-bg-3);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
 
 .btn-sm {
-  height: 24px;
+  height: 28px;
   padding: 0 var(--space-m);
   font-size: var(--font-size-caption);
 }
 
-/* —— Input / Textarea / Select（appearance=outline）—— */
+/* —— Input / Textarea / Select（控件亚克力: 半透明 + blur + 品牌染色描边） —— */
 .input,
 .textarea,
 .select {
@@ -187,24 +331,41 @@
   font-family: inherit;
   font-size: var(--font-size-body);
   color: var(--color-fg-1);
-  background: var(--color-bg-1);
-  border: 1px solid var(--color-stroke-1);
+  background: var(--surface-bg);   /* 与卡片/侧边栏同源(统一表面令牌), 消除材质割裂 */
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+  border: 1px solid var(--control-stroke);
   border-radius: var(--radius-medium);
   padding: 0 var(--space-m);
-  height: 32px;
+  height: 36px;
   transition: border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
     box-shadow var(--motion-fast) var(--motion-ease);
 }
+@supports not (backdrop-filter: blur(1px)) {
+  .input, .textarea, .select { background-color: var(--color-bg-2); }
+}
 .input::placeholder,
-.textarea::placeholder { color: var(--color-fg-4); }
+.textarea::placeholder { color: var(--color-fg-2); }
 
+.input:hover,
+.textarea:hover,
+.select:hover {
+  border-color: var(--control-stroke-hover);
+  background-color: var(--control-bg-hover);
+}
 .input:focus,
 .textarea:focus,
 .select:focus {
   outline: none;
   border-color: var(--color-brand);
-  box-shadow: 0 0 0 2px var(--color-brand);
+  background-color: var(--control-bg-focus);
+  box-shadow: 0 0 0 3px var(--color-brand), var(--glow-brand);
 }
+/* 数字输入与文本输入外观统一(隐藏原生上下箭头, 避免与 select 风格割裂) */
+.input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.input[type="number"]::-webkit-inner-spin-button,
+.input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
 .textarea {
   height: auto;
@@ -216,22 +377,72 @@
 .select {
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2.5 4.5l3.5 3.5 3.5-3.5' fill='none' stroke='%23616161' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  /* 品牌色箭头: CSS 渐变绘制, 跟随 --color-brand 动态变色(SVG data-URI 做不到) */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-brand) 50%),
+    linear-gradient(135deg, var(--color-brand) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 1px),
+    calc(100% - 12px) calc(50% - 1px);
+  background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
-  background-position: right var(--space-s) center;
   padding-right: var(--space-3xl);
   cursor: pointer;
 }
-[data-theme="dark"] .select {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2.5 4.5l3.5 3.5 3.5-3.5' fill='none' stroke='%23ABABAB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+/* 原生下拉弹层: 无法透明, 但配色跟随主题 + 选中项品牌染色, 消除风格割裂 */
+.select option {
+  background: var(--popup-bg);
+  color: var(--popup-fg);
+  padding: 8px 12px;
 }
+.select option:checked {
+  background: color-mix(in srgb, var(--color-brand) 18%, var(--popup-bg));
+  color: var(--color-brand);
+  font-weight: 600;
+}
+.select option:disabled { color: var(--color-fg-4); }
+
+/* —— 自定义主题下拉 (替代原生 select, 全令牌化, 消除与主题割裂) —— */
+.pv-select { position: relative; width: 100%; }
+.pv-select-trigger {
+  width: 100%; height: 36px; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 0 var(--space-m); font: inherit; font-size: var(--font-size-body);
+  color: var(--color-fg-1); background: var(--surface-bg);
+  -webkit-backdrop-filter: var(--surface-blur); backdrop-filter: var(--surface-blur);
+  border: 1px solid var(--control-stroke); border-radius: var(--radius-medium); cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+}
+.pv-select-trigger:hover { border-color: var(--control-stroke-hover); }
+.pv-select-trigger:focus-visible,
+.pv-select.open .pv-select-trigger {
+  outline: none; border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-brand), var(--glow-brand);
+}
+.pv-select-caret { flex: 0 0 18px; width: 18px; height: 18px; color: var(--color-brand); transition: transform var(--motion-fast) var(--motion-ease); }
+.pv-select.open .pv-select-caret { transform: rotate(180deg); }
+.pv-select-menu {
+  position: absolute; z-index: 50; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--surface-bg); -webkit-backdrop-filter: var(--surface-blur); backdrop-filter: var(--surface-blur);
+  border: 1px solid var(--control-stroke); border-radius: var(--radius-medium);
+  padding: 6px; box-shadow: var(--shadow-8); display: none; max-height: 260px; overflow: auto;
+}
+.pv-select.open .pv-select-menu { display: block; }
+.pv-select-option {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-small);
+  font-size: var(--font-size-body); color: var(--color-fg-1); cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+.pv-select-option:hover { background: var(--color-brand-weak); color: var(--color-brand); }
+.pv-select-option[aria-selected="true"] { background: color-mix(in srgb, var(--color-brand) 16%, transparent); color: var(--color-brand); font-weight: 600; }
+.pv-select-option .pv-check { margin-left: auto; flex: 0 0 16px; width: 16px; height: 16px; color: var(--color-brand); opacity: 0; }
+.pv-select-option[aria-selected="true"] .pv-check { opacity: 1; }
 /* 原生 color 输入：保留色块 */
 input[type="color"].input {
   padding: 4px;
   cursor: pointer;
 }
 
-/* —— Slider（Fluent 2 range）—— */
+/* —— Slider —— */
 .slider {
   -webkit-appearance: none;
   appearance: none;
@@ -265,11 +476,11 @@ input[type="color"].input {
 .slider:focus-visible { box-shadow: var(--focus-ring); }
 
 /* —— Form —— */
-.form-row { margin-bottom: var(--space-m); }
+.form-row { margin-bottom: var(--space-l); }
 .form-label {
   display: block;
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   color: var(--color-fg-1);
   margin-bottom: var(--space-2xs);
 }
@@ -277,7 +488,7 @@ input[type="color"].input {
   margin: var(--space-2xs) 0 0;
   font-size: var(--font-size-caption);
   line-height: var(--line-caption);
-  color: var(--color-fg-3);
+  color: var(--color-fg-2);
 }
 
 /* —— Table —— */
@@ -293,9 +504,13 @@ input[type="color"].input {
 }
 .table thead th {
   text-align: left;
-  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: var(--font-weight-medium);
   color: var(--color-fg-2);
-  background: var(--color-bg-2);
+  background: transparent;
   padding: var(--space-s) var(--space-m);
   border-bottom: 1px solid var(--color-stroke-2);
   white-space: nowrap;
@@ -315,20 +530,22 @@ input[type="color"].input {
   justify-content: center;
   text-align: center;
   padding: var(--space-l);
-  border: 1px dashed var(--color-stroke-1);
+  border: 1.5px dashed var(--control-stroke-hover);
   border-radius: var(--radius-medium);
-  color: var(--color-fg-3);
-  background: var(--color-bg-1);
+  color: var(--color-fg-2);
+  background: var(--control-bg);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
   cursor: pointer;
   transition: border-color var(--motion-fast) var(--motion-ease),
     background var(--motion-fast) var(--motion-ease),
     color var(--motion-fast) var(--motion-ease);
   position: relative;
 }
-.file-drop:hover { border-color: var(--color-brand); color: var(--color-fg-2); }
+.file-drop:hover { border-color: var(--color-brand); color: var(--color-brand); }
 .file-drop.dragover {
   border-color: var(--color-brand);
-  background: var(--color-brand-tint);
+  background: var(--color-brand-weak);
   color: var(--color-brand);
 }
 .file-drop input[type="file"] {
@@ -340,10 +557,13 @@ input[type="color"].input {
 
 /* —— Audio Player —— */
 .audio-player {
-  background: var(--color-bg-2);
-  border: 1px solid var(--color-stroke-2);
+  background: var(--control-bg);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+  border: none;
   border-radius: var(--radius-medium);
   padding: var(--space-s) var(--space-m);
+  box-shadow: var(--glow-brand);
 }
 .audio-player audio {
   width: 100%;
@@ -361,12 +581,17 @@ input[type="color"].input {
   color: var(--color-fg-3);
   text-align: center;
 }
-.empty-state-icon { font-size: 32px; line-height: 1; }
+.empty-state-icon {
+  font-size: 32px;
+  line-height: 1;
+  color: var(--color-brand);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-brand) 40%, transparent));
+}
 
-/* —— Progress（ProgressBar）—— */
+/* —— Progress —— */
 .progress {
   position: relative;
-  height: 4px;
+  height: 6px;
   width: 100%;
   background: var(--color-stroke-2);
   border-radius: var(--radius-circular);
@@ -381,7 +606,7 @@ input[type="color"].input {
 .progress-bar.indeterminate {
   position: absolute;
   width: 40%;
-  animation: fluent-indeterminate 1.1s var(--motion-ease) infinite;
+  animation: signal-indeterminate 1.1s var(--motion-ease) infinite;
 }
 
 /* —— Skeleton —— */
@@ -393,11 +618,11 @@ input[type="color"].input {
     var(--color-bg-3) 100%
   );
   background-size: 960px 100%;
-  animation: fluent-shimmer 1.4s linear infinite;
+  animation: signal-shimmer 1.4s linear infinite;
   border-radius: var(--radius-small);
 }
 
-/* —— Toast（Fluent MessageBar 风格: 左侧语义色条）—— */
+/* —— Toast（左侧语义色条）—— */
 .toast-container {
   position: fixed;
   top: var(--space-l);
@@ -413,19 +638,76 @@ input[type="color"].input {
   align-items: flex-start;
   gap: var(--space-s);
   padding: var(--space-s) var(--space-m);
-  background: var(--color-bg-1);
-  border: 1px solid var(--color-stroke-2);
+  background: var(--surface-bg-high);
+  -webkit-backdrop-filter: var(--surface-blur);
+          backdrop-filter: var(--surface-blur);
+  border: none;
   border-left: 3px solid var(--color-stroke-1);
   border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-16);
+  box-shadow: var(--shadow-16), var(--glow-brand);
   font-size: var(--font-size-body);
   color: var(--color-fg-1);
-  animation: fluent-toast-in var(--motion-base) var(--motion-ease) both;
+  animation: signal-toast-in var(--motion-base) var(--motion-ease) both;
 }
-.toast.toast-out { animation: fluent-toast-out var(--motion-base) var(--motion-ease) forwards; }
+.toast.toast-out { animation: signal-toast-out var(--motion-base) var(--motion-ease) forwards; }
 .toast-success { border-left-color: var(--color-success-fg); }
 .toast-error { border-left-color: var(--color-error-fg); }
 .toast-info { border-left-color: var(--color-brand); }
 .toast-warning { border-left-color: var(--color-warning-fg); }
 .toast-icon { font-size: 16px; line-height: var(--line-body); }
 .toast-msg { flex: 1; }
+
+/* —— 亚克力关(材质开关 off): 全部浮起表面转实底, 关闭模糊, 颜色仍跟随主题令牌 —— */
+#app.acrylic-off .card,
+#app.acrylic-off .stat-card,
+#app.acrylic-off .sidebar,
+#app.acrylic-off .hero,
+#app.acrylic-off .toast,
+#app.acrylic-off .tab-content.active,
+#app.acrylic-off .input,
+#app.acrylic-off .textarea,
+#app.acrylic-off .select,
+#app.acrylic-off .file-drop,
+#app.acrylic-off .audio-player {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  background-color: var(--color-bg-1);
+  background-image: none !important;
+}
+
+/* —— 泛光开关(.glow-off 默认): 关闭时品牌 bloom 归零(透明, 不影响 box-shadow 列表合法性) —— */
+#app.glow-off {
+  --glow-brand: 0 0 0 transparent;
+  --glow-brand-strong: 0 0 0 transparent;
+  --glow-text: 0 0 0 transparent;
+}
+
+/* —— 阴影开关(.shadow-off 默认): 关闭时所有层级阴影归零 —— */
+#app.shadow-off {
+  --shadow-2:  0 0 0 transparent;
+  --shadow-4:  0 0 0 transparent;
+  --shadow-8:  0 0 0 transparent;
+  --shadow-16: 0 0 0 transparent;
+  --shadow-28: 0 0 0 transparent;
+}
+
+/* —— 材质类型: 云母(Mica) —— 仅改写两个统一表面令牌, 全部浮起表面(卡片/侧栏/控件/Toast…)自动跟随,
+   保证卡片与侧栏材质、模糊完全一致; 与亚克力共用同一 --material-opacity / --material-blur 源 —— */
+#app.material-mica {
+  --surface-bg:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-bg-1) 72%, var(--color-app-bg)),
+      color-mix(in srgb, var(--color-bg-1) 94%, var(--color-app-bg))),
+    var(--material-noise);
+  --surface-blur: blur(calc(var(--material-blur) * 0.25)) saturate(1.15);
+}
+
+/* —— 字体切换: MiSans 优先 / 系统内置优先 —— */
+#app.font-misans {
+  --font-family: var(--font-stack-misans);
+  --font-family-display: "MiSans", "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+}
+#app.font-builtin {
+  --font-family: var(--font-stack-builtin);
+  --font-family-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+}

@@ -1,4 +1,4 @@
-# AstrBot Minimax TTS 插件
+# AstrBot Denpa Echo 插件
 
 > 接入 Minimax 官方 TTS API 的全功能语音合成插件
 
@@ -28,9 +28,9 @@
   - 可选指定 Provider 或使用会话默认
   - 失败可降级使用原文
 
-- **Fluent UI 2 自定义控制台面板**
+- **Signal 声场控制台面板**
   - 通过 AstrBot Plugin Pages 提供 WebUI 高级面板
-  - 采用 Fluent UI 2 设计语言，**10px 圆角**
+  - 采用 Signal 设计语言（亚克力/Mica 材质），**14px 圆角**
   - 支持**动态取色**（跟随 AstrBot 亮/暗主题）与**静态取色**（自定义品牌色）
   - 三种背景模式：跟随主题 / 品牌色渐变 / 自定义颜色
   - 状态总览、音色管理（试听）、语音克隆、调试试听、运行日志、界面设置
@@ -60,7 +60,7 @@ git clone https://github.com/LilycleHeart/astrbot_plugin_minimax_tts
 
 ## 配置
 
-安装后，在 AstrBot WebUI → 插件管理 → Minimax TTS → 配置：
+安装后，在 AstrBot WebUI → 插件管理 → Denpa Echo → 配置：
 
 ### 必填
 - **API Key**：Minimax 开放平台 > 账户管理 > 接口密钥
@@ -95,7 +95,7 @@ git clone https://github.com/LilycleHeart/astrbot_plugin_minimax_tts
 - `/tts_panel`：提示打开 WebUI 控制台
 
 ### WebUI 控制台面板
-AstrBot WebUI → 插件管理 → Minimax TTS → 打开「控制台」页面：
+AstrBot WebUI → 插件管理 → Denpa Echo → 打开「控制台」页面：
 
 - **状态总览**：API 状态、今日合成次数、缓存大小、ffmpeg 可用性
 - **音色管理**：加载系统/克隆音色，点击试听
@@ -141,7 +141,7 @@ astrbot_plugin_minimax_tts/
 │   ├── audio_utils.py       # 音频转换
 │   ├── sender.py            # 消息发送
 │   └── text_utils.py        # 文本清洗
-├── pages/dashboard/         # Fluent UI 2 控制台面板
+├── pages/dashboard/         # Signal 声场控制台面板
 │   ├── index.html
 │   ├── styles/              # tokens.css, theme.css, components.css
 │   ├── scripts/app.js

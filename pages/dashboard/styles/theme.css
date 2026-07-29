@@ -1,6 +1,6 @@
 /* ============================================================
- * Fluent 2 主题与布局
- * 灵感: fluent2-design-system skill (App Shell Layout / Card / TabList)
+ * Signal 主题与布局
+ * 签名英雄区: 顶部实时频谱波场 + 示波器网格 + 品牌光晕
  * ============================================================ */
 
 *,
@@ -16,7 +16,15 @@ body {
 }
 
 body {
-  background: var(--color-app-bg);
+  min-height: 100vh;
+  /* Mica 画布: 中性表面光晕 + 颗粒噪点 + 壁纸色调纵向渐变 */
+  background-color: var(--color-app-bg);
+  background-image:
+    radial-gradient(120% 60% at 50% -10%, var(--color-bg-2), transparent 55%),
+    radial-gradient(90% 50% at 6% 108%, var(--color-bg-2), transparent 58%),
+    var(--material-noise),
+    linear-gradient(180deg, var(--mica-tint-1), var(--mica-tint-2));
+  background-attachment: fixed;
   color: var(--color-fg-1);
   font-family: var(--font-family);
   font-size: var(--font-size-body);
@@ -25,11 +33,18 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* —— App Shell —— */
+/* —— App Shell: 侧边栏 + 主内容 双列 —— */
 .app-shell {
-  max-width: 1080px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: var(--space-l);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-l);
+}
+.main-area {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-m);
@@ -37,106 +52,317 @@ body {
 
 /* 背景模式 (app.js 在 #app 上切换 class / 内联 backgroundImage) */
 .bg-mode-custom {
-  background: var(--color-app-bg);
+  background-image:
+    radial-gradient(120% 60% at 50% -10%, var(--color-bg-2), transparent 55%),
+    radial-gradient(90% 50% at 6% 108%, var(--color-bg-2), transparent 58%),
+    var(--material-noise);
+  background-color: var(--color-app-bg);
 }
 .bg-mode-brand-gradient {
   background:
-    radial-gradient(1100px 380px at 100% 0, var(--color-brand-tint), transparent 60%),
+    radial-gradient(1100px 360px at 100% 0, var(--color-brand-tint), transparent 60%),
+    var(--material-noise),
     linear-gradient(135deg, var(--color-brand-tint), var(--color-app-bg) 55%);
 }
 
 /* ============================================================
- * Hero（签名区域：标题 + 实时波形 canvas + 状态）
- * 使用 brand[160] 浅色底(brand-tint) 作为 Fluent 强调表面
+ * Hero（签名区域：标题 + 实时频谱波场 canvas + 状态）
+ * 示波器网格(伪元素) + 品牌光晕 + 底部全宽波形
  * ============================================================ */
 .hero {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "content wave"
-    "actions wave";
-  align-items: center;
-  column-gap: var(--space-xl);
-  row-gap: var(--space-s);
-  padding: var(--space-xl) var(--space-2xl);
-  background: var(--color-brand-tint);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-8);
   position: relative;
   overflow: hidden;
-  animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
+  border-radius: var(--radius-large);
+  padding: var(--space-3xl) var(--space-2xl) 188px;
+  /* 亚克力 hero: 低抬升表面(与侧栏同级), 品牌光晕半透明(不遮蔽玻璃感) */
+  background:
+    radial-gradient(120% 90% at 82% -10%, color-mix(in srgb, var(--color-brand) 9%, transparent), transparent 60%),
+    var(--surface-bg-low);
+  -webkit-backdrop-filter: var(--surface-blur);
+          backdrop-filter: var(--surface-blur);
+  border: none;
+  box-shadow: var(--shadow-4), var(--glow-brand);
+  animation: signal-fade-in var(--motion-base) var(--motion-ease) both;
+}
+/* 示波器网格纹理 */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--color-stroke-2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-stroke-2) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(125% 135% at 72% 0%, #000 28%, transparent 76%);
+          mask-image: radial-gradient(125% 135% at 72% 0%, #000 28%, transparent 76%);
+  opacity: 0.28; /* 减淡: 网格只作隐约纹理, 不与卡片材质对打 */
 }
 .hero-content {
-  grid-area: content;
+  position: relative;
+  z-index: 2;
 }
 .hero-content h1 {
   margin: 0;
+  font-family: var(--font-family-display);
   font-size: var(--font-size-display);
   line-height: var(--line-display);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: -0.01em;
-  color: var(--color-fg-1);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.5px;
+  color: var(--color-fg-1);                /* 标题: 中性 onSurface (Material 低强调) */
+  text-shadow: var(--text-depth), var(--glow-text);  /* 立体感 + 泛光 */
+}
+.hero-en {
+  font-size: 0.5em;
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0.3px;
+  color: var(--color-fg-2);            /* 英文副标: 中性 secondary (Material 低强调) */
+  margin-left: 0.45em;
+  vertical-align: baseline;
 }
 .hero .subtitle {
-  margin: var(--space-2xs) 0 0;
-  color: var(--color-fg-2);
+  margin: var(--space-s) 0 0;
+  color: var(--color-fg-2);                 /* 副标题: 中性 onSurfaceVariant */
   font-size: var(--font-size-body);
 }
-.hero-wave {
-  grid-area: wave;
-  width: 240px;
-  height: 64px;
-  display: block;
-  opacity: 0.95;
-}
 .hero-actions {
-  grid-area: actions;
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--space-s);
+  margin-top: var(--space-l);
+}
+.hero-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 188px;
+  display: block;
+  opacity: 0.92;
+  z-index: 1;
 }
 
+/* 主题切换按钮: 与侧边栏 logo / 选中项统一为品牌色(原 .btn-subtle 灰字与品牌体系割裂) */
+#btn-theme {
+  color: var(--color-brand);
+  background: transparent;
+  border-color: transparent;
+}
+#btn-theme:hover {
+  color: var(--color-brand-hover);
+  background: var(--color-brand-weak);
+  border-color: transparent;
+}
+#btn-theme svg { color: var(--color-brand); }
+
 /* ============================================================
- * Tabs（Fluent 2 TabList：选中项 2px 品牌下划线, 44px 高）
+ * Sidebar（可收缩侧边导航: 亚克力面板 + Material 图标）
+ * 收起时仅显示图标(64px), 展开显示图标+文字(224px)
  * ============================================================ */
+.sidebar {
+  position: sticky;
+  top: var(--space-l);
+  z-index: 10;
+  flex: 0 0 auto;
+  width: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-m) var(--space-s);
+  border-radius: var(--radius-large);
+  /* 侧栏 = 低抬升表面(统一表面令牌的低级变体); 无边缘处理, 立体感靠泛光+阴影 */  background: var(--surface-bg-low);
+  -webkit-backdrop-filter: var(--surface-blur);
+          backdrop-filter: var(--surface-blur);
+  border: none;
+  box-shadow: var(--shadow-4), var(--glow-brand);
+  transition: width var(--motion-gentle) var(--motion-ease);
+  overflow: hidden;
+}
+.sidebar.collapsed {
+  width: var(--sidebar-w-collapsed);
+}
+
+/* 侧栏头部（logo 圆点 + 标题） */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-mnudge);
+  padding: var(--space-s) var(--space-mnudge);
+  margin-bottom: var(--space-xs);
+}
+/* 品牌图标: 与 .tab-icon 完全同规格(22px / viewBox 0 0 24 24 / fill:currentColor),
+   仅以品牌色 + 泛光区分, 保证展开/收缩态都与导航图标像素对齐 */
+.sidebar-logo {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-brand);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-brand) 40%, transparent));
+}
+.sidebar-logo svg { width: 22px; height: 22px; display: block; }
+/* 动态声纹 logo: 四条品牌色竖条随节奏起伏; 收起/展开均居中对齐 tab-icon 列 */
+.sidebar-logo .soundwave-logo { width: 22px; height: 22px; display: block; color: inherit; }
+.sidebar-logo .soundwave-logo .bar {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: swPulse 1.1s ease-in-out infinite;
+}
+.sidebar-logo .soundwave-logo .bar:nth-child(1) { animation-delay: 0s; }
+.sidebar-logo .soundwave-logo .bar:nth-child(2) { animation-delay: .14s; }
+.sidebar-logo .soundwave-logo .bar:nth-child(3) { animation-delay: .28s; }
+.sidebar-logo .soundwave-logo .bar:nth-child(4) { animation-delay: .42s; }
+@keyframes swPulse {
+  0%, 100% { transform: scaleY(0.35); }
+  50%      { transform: scaleY(1); }
+}
+.sidebar-title {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-subtitle);
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  color: var(--color-fg-1);                /* 侧栏标题: 中性 onSurface */
+  text-shadow: var(--text-depth), var(--glow-text);
+}
+
+/* 导航容器 */
 .tabs {
   display: flex;
-  gap: var(--space-xs);
-  border-bottom: 1px solid var(--color-stroke-2);
-  overflow-x: auto;
-  scrollbar-width: thin;
+  flex-direction: column;
+  gap: var(--space-2xs);
 }
+
+/* 导航项: 图标 + 文字 */
 .tab {
   appearance: none;
   border: none;
   background: transparent;
   font-family: inherit;
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  color: var(--color-fg-2);
-  height: 44px;
-  padding: 0 var(--space-m);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-fg-2);                 /* 导航未选中项: 中性 onSurfaceVariant */
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  height: 40px;
+  padding: 0 var(--space-mnudge);
+  border-radius: var(--radius-medium);
   cursor: pointer;
   position: relative;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  white-space: nowrap;
+  text-align: left;
+  transition: color var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease);
+}
+.tab-icon {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: block;
+  fill: currentColor;
+}
+.tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 1;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+.tab:hover {
+  background: var(--color-brand-weak);
+  color: var(--color-brand);
+}
+/* 高亮着色: 选中项 = M3 容器实底 + 容器文字(primaryContainer/onPrimaryContainer),
+   两主题 / 低材质不透明度下均达 WCAG AA, 不再与背景融为一体 */
+.tab.active {
+  color: var(--color-on-brand-surface);
+  background: var(--color-brand-surface);
+  box-shadow: var(--shadow-4), var(--glow-brand);
+}
+.tab.active .tab-icon {
+  color: var(--color-on-brand-surface);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-on-brand-surface) 35%, transparent));
+}
+/* 选中项左侧信号条(容器文字色, 在容器实底上清晰) */
+.tab.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: var(--radius-circular);
+  background: var(--color-on-brand-surface);
+}
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* 收缩态: 隐藏文字, 图标居中 */
+.sidebar.collapsed .tab-label,
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed .sidebar-toggle .tab-label {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+.sidebar.collapsed .tab,
+.sidebar.collapsed .sidebar-toggle {
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+}
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  gap: 0;                 /* 收起时标题 width:0 仍残留 gap 会把 logo 推偏, 归零以与 tab-icon 列对齐 */
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* 收起/展开按钮 */
+.sidebar-toggle {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--font-size-caption);
+  color: var(--color-fg-2);                 /* 收起/展开按钮: 中性 onSurfaceVariant */
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  height: 36px;
+  padding: 0 var(--space-mnudge);
+  margin-top: var(--space-s);
+  border-top: 1px solid var(--color-stroke-2);
+  border-radius: 0 0 var(--radius-medium) var(--radius-medium);
+  cursor: pointer;
   white-space: nowrap;
   transition: color var(--motion-fast) var(--motion-ease),
     background var(--motion-fast) var(--motion-ease);
 }
-.tab:hover {
-  background: var(--color-bg-3);
-  color: var(--color-fg-1);
+.sidebar-toggle:hover { color: var(--color-brand); background: var(--color-brand-weak); }
+.sidebar-toggle:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.sidebar-toggle .tab-icon {
+  transition: transform var(--motion-gentle) var(--motion-ease);
 }
-.tab.active {
-  color: var(--color-brand);
-  border-bottom-color: var(--color-brand);
+.sidebar.collapsed .sidebar-toggle .tab-icon {
+  transform: rotate(180deg);
 }
-.tab:focus-visible {
-  outline: none;
-  border-radius: var(--radius-small) var(--radius-small) 0 0;
-  box-shadow: var(--focus-ring);
+
+/* 窄屏: 自动收缩为图标栏 */
+@media (max-width: 760px) {
+  .sidebar { width: var(--sidebar-w-collapsed); }
+  .sidebar .tab-label,
+  .sidebar .sidebar-title { opacity: 0; width: 0; pointer-events: none; }
+  .sidebar .tab, .sidebar .sidebar-toggle { justify-content: center; padding: 0; gap: 0; }
+  .sidebar .sidebar-header { justify-content: center; padding-left: 0; padding-right: 0; }
 }
 
 /* ============================================================
@@ -147,10 +373,18 @@ body {
 }
 .tab-content {
   display: none;
-  animation: fluent-fade-in var(--motion-base) var(--motion-ease) both;
+  animation: signal-fade-in var(--motion-base) var(--motion-ease) both;
 }
 .tab-content.active {
   display: block;
+  /* 与侧边栏完全同配方(统一表面令牌): 内容面板即一块大玻璃, 与侧栏视觉统一 */
+  background: var(--surface-bg);
+  -webkit-backdrop-filter: var(--surface-blur);
+          backdrop-filter: var(--surface-blur);
+  border: none;
+  border-radius: var(--radius-large);
+  padding: var(--space-l);
+  box-shadow: var(--shadow-4), var(--glow-brand);
 }
 
 /* ============================================================
@@ -169,6 +403,7 @@ body {
   align-items: center;
 }
 .flex-wrap { flex-wrap: wrap; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; gap: var(--space-s); }
 .gap-s { gap: var(--space-s); }
 .gap-m { gap: var(--space-m); }
 .gap-l { gap: var(--space-l); }
@@ -182,34 +417,40 @@ body {
 .ml-s { margin-left: var(--space-s); }
 
 /* 文本工具 */
-.text-muted { color: var(--color-fg-3); }
+.text-muted { color: var(--color-fg-2); }
 .text-bold { font-weight: var(--font-weight-semibold); }
 .text-sm { font-size: var(--font-size-caption); line-height: var(--line-caption); }
 .text-mono {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-caption);
 }
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ============================================================
  * 动效
  * ============================================================ */
-@keyframes fluent-fade-in {
-  from { opacity: 0; transform: translateY(4px); }
+@keyframes signal-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes fluent-toast-in {
+@keyframes signal-toast-in {
   from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-@keyframes fluent-toast-out {
+}
+@keyframes signal-toast-out {
   from { opacity: 1; transform: translateX(0); }
   to   { opacity: 0; transform: translateX(16px); }
 }
-@keyframes fluent-shimmer {
+@keyframes signal-shimmer {
   0%   { background-position: -480px 0; }
   100% { background-position: 480px 0; }
 }
-@keyframes fluent-indeterminate {
+@keyframes signal-indeterminate {
   0%   { left: -40%; }
   100% { left: 100%; }
 }
@@ -217,19 +458,19 @@ body {
 /* 响应式 */
 @media (max-width: 880px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .hero {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    grid-template-areas:
-      "content"
-      "wave"
-      "actions";
-    gap: var(--space-m);
-  }
-  .hero-wave { width: 100%; height: 56px; }
+  .hero { padding-bottom: 160px; }
+  .hero-wave { height: 150px; }
 }
 @media (max-width: 560px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* backdrop-filter 不可用时回退为实底(保证可读性) */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sidebar { background-color: var(--color-bg-1); }
+  .hero { background-color: var(--color-bg-1); }
+  .card, .stat-card { background-color: var(--color-bg-2); }
+  .toast { background-color: var(--color-bg-4); }
 }
 
 /* 尊重减少动效偏好 */

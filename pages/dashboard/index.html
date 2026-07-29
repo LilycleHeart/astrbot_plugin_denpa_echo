@@ -3,7 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Minimax TTS 控制台</title>
+    <title>电波，回响 控制台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <!-- MiSans（默认字体，官方 CDN；加载失败时回退到内置字体栈） -->
+    <link rel="preconnect" href="https://cdn-font.hyperos.mi.com" crossorigin />
+    <link href="https://cdn-font.hyperos.mi.com/font/css?family=MiSans:100,200,300,400,450,500,600,650,700,900:Chinese_Simplify,Latin&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles/tokens.css" />
     <link rel="stylesheet" href="./styles/theme.css" />
     <link rel="stylesheet" href="./styles/components.css" />
@@ -11,31 +17,76 @@
   <body>
     <div class="app-shell" id="app">
 
+      <!-- ═══ Sidebar（可收缩侧边导航: Material 图标 + 文字）═══ -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-logo" aria-hidden="true">
+            <svg class="soundwave-logo" viewBox="0 0 24 24" fill="currentColor">
+              <rect class="bar" x="3"  y="8"  width="3.2" height="8"  rx="1.6"/>
+              <rect class="bar" x="8"  y="5"  width="3.2" height="14" rx="1.6"/>
+              <rect class="bar" x="13" y="3"  width="3.2" height="18" rx="1.6"/>
+              <rect class="bar" x="18" y="6"  width="3.2" height="12" rx="1.6"/>
+            </svg>
+          </span>
+          <span class="sidebar-title">Denpa Echo</span>
+        </div>
+
+        <nav class="tabs" role="tablist">
+          <button class="tab active" data-tab="overview" title="状态总览">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span class="tab-label" data-i18n="tabs.overview">状态总览</span>
+          </button>
+          <button class="tab" data-tab="voices" title="音色管理">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h2V6H7v12zm4 4h2V2h-2v20zm-8-8h2v-4H3v4zm12 4h2V6h-2v12zm4-8v4h2v-4h-2z"/></svg>
+            <span class="tab-label" data-i18n="tabs.voices">音色管理</span>
+          </button>
+          <button class="tab" data-tab="clone" title="语音克隆">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>
+            <span class="tab-label" data-i18n="tabs.clone">语音克隆</span>
+          </button>
+          <button class="tab" data-tab="debug" title="调试试听">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            <span class="tab-label" data-i18n="tabs.debug">调试试听</span>
+          </button>
+          <button class="tab" data-tab="logs" title="运行日志">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span class="tab-label" data-i18n="tabs.logs">运行日志</span>
+          </button>
+          <button class="tab" data-tab="settings" title="界面设置">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            <span class="tab-label" data-i18n="settings.title">界面设置</span>
+          </button>
+        </nav>
+
+        <button class="sidebar-toggle" id="sidebar-toggle" title="收起 / 展开侧边栏">
+          <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z"/></svg>
+          <span class="tab-label">收起侧栏</span>
+        </button>
+      </aside>
+
+      <!-- ═══ 主内容列 ═══ -->
+      <div class="main-area">
+
       <!-- ═══ Hero（签名区域：标题 + 实时波形 canvas）═══ -->
       <header class="hero">
         <div class="hero-content">
-          <h1 data-i18n="title">Minimax TTS</h1>
+          <h1>电波，回响 <span class="hero-en">Denpa Echo</span></h1>
           <p class="subtitle" data-i18n="subtitle">语音合成 · 语音克隆 · 发音词典 · 运行状态</p>
         </div>
 
-        <!-- 实时波形可视化器（Fluent 品牌色线条） -->
+        <!-- 实时波形可视化器（信号色线条） -->
         <canvas id="waveform-canvas" class="hero-wave"></canvas>
 
         <div class="hero-actions">
           <span id="api-status-badge" class="badge badge-neutral">检测中</span>
+          <button class="btn btn-subtle btn-sm" id="btn-theme" title="切换主题">
+            <svg id="icon-theme" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px">
+              <path id="icon-theme-path" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+            </svg><span id="btn-theme-label">暗色主题</span>
+          </button>
           <button class="btn btn-subtle btn-sm" id="btn-refresh-all" data-i18n="refresh">刷新</button>
         </div>
       </header>
-
-      <!-- ═══ Tabs ═══ -->
-      <nav class="tabs" role="tablist">
-        <button class="tab active" data-tab="overview" data-i18n="tabs.overview">状态总览</button>
-        <button class="tab" data-tab="voices"   data-i18n="tabs.voices">音色管理</button>
-        <button class="tab" data-tab="clone"    data-i18n="tabs.clone">语音克隆</button>
-        <button class="tab" data-tab="debug"    data-i18n="tabs.debug">调试试听</button>
-        <button class="tab" data-tab="logs"     data-i18n="tabs.logs">运行日志</button>
-        <button class="tab" data-tab="settings" data-i18n="settings.title">界面设置</button>
-      </nav>
 
       <!-- ═══ Tab Panels ═══ -->
       <main class="tab-panels">
@@ -193,7 +244,7 @@
             </div>
             <div class="form-row">
               <label class="form-label" data-i18n="debug.text">合成文本</label>
-              <textarea class="textarea" id="debug-text" rows="3">你好，这是 Minimax TTS 的试听样本。</textarea>
+              <textarea class="textarea" id="debug-text" rows="3">你好，这是 Denpa Echo 的试听样本。</textarea>
             </div>
             <div class="grid grid-3">
               <div class="form-row">
@@ -250,22 +301,22 @@
             <div class="card-header">
               <div>
                 <h2 class="card-title" data-i18n="settings.title">界面设置</h2>
-                <p class="card-subtitle" data-i18n="settings.subtitle">取色、背景与圆角</p>
+                <p class="card-subtitle" data-i18n="settings.subtitle">取色、背景、材质、字体与效果</p>
               </div>
             </div>
             <div class="grid grid-2">
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.colorMode">取色模式</label>
                 <select class="select" id="ui-color-mode">
-                  <option value="dynamic" data-i18n="settings.dynamic">动态（跟随主题）</option>
-                  <option value="static" data-i18n="settings.static">静态（自定义）</option>
+                  <option value="dynamic" data-i18n="settings.dynamic">动态（背景图 Material 取色）</option>
+                  <option value="static" data-i18n="settings.static">静态（自定义颜色）</option>
                 </select>
               </div>
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.brandColor">品牌色</label>
                 <div class="flex gap-s">
-                  <input type="color" class="input" id="ui-brand-color-picker" value="#0f6cbd" style="width:60px;padding:4px" />
-                  <input class="input" id="ui-brand-color" value="#0f6cbd" />
+                  <input type="color" class="input" id="ui-brand-color-picker" value="#ff8ab9" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-brand-color" value="#ff8ab9" />
                 </div>
               </div>
               <div class="form-row">
@@ -279,20 +330,62 @@
               </div>
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.radius">圆角大小（px）</label>
-                <input type="number" class="input" id="ui-radius" value="8" min="0" max="40" />
+                <input type="number" class="input" id="ui-radius" value="14" min="0" max="40" />
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="ui-acrylic-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0" data-i18n="settings.acrylicOn">启用材质（关闭则转实底）</label>
+              </div>
+              <div class="form-row">
+                <label class="form-label">材质类型</label>
+                <select class="select" id="ui-material-type">
+                  <option value="acrylic">亚克力（Acrylic，半透明模糊）</option>
+                  <option value="mica">云母（Mica，低模糊带壁纸色调）</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.material">材质不透明度 <span id="ui-material-val" class="text-mono">62%</span></label>
+                <input type="range" class="slider" id="ui-material" min="0" max="100" value="62" />
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.blur">模糊强度 <span id="ui-blur-val" class="text-mono">28px</span></label>
+                <input type="range" class="slider" id="ui-blur" min="0" max="100" value="28" />
+              </div>
+              <div class="form-row">
+                <label class="form-label">字体</label>
+                <select class="select" id="ui-font">
+                  <option value="misans">MiSans（默认，需联网加载）</option>
+                  <option value="builtin">内置字体（系统字体栈）</option>
+                </select>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="ui-glow-on" style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用品牌泛光</label>
+              </div>
+              <div class="form-row">
+                <label class="form-label">泛光强度 <span id="ui-glow-val" class="text-mono">40%</span></label>
+                <input type="range" class="slider" id="ui-glow" min="0" max="100" value="40" />
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="ui-shadow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用投影阴影</label>
+              </div>
+              <div class="form-row">
+                <label class="form-label">阴影强度 <span id="ui-shadow-val" class="text-mono">60%</span></label>
+                <input type="range" class="slider" id="ui-shadow" min="0" max="100" value="60" />
               </div>
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.customBg">自定义亮色背景</label>
                 <div class="flex gap-s">
-                  <input type="color" class="input" id="ui-custom-bg-picker" value="#f5f5f5" style="width:60px;padding:4px" />
-                  <input class="input" id="ui-custom-bg" value="#f5f5f5" />
+                  <input type="color" class="input" id="ui-custom-bg-picker" value="#F5F6F8" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-custom-bg" value="#F5F6F8" />
                 </div>
               </div>
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.customBgDark">自定义暗色背景</label>
                 <div class="flex gap-s">
-                  <input type="color" class="input" id="ui-custom-bg-dark-picker" value="#1f1f1f" style="width:60px;padding:4px" />
-                  <input class="input" id="ui-custom-bg-dark" value="#1f1f1f" />
+                  <input type="color" class="input" id="ui-custom-bg-dark-picker" value="#0C0E13" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-custom-bg-dark" value="#0C0E13" />
                 </div>
               </div>
             </div>
@@ -302,7 +395,7 @@
               <div class="flex gap-s flex-wrap">
                 <label class="file-drop" id="bg-drop" style="flex:1;min-width:200px">
                   <input type="file" id="bg-image-file" accept=".jpg,.jpeg,.png,.webp,.gif" />
-                  <div id="bg-file-name" data-i18n="settings.bgImageHint">点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）</div>
+                  <div id="bg-file-name" data-i18n="settings.bgImageHint">点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤20MB）</div>
                 </label>
                 <button class="btn" id="btn-bg-upload" data-i18n="settings.bgImageUpload">上传</button>
                 <button class="btn btn-subtle" id="btn-bg-remove" data-i18n="settings.bgImageRemove">移除</button>
@@ -320,6 +413,7 @@
         </section>
 
       </main><!-- /tab-panels -->
+      </div><!-- /main-area -->
     </div><!-- /app-shell -->
 
     <!-- Toast 容器 -->

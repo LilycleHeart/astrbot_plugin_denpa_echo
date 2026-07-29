@@ -1,13 +1,7 @@
 /* ============================================================
- * Fluent 2 Design Tokens
- * 来源: @fluentui/react-components v9 (microsoft/fluentui)
- * 权威基准: fluent2-design-system skill → references/tokens.md
- *
- * 关键设计决策 (决定"像不像 Fluent 2"):
- *  - 画布(canvas) = colorNeutralBackground2 (浅灰), 卡片(surface) = colorNeutralBackground1 (白)
- *    → 这是 Fluent 2 最显著的"灰底白卡"分层特征, 与旧版(白底近白卡)截然不同
- *  - 品牌主色 brand[80] = #0F6CBD (Fluent 2 Web 真值, 严禁旧版 v8 的 #0078D4)
- *  - 圆角令牌: Small2 / Medium4 / Large6 / XLarge8 / Circular (v9 实现值)
+ * Signal Design Tokens — "声场控制台" 设计语言
+ * 方向: 抛弃 Fluent 2, 用 frontend-design 重做 (2026-07-29)
+ * 主题世界 = 声音(TTS/克隆/试听); 唯一强调色 = 信号粉(#ff8ab9); 签名 = 顶部实时频谱波场
  *
  * 与 app.js 桥接契约 (必须保留, 不得改名):
  *  --color-brand* / --color-app-bg / --radius-large / --radius-xlarge
@@ -16,78 +10,103 @@
 
 :root,
 [data-theme="light"] {
-  /* —— 品牌色 (Communication Blue ramp, brand[10..160]) —— */
-  --color-brand: #0F6CBD;            /* colorBrandBackground / colorBrandForeground1 (brand[80]) */
-  --color-brand-hover: #115EA3;      /* colorBrandBackgroundHover (brand[70]) */
-  --color-brand-pressed: #0C3B5E;    /* colorBrandBackgroundPressed (brand[40]) */
-  --color-brand-fg: #0F6CBD;          /* 文字/链接用品牌色 (colorBrandForeground1) */
-  --color-brand-border: #0F6CBD;     /* colorBrandStroke1 */
-  --color-brand-bg: #0F6CBD;         /* 填充按钮底色 (colorBrandBackground) */
-  --color-brand-bg-hover: #115EA3;   /* colorBrandBackgroundHover */
-  --color-brand-bg-pressed: #0C3B5E; /* colorBrandBackgroundPressed */
-  --color-brand-fg-text: #FFFFFF;    /* 品牌按钮上的文字 (colorNeutralForegroundOnBrand) */
-  --color-brand-tint: #EFF6FC;       /* brand[160] 浅色底, 用于强调表面 (accent surfaces) */
+  /* —— 信号色 (唯一强调色, 默认粉色) ——
+   * 全套颜色(品牌/中性前景/中性背景/描边/状态色/弹层/云母)均由 app.js 经
+   * material-color-utilities 从单一源色全量派生(品牌= M3 官方 primary 调色板,
+   * 中性= M3 官方 neutral / neutralVariant 调色板, 取色用 theme.palettes.*),
+   * 此处仅为默认源 #ff8ab9 的静态回退值, 确保无 JS 时也是 MCU 派生结果。 */
+  --color-brand: #9d3b67;            /* M3 light primary（默认源 #ff8ab9; JS 运行时按源色全量重算） */
+  --color-brand-on: #ffffff;         /* 实底按钮/填充上的文字（M3 onPrimary） */
+  --color-brand-hover: #a94571;      /* 实底按钮 hover（仍深, onBrand 可读） */
+  --color-brand-pressed: #91315d;    /* 实底按钮 pressed（仍深） */
+  --color-brand-fg: var(--color-brand);          /* 文字/链接用品牌色 */
+  --color-brand-border: var(--color-brand);      /* 描边/焦点 */
+  --color-brand-bg: var(--color-brand);          /* 填充按钮底色 */
+  --color-brand-bg-hover: var(--color-brand-hover);
+  --color-brand-bg-pressed: var(--color-brand-pressed);
+  --color-brand-surface: #ffd9e4;    /* 选中态/容器实底（浅, M3 primaryContainer） */
+  --color-on-brand-surface: #3e0021; /* 容器上文字（深, M3 onPrimaryContainer） */
+  --color-brand-tint: #ffd9e4;       /* 薄染背景 */
+  --color-brand-weak: #ffd1df;       /* 薄染背景（hover/badge, 亮色用浅洗保证品牌文字 AA） */
+  --color-brand-line: #db6c9a;       /* 描边 */
+  /* 着色前景: 标题/图标/标签的品牌染色 (纯 M3 TonalPalette 派生, 运行时按源色重算, 非灰字混合) */
+  --color-fg-tinted: #91315d;
+  --color-fg-tinted-2: #a94571;
 
-  /* —— 中性前景 (grey ramp) —— */
-  --color-fg-1: #242424;             /* colorNeutralForeground1 (grey[14]) 主文本 */
-  --color-fg-2: #424242;             /* colorNeutralForeground2 (grey[26]) 次要文本 */
-  --color-fg-3: #616161;             /* colorNeutralForeground3 (grey[38]) 第三文本 */
-  --color-fg-4: #767676;             /* colorNeutralForeground4 (grey[44]) 占位/禁用 */
-  --color-fg-inverted: #FFFFFF;
+  /* —— 次要色组 (M3 secondary: 低强调度填充, 如 Filter Chip / 分段控件选中; 同色相低彩度, 克制不抢焦点) —— */
+  --color-secondary: #735760;                 /* secondary */
+  --color-on-secondary: #ffffff;              /* secondary 上的文字 */
+  --color-secondary-container: #ffd9e4;        /* secondaryContainer (= primaryContainer 同种子下) */
+  --color-on-secondary-container: #2a151d;    /* secondaryContainer 上的文字 */
+  /* —— 三级色组 (M3 tertiary: 视觉差异化点缀, 如特惠/特征/新消息标签; +60° 色相偏移, 真·第二色相) —— */
+  --color-tertiary: #7d5636;                  /* tertiary (暖橙棕) */
+  --color-on-tertiary: #ffffff;               /* tertiary 上的文字 */
+  --color-tertiary-container: #ffdcc4;        /* tertiaryContainer (浅桃) */
+  --color-on-tertiary-container: #2f1500;     /* tertiaryContainer 上的文字 */
 
-  /* —— 中性背景: 画布浅灰, 卡片白 (Fluent 2 分层) —— */
-  --color-app-bg: #F5F5F5;           /* colorNeutralBackground2 画布/页面 */
-  --color-bg-1: #FFFFFF;             /* colorNeutralBackground1 卡片/浮起表面 */
-  --color-bg-2: #FAFAFA;             /* colorNeutralBackground3 嵌套表面 */
-  --color-bg-3: #F0F0F0;             /* colorNeutralBackground4 更深表面/hover */
-  --color-bg-4: #EDEDED;             /* colorNeutralBackground5 */
-  --color-bg-inverted: #242424;
+  /* —— 中性前景 (ink): 由 M3 scheme (onSurface/onSurfaceVariant) + 中性色板派生 —— */
+  --color-fg-1: #201a1c;             /* 主文本 */
+  --color-fg-2: #514347;             /* 次要文本 */
+  --color-fg-3: #695b5f;             /* 第三文本 / 占位 (官方 neutralVariant.tone(40), 保证 AA) */
+  --color-fg-4: #d5c2c6;             /* 禁用 */
+  --color-fg-inverted: #faeef0;
+
+  /* —— 中性背景: 由中性色板 tone 阶梯派生 (近白/近黑, 随源色微调) —— */
+  --color-app-bg: #fff8f8;           /* 画布/页面 (surface tone 98) */
+  --color-bg-1: #f8e8ec;             /* 低抬升(侧栏/导航): neutral.tone(96) + primary 5% 蒙版 */
+  --color-bg-2: #f0dde2;             /* 中抬升(卡片): neutral.tone(94) + primary 8% 蒙版 */
+  --color-bg-3: #e8d2d9;             /* 高抬升(输入/hover): neutral.tone(92) + primary 11% 蒙版 */
+  --color-bg-4: #e0c9d1;             /* 最高抬升(toast/弹层): neutral.tone(90) + primary 14% 蒙版 */
+  --color-bg-inverted: #352f30;
 
   /* —— 中性描边 —— */
-  --color-stroke-1: #D1D1D1;         /* colorNeutralStroke1 (grey[82]) */
-  --color-stroke-2: #E0E0E0;         /* colorNeutralStroke2 (grey[88]) */
-  --color-stroke-3: #ECECEC;         /* colorNeutralStroke3 */
-  --color-stroke-accessible: #0F6CBD;/* colorNeutralStrokeAccessible 焦点环(3:1 对比) */
+  --color-stroke-1: #837377;         /* 主描边 (M3 outline) */
+  --color-stroke-2: #d5c2c6;         /* 次描边 (M3 outlineVariant) */
+  --color-stroke-3: #f2dde2;         /* 极浅 (官方 neutralVariant.tone(90)) */
+  --color-stroke-1-hover: var(--color-brand);   /* 输入悬浮描边 / 焦点 */
+  --color-stroke-accessible: var(--color-brand);/* 焦点环 */
 
-  /* —— 状态色 (Fluent 2 v9 colorStatus*) —— */
-  --color-success-fg: #0E700E;       /* colorStatusSuccessForeground1 */
-  --color-success-bg: #DFF6DD;       /* colorStatusSuccessBackground1 */
-  --color-warning-fg: #8C5B00;       /* colorStatusWarningForeground1 */
-  --color-warning-bg: #FFFCF5;       /* colorStatusWarningBackground1 */
-  --color-error-fg: #C8311B;         /* colorStatusDangerForeground1 */
-  --color-error-bg: #FDF3F2;         /* colorStatusDangerBackground1 */
-  --color-info: #0F6CBD;             /* info 语义使用品牌蓝 */
+  /* —— 状态色: error 来自 M3 error 角色; success/warning 用规范源色经 MCU 派生 —— */
+  --color-success-fg: #006d3d;
+  --color-success-bg: #86fab1;
+  --color-warning-fg: #815500;
+  --color-warning-bg: #ffddb2;
+  --color-error-fg: #ba1a1a;
+  --color-error-bg: #ffdad6;
+  --color-info: var(--color-brand);
 
-  /* —— 圆角 (Fluent 2 v9: Small2 / Medium4 / Large6 / XLarge8 / Circular) —— */
-  --radius-small: 2px;               /* 小徽章 / <32px 元素 */
-  --radius-medium: 4px;              /* 控件: Button, Input, Card, Tab */
-  --radius-large: 6px;               /* 大容器 / hero */
-  --radius-xlarge: 8px;              /* Button sheets, popovers, 背景预览 */
-  --radius-circular: 999px;          /* 胶囊 / 滑块 / 头像 */
+  /* —— 圆角 (Signal: 控件 10 / 卡片 14 / 胶囊) —— */
+  --radius-small: 8px;
+  --radius-medium: 10px;             /* 控件: Button, Input, Card 内容 */
+  --radius-large: 14px;              /* 卡片/hero (app.js 可覆盖) */
+  --radius-xlarge: 14px;             /* 背景预览 (app.js 可覆盖) */
+  --radius-circular: 999px;
 
-  /* —— 字体 (Segoe UI Variable) —— */
-  --font-family: "Segoe UI Variable Display", "Segoe UI", "Segoe UI Web (West European)",
-    system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, Arial,
-    "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-family-mono: "Cascadia Code", Consolas, "Courier New", Courier, monospace;
-  --font-size-caption: 12px;         /* fontSizeBase200 */
+  /* —— 字体 (默认 MiSans; 选项: MiSans 优先 / 系统内置优先) ——
+   * 具体切换由 #app.font-misans / #app.font-builtin 类控制, 这里给默认栈 */
+  --font-stack-misans: "MiSans", "Inter", "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-stack-builtin: "Inter", "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-family: var(--font-stack-misans);
+  --font-family-display: "MiSans", "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-family-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, Menlo, monospace;
+  --font-size-caption: 12px;
   --line-caption: 16px;
-  --font-size-body: 14px;            /* fontSizeBase300 (Body 默认) */
+  --font-size-body: 14px;
   --line-body: 20px;
-  --font-size-subtitle: 16px;        /* fontSizeBase400 */
+  --font-size-subtitle: 16px;
   --line-subtitle: 22px;
-  --font-size-title: 20px;           /* fontSizeBase500 */
-  --line-title: 28px;
-  --font-size-title-lg: 28px;        /* fontSizeHero700 */
-  --line-title-lg: 36px;
-  --font-size-display: 32px;         /* fontSizeHero800 */
-  --line-display: 40px;
+  --font-size-title: 18px;
+  --line-title: 24px;
+  --font-size-title-lg: 26px;
+  --line-title-lg: 32px;
+  --font-size-display: 30px;
+  --line-display: 36px;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  /* —— 间距 (4px base: 2/4/6/8/10/12/16/20/24/32) —— */
+  /* —— 间距 (4px base) —— */
   --space-2xs: 2px;
   --space-xs: 4px;
   --space-snudge: 6px;
@@ -100,84 +119,184 @@
   --space-3xl: 32px;
   --space-4xl: 40px;
 
-  /* —— 阴影 (elevation: key + ambient 两层, Fluent 2) —— */
-  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 1px rgba(0, 0, 0, 0.12);
-  --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
-  --shadow-8: 0 4px 8px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
-  --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
-  --shadow-28: 0 14px 28px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  /* —— 阴影 (Signal: 克制、双层、低透明; 强度由 --shadow-strength 0..1 控制, 开关见 .shadow-off) —— */
+  --shadow-strength: 0.6;
+  --shadow-2:  0 1px 2px rgba(17, 20, 28, calc(0.04 * var(--shadow-strength))), 0 1px 3px rgba(17, 20, 28, calc(0.05 * var(--shadow-strength)));
+  --shadow-4:  0 2px 8px rgba(17, 20, 28, calc(0.06 * var(--shadow-strength)));
+  --shadow-8:  0 6px 20px rgba(17, 20, 28, calc(0.08 * var(--shadow-strength)));
+  --shadow-16: 0 12px 32px rgba(17, 20, 28, calc(0.10 * var(--shadow-strength)));
+  --shadow-28: 0 20px 48px rgba(17, 20, 28, calc(0.12 * var(--shadow-strength)));
 
-  /* —— 动效 (Fluent 2 duration + curve) —— */
-  --motion-ultrafast: 50ms;          /* durationUltraFast */
-  --motion-fast: 150ms;              /* durationFast */
-  --motion-base: 200ms;              /* durationNormal */
-  --motion-gentle: 250ms;            /* durationGentle */
-  --motion-slow: 300ms;              /* durationSlow */
-  --motion-ease: cubic-bezier(0.33, 0, 0.67, 1);            /* curveEasyEase */
-  --motion-ease-emphasized: cubic-bezier(0.3, 0, 0.8, 0.15);/* curveEasyEaseMax */
+  /* —— 动效 —— */
+  --motion-ultrafast: 60ms;
+  --motion-fast: 140ms;
+  --motion-base: 200ms;
+  --motion-gentle: 250ms;
+  --motion-slow: 320ms;
+  --motion-ease: cubic-bezier(0.33, 0, 0.67, 1);
+  --motion-ease-emphasized: cubic-bezier(0.3, 0, 0.8, 0.15);
 
-  /* —— 焦点环 (2px brand = colorNeutralStrokeAccessible) —— */
-  --focus-ring: 0 0 0 2px var(--color-stroke-accessible);
-  --focus-ring-inset: inset 0 0 0 1px var(--color-stroke-accessible);
+  /* —— 焦点环 —— */
+  --focus-ring: 0 0 0 3px var(--color-brand);
+  --focus-ring-solid: 0 0 0 2px var(--color-stroke-accessible);
+
+  /* —— 材质: Mica(画布) / Acrylic(浮起表面) —— */
+  /* 颗粒噪点 (SVG feTurbulence, 极低透明度) — Mica 的 grain */
+  --material-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.045'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* —— 材质可调控件: 不透明度 + 模糊, 全部亚克力表面统一引用 → 一处调整全局一致 —— */
+  --material-opacity: 0.45;        /* 亚克力不透明度(设置面板可调) */
+  --material-blur: 5px;            /* 背景模糊强度(设置面板可调, 全表面统一) */
+  --acrylic-rgb: 240, 221, 226;   /* 亚克力基色 RGB (默认源 #ff8ab9 的 bg-2 卡片; JS 运行时按源色重算) */
+  --control-rgb: 232, 210, 217;   /* 控件基色 RGB (默认源 bg-3 输入) */
+  --acrylic-bg: rgba(var(--acrylic-rgb), var(--material-opacity));        /* 亚克力半透明底(全部浮起表面统一) */
+  --acrylic-bg-strong: rgba(var(--acrylic-rgb), var(--material-opacity)); /* 与 --acrylic-bg 同值(材质统一, 勿分叉) */
+  --acrylic-stroke: transparent;                  /* 边缘不处理: inset 高光关闭 */
+  --acrylic-edge: transparent;                    /* 边缘不处理: 外描边关闭 */
+  --acrylic-blur: blur(var(--material-blur)) saturate(1.6);       /* backdrop-filter(全局统一模糊) */
+  /* —— 统一表面令牌: 所有浮起表面(卡片/侧栏/控件…)一律引用, 亚克力与云母共用 → 材质与模糊全局一致 —— */
+  --surface-bg: var(--acrylic-bg) var(--material-noise);
+  --surface-blur: var(--acrylic-blur);
+  /* —— 多级抬升亚克力(基色由各容器 tone 派生, 制造 M3「轻重」) —— */
+  --acrylic-rgb-low: 248, 232, 236;   /* 低抬升基色 (侧栏/导航 = bg1 = #f9e6ec) */
+  --acrylic-rgb-high: 224, 201, 209;  /* 高抬升基色 (toast/弹层 = bg4 = #e3c3d2) */
+  --surface-bg-low: rgba(var(--acrylic-rgb-low), var(--material-opacity)) var(--material-noise);
+  --surface-bg-high: rgba(var(--acrylic-rgb-high), var(--material-opacity)) var(--material-noise);
+
+  /* —— 控件(输入/下拉)亚克力: 比卡片略实一点保证可读, 但仍半透明 —— */
+  --control-bg: rgba(var(--control-rgb), 0.38);
+  --control-bg-hover: color-mix(in srgb, var(--color-brand) 6%, transparent);
+  --control-bg-focus: rgba(var(--control-rgb), 0.55);
+  --control-stroke: color-mix(in srgb, var(--color-brand) 22%, transparent);
+  --control-stroke-hover: color-mix(in srgb, var(--color-brand) 45%, transparent);
+  --popup-bg: #ebe0e2;                             /* 原生下拉弹层(必须不透明, JS 按源色重算 = neutral.tone(90) 容器 tone) */
+  --popup-fg: #201a1c;
+
+  /* —— 泛光 (品牌色 bloom; 强度由 --glow-strength 0..1 控制, 开关见 .glow-off, 默认关闭) ——
+   * 默认偏克制(范围/强度都收窄), 可经设置面板「泛光强度」滑块放大 */
+  --glow-strength: 0.15;         /* 泛光强度 (透明度, 0..1) */
+  --glow-range: 10px;            /* 泛光范围 (模糊半径, 设置面板可调, 与强度解耦) */
+  --glow-brand: 0 0 var(--glow-range) color-mix(in srgb, var(--color-brand) calc(var(--glow-strength) * 100%), transparent);
+  --glow-brand-strong: 0 0 calc(var(--glow-range) * 1.45) color-mix(in srgb, var(--color-brand) calc(var(--glow-strength) * 100%), transparent);
+  --glow-text: 0 0 calc(var(--glow-range) * 0.55) color-mix(in srgb, var(--color-brand) calc(var(--glow-strength) * 100%), transparent);
+  --text-depth: 0 1px 1px rgba(17, 20, 28, 0.14); /* 文字投影(立体感, 独立于泛光) */
+  --mica-tint-1: #fff8f8;                          /* Mica 画布渐变起 (M3 neutral.tone(98) = appBg) */
+  --mica-tint-2: #fdf1f3;                          /* Mica 画布渐变止 (官方 neutral.tone(96)) */
+  --mica-surface: color-mix(in srgb, var(--color-bg-1) 78%, var(--color-app-bg));   /* 云母表面底 */
+
+  /* —— 侧边栏 —— */
+  --sidebar-w: 224px;
+  --sidebar-w-collapsed: 64px;
 
   color-scheme: light;
 }
 
 /* ============================================================
- * 暗色主题 (Fluent 2 web dark, v9)
- * 分层同构: 画布深灰(#1F1F1F) / 卡片略亮(#292929)
+ * 暗色主题 (深海军蓝, 非纯黑)
  * ============================================================ */
 [data-theme="dark"] {
-  --color-brand: #479EF5;            /* colorBrandForeground1 (brand[100]) 暗色品牌前景 */
-  --color-brand-hover: #2886DE;      /* brand[90] */
-  --color-brand-pressed: #115EA3;    /* brand[70] */
-  --color-brand-fg: #479EF5;
-  --color-brand-border: #479EF5;
-  --color-brand-bg: #115EA3;         /* colorBrandBackground (dark, brand[70]) */
-  --color-brand-bg-hover: #0F6CBD;   /* brand[80] */
-  --color-brand-bg-pressed: #0C3B5E; /* brand[40] */
-  --color-brand-fg-text: #FFFFFF;
-  --color-brand-tint: #0B2944;       /* brand[160] 暗色浅底 */
+  --color-brand: #ffb0cc;            /* M3 dark primary（浅, 对比安全） */
+  --color-brand-on: #610738;         /* 实底按钮文字（深, M3 onPrimary dark） */
+  --color-brand-hover: #ff9fc3;      /* 实底按钮 hover（仍浅） */
+  --color-brand-pressed: #ffc1d6;    /* 实底按钮 pressed（仍浅） */
+  --color-brand-fg: var(--color-brand);
+  --color-brand-border: var(--color-brand);
+  --color-brand-bg: var(--color-brand);
+  --color-brand-bg-hover: var(--color-brand-hover);
+  --color-brand-bg-pressed: var(--color-brand-pressed);
+  --color-brand-surface: #7f224f;    /* 选中态/容器实底（深, M3 primaryContainer dark） */
+  --color-on-brand-surface: #ffd9e4; /* 容器上文字（浅, M3 onPrimaryContainer dark） */
+  --color-brand-tint: #6d1341;       /* 薄染背景（暗色=深色洗, 浅粉文字压上可读） */
+  --color-brand-weak: #852753;       /* 薄染背景（hover/badge, 暗色深色洗） */
+  --color-brand-line: #b54e7b;       /* 描边（暗色中色调, 可见） */
+  --color-fg-tinted: #ffb0cc;
+  --color-fg-tinted-2: #fa86b5;
 
-  --color-fg-1: #FFFFFF;             /* colorNeutralForeground1 */
-  --color-fg-2: #C8C8C8;             /* colorNeutralForeground2 */
-  --color-fg-3: #ABABAB;             /* colorNeutralForeground3 */
-  --color-fg-4: #919191;             /* colorNeutralForeground4 */
-  --color-fg-inverted: #242424;
+  /* —— 次要色组 (M3 secondary: 低强调度填充; 同色相低彩度, 克制) —— */
+  --color-secondary: #e2bdc8;
+  --color-on-secondary: #422932;
+  --color-secondary-container: #5a3f48;
+  --color-on-secondary-container: #ffd9e4;
+  /* —— 三级色组 (M3 tertiary: 视觉差异化点缀; +60° 色相偏移, 真·第二色相) —— */
+  --color-tertiary: #f0bc96;
+  --color-on-tertiary: #48290d;
+  --color-tertiary-container: #623f21;
+  --color-on-tertiary-container: #ffdcc4;
 
-  --color-app-bg: #1F1F1F;           /* colorNeutralBackground2 暗色画布 */
-  --color-bg-1: #292929;             /* colorNeutralBackground1 卡片 */
-  --color-bg-2: #1F1F1F;             /* colorNeutralBackground2 */
-  --color-bg-3: #141414;             /* colorNeutralBackground6 */
-  --color-bg-4: #0A0A0A;             /* colorNeutralBackground5 */
-  --color-bg-inverted: #FFFFFF;
+  --color-fg-1: #ebe0e2;
+  --color-fg-2: #d5c2c6;
+  --color-fg-3: #ae9ca1;             /* 第三文本 / 占位 (官方 neutralVariant.tone(66), 保证 AA) */
+  --color-fg-4: #514347;
+  --color-fg-inverted: #352f30;
 
-  --color-stroke-1: #3B3B3B;         /* colorNeutralStroke1 (dark) */
-  --color-stroke-2: #2E2E2E;         /* colorNeutralStroke2 (dark) */
-  --color-stroke-3: #3D3D3D;
-  --color-stroke-accessible: #479EF5;
+  --color-app-bg: #171214;          /* 画布/页面 (surface tone 6) */
+  --color-bg-1: #2b2225;            /* 低抬升(侧栏/导航): neutral.tone(10) + primary 5% 蒙版 */
+  --color-bg-2: #362a2e;            /* 中抬升(卡片): neutral.tone(12) + primary 8% 蒙版 */
+  --color-bg-3: #45373c;            /* 高抬升(输入/hover): neutral.tone(17) + primary 11% 蒙版 */
+  --color-bg-4: #56454a;            /* 最高抬升(toast/弹层): neutral.tone(22) + primary 14% 蒙版 */
+  --color-bg-inverted: #ebe0e2;
 
-  --color-success-fg: #6CCB5F;       /* colorStatusSuccessForeground1 (dark) */
-  --color-success-bg: #0E380E;
-  --color-warning-fg: #F2B15A;       /* colorStatusWarningForeground1 (dark) */
-  --color-warning-bg: #3B2E00;
-  --color-error-fg: #F1707B;         /* colorStatusDangerForeground1 (dark) */
-  --color-error-bg: #3B0A0C;
-  --color-info: #479EF5;
+  --color-stroke-1: #9d8c91;
+  --color-stroke-2: #514347;
+  --color-stroke-3: #695b5f;        /* 极浅 (官方 neutralVariant.tone(40)) */
+  --color-stroke-1-hover: var(--color-brand);
+  --color-stroke-accessible: var(--color-brand);
 
-  --radius-small: 2px;
-  --radius-medium: 4px;
-  --radius-large: 6px;
-  --radius-xlarge: 8px;
-  --radius-circular: 999px;
+  --color-success-fg: #69dd96;
+  --color-success-bg: #00522d;
+  --color-warning-fg: #ffb94d;
+  --color-warning-bg: #624000;
+  --color-error-fg: #ffb4ab;
+  --color-error-bg: #93000a;
+  --color-info: var(--color-brand);
 
-  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.28), 0 0 1px rgba(0, 0, 0, 0.24);
-  --shadow-4: 0 2px 4px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
-  --shadow-8: 0 4px 8px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
-  --shadow-16: 0 8px 16px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
-  --shadow-28: 0 14px 28px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+  --shadow-strength: 0.6;
+  --shadow-2:  0 1px 2px rgba(0, 0, 0, calc(0.30 * var(--shadow-strength))), 0 1px 3px rgba(0, 0, 0, calc(0.34 * var(--shadow-strength)));
+  --shadow-4:  0 2px 10px rgba(0, 0, 0, calc(0.40 * var(--shadow-strength)));
+  --shadow-8:  0 8px 24px rgba(0, 0, 0, calc(0.46 * var(--shadow-strength)));
+  --shadow-16: 0 14px 36px rgba(0, 0, 0, calc(0.52 * var(--shadow-strength)));
+  --shadow-28: 0 22px 52px rgba(0, 0, 0, calc(0.58 * var(--shadow-strength)));
 
-  --focus-ring: 0 0 0 2px var(--color-stroke-accessible);
+  --focus-ring: 0 0 0 3px var(--color-brand);
+  --focus-ring-solid: 0 0 0 2px var(--color-stroke-accessible);
+
+  /* —— 材质 (暗色: 更深的亚克力, 噪点稍强) —— */
+  /* —— 材质可调控件(暗色): 不透明度 + 模糊, 与亮色同源统一 —— */
+  --material-opacity: 0.45;        /* 暗色亚克力不透明度(设置面板统一可调) */
+  --material-blur: 5px;            /* 背景模糊强度(与亮色一致) */
+  --acrylic-rgb: 54, 42, 46;     /* 亚克力基色 RGB (默认源 #ff8ab9 的 bg-2 = #362a2e; JS 运行时按源色重算) */
+  --control-rgb: 69, 55, 60;     /* 控件基色 RGB (默认源 bg-3 = #45373c) */
+  --acrylic-bg: rgba(var(--acrylic-rgb), var(--material-opacity));
+  --acrylic-bg-strong: rgba(var(--acrylic-rgb), var(--material-opacity)); /* 与 --acrylic-bg 同值(材质统一) */
+  --acrylic-stroke: transparent;               /* 边缘不处理 */
+  --acrylic-edge: transparent;                 /* 边缘不处理 */
+  --acrylic-blur: blur(var(--material-blur)) saturate(1.5);
+  /* —— 统一表面令牌(暗色, 与亮色同源) —— */
+  --surface-bg: var(--acrylic-bg) var(--material-noise);
+  --surface-blur: var(--acrylic-blur);
+  /* —— 多级抬升亚克力(基色由各容器 tone 派生, 制造 M3「轻重」) —— */
+  --acrylic-rgb-low: 43, 34, 37;   /* 低抬升基色 (侧栏/导航 = bg1 = #2b2225) */
+  --acrylic-rgb-high: 86, 69, 74;  /* 高抬升基色 (toast/弹层 = bg4 = #56454a) */
+  --surface-bg-low: rgba(var(--acrylic-rgb-low), var(--material-opacity)) var(--material-noise);
+  --surface-bg-high: rgba(var(--acrylic-rgb-high), var(--material-opacity)) var(--material-noise);
+
+  /* —— 控件(输入/下拉)亚克力 —— */
+  --control-bg: rgba(var(--control-rgb), 0.35);
+  --control-bg-hover: color-mix(in srgb, var(--color-brand) 8%, transparent);
+  --control-bg-focus: rgba(var(--control-rgb), 0.55);
+  --control-stroke: color-mix(in srgb, var(--color-brand) 30%, transparent);
+  --control-stroke-hover: color-mix(in srgb, var(--color-brand) 55%, transparent);
+  --popup-bg: #2e282a;                          /* 原生下拉弹层(必须不透明, JS 按源色重算 = neutral.tone(17) 容器 tone) */
+  --popup-fg: #ebe0e2;
+
+  /* —— 泛光 (暗色下更明显, 强度仍由 --glow-strength 控制; 默认克制) —— */
+  --glow-range: 10px;            /* 暗色下范围(与亮色一致) */
+  --glow-brand: 0 0 var(--glow-range) color-mix(in srgb, var(--color-brand) calc(var(--glow-strength) * 100%), transparent);
+  --glow-brand-strong: 0 0 calc(var(--glow-range) * 1.45) color-mix(in srgb, var(--color-brand) calc(var(--glow-strength) * 100%), transparent);
+  --glow-text: 0 0 calc(var(--glow-range) * 0.55) color-mix(in srgb, var(--color-brand) calc(var(--glow-strength) * 100%), transparent);
+  --text-depth: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --mica-tint-1: #201a1c;                          /* Mica 画布渐变起 (M3 neutral.tone(10)) */
+  --mica-tint-2: #171214;                          /* Mica 画布渐变止 (M3 neutral.tone(6) = appBg) */
+  --mica-surface: color-mix(in srgb, var(--color-bg-1) 70%, var(--color-app-bg));   /* 云母表面底(暗色) */
 
   color-scheme: dark;
 }

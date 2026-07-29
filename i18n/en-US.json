@@ -59,7 +59,10 @@
   },
   "settings": {
     "title": "UI Settings",
-    "subtitle": "Fluent UI 2 color and background settings",
+    "subtitle": "Appearance, color and background settings",
+    "acrylicOn": "Enable acrylic material",
+    "material": "Material opacity",
+    "blur": "Blur strength",
     "colorMode": "Color Mode",
     "dynamic": "Dynamic (follow theme)",
     "static": "Static (custom)",
@@ -81,7 +84,7 @@
   },
   "pages": {
     "dashboard": {
-      "title": "Minimax TTS Console",
+      "title": "Denpa Echo Console",
       "description": "Voice synthesis, cloning, preview and status"
     }
   }

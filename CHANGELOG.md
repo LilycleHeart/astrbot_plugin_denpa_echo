@@ -4,6 +4,18 @@
 
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.3.0] - 2026-07-29
+
+### Changed
+- **项目正式更名为 Denpa Echo**：插件包名 `astrbot_plugin_minimax_tts` → `astrbot_plugin_denpa_echo`，显示名「Denpa Echo 语音合成」，所有日志前缀与文档同步更新（Minimax API 引用保持原样）。
+- **面板设计语言由 Fluent 2 切换为 Signal 声场控制台**：单一品牌色单源派生、亚克力/Mica 材质、亮/暗双主题、实时声纹可视化器。
+- **统一全界面颜色**：API 正常态/可用态徽章由语义绿改为品牌色派生，消除与主题色割裂。
+- **统一卡片模糊**：所有亚克力表面引用单一 `--material-opacity` / `--material-blur` 令牌，模糊不再分叉。
+- **声纹亮/暗主题差异化着色**：暗色主题线条更亮 + shadowBlur 泛光（霓虹感），亮色主题更柔和。
+
+### Added
+- **外观设置**：界面设置新增「启用亚克力材质」开关、「材质不透明度」与「模糊强度」滑块，实时预览并持久化（后端 `config/save` 自动存储新字段）。
+
 ## [1.2.0] - 2026-07-29
 
 ### Added
