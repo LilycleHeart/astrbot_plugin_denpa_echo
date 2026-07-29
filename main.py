@@ -343,8 +343,17 @@ class Main(Star):
                 skip_emotion_classify=True,
             )
             self._record_stat(text, meta)
+            # 内联 base64 音频，前端用 Blob URL 播放，绕开插件页相对路径路由问题
+            import base64
+            audio_b64 = ""
+            try:
+                with open(wav_path, "rb") as af:
+                    audio_b64 = base64.b64encode(af.read()).decode("ascii")
+            except Exception:
+                pass
             return json_response({
                 "audio_path": wav_path,
+                "audio_base64": audio_b64,
                 "elapsed_ms": meta.get("elapsed_ms", 0),
                 "usage_chars": meta.get("usage_chars", len(text)),
             })
@@ -406,6 +415,7 @@ class Main(Star):
             # 下载试听音频到本地（voice_clone 响应里的 demo_audio 是试听 URL）
             demo_audio_url = result.get("demo_audio")
             audio_url = None
+            audio_b64 = ""
             if demo_audio_url:
                 preview_path = os.path.join(
                     self.plugin_data_dir, "clone_preview",
@@ -414,6 +424,9 @@ class Main(Star):
                 try:
                     await vc.get_clone_preview_audio(result, preview_path)
                     audio_url = preview_path
+                    import base64
+                    with open(preview_path, "rb") as af:
+                        audio_b64 = base64.b64encode(af.read()).decode("ascii")
                 except Exception as e:
                     logger.warning(f"[Denpa Echo] 下载克隆试听失败: {e}")
             return json_response({
@@ -421,6 +434,8 @@ class Main(Star):
                 "voice_id": voice_id,
                 "demo_audio": demo_audio_url,
                 "audio_path": audio_url,
+                "audio_base64": audio_b64,
+                "audio_mime": "audio/mpeg",
                 "raw": result,
             })
         except Exception as e:
@@ -508,8 +523,16 @@ class Main(Star):
             )
             elapsed = int((time.time() - t0) * 1000)
             self._record_stat(text, meta)
+            import base64
+            audio_b64 = ""
+            try:
+                with open(wav_path, "rb") as af:
+                    audio_b64 = base64.b64encode(af.read()).decode("ascii")
+            except Exception:
+                pass
             return json_response({
                 "audio_path": wav_path,
+                "audio_base64": audio_b64,
                 "elapsed_ms": elapsed,
                 "usage_chars": meta.get("usage_chars", len(text)),
                 "meta": meta,

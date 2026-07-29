@@ -81,8 +81,20 @@ function syncThemeIcon() {
 function applyI18n(ctx) {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
-    const fallback = el.textContent;
-    el.textContent = bridge.t(key, fallback);
+    const translated = bridge.t(key, "");
+    if (!translated) return;
+    // 若元素含子元素（如 label 内嵌 <span id="...-val">），仅替换首个文本节点，
+    // 避免 textContent 赋值销毁子节点导致数值 span 丢失
+    if (el.childElementCount > 0) {
+      const firstText = Array.from(el.childNodes).find(n => n.nodeType === 3 && n.textContent.trim());
+      if (firstText) {
+        firstText.textContent = translated + " ";
+      } else {
+        el.insertBefore(document.createTextNode(translated + " "), el.firstChild);
+      }
+    } else {
+      el.textContent = translated;
+    }
   });
 }
 
@@ -847,7 +859,8 @@ async function previewVoice(voiceId, name) {
       voice_id: voiceId,
       text: "你好，这是该音色的试听样本。",
     });
-    playAudio(result.audio_path, `试听: ${name || voiceId}`);
+    const blobUrl = base64ToBlobUrl(result.audio_base64, "audio/wav");
+    playAudio(blobUrl || result.audio_path, `试听: ${name || voiceId}`, !!blobUrl);
   } catch (e) {
     showToast(`试听失败: ${e.message}`, "error");
   }
@@ -891,9 +904,11 @@ async function doClone() {
 
     if (cloneResp.success) {
       let audioHtml = "";
-      if (cloneResp.audio_path) {
+      const cloneAudioSrc = base64ToBlobUrl(cloneResp.audio_base64, cloneResp.audio_mime || "audio/mpeg")
+        || (cloneResp.audio_path ? `./audio?path=${encodeURIComponent(cloneResp.audio_path)}` : "");
+      if (cloneAudioSrc) {
         audioHtml = `<div class="audio-player mt-s">
-          <audio controls preload="metadata" src="./audio?path=${encodeURIComponent(cloneResp.audio_path)}"></audio>
+          <audio controls preload="metadata" src="${cloneAudioSrc}"></audio>
         </div>`;
       }
       resultEl.innerHTML = `
@@ -1072,9 +1087,11 @@ async function doDebugSynth() {
       speed,
       emotion,
     });
+    const audioSrc = base64ToBlobUrl(result.audio_base64, "audio/wav")
+      || `./audio?path=${encodeURIComponent(result.audio_path)}`;
     resultEl.innerHTML = `
       <div class="audio-player">
-        <audio controls preload="metadata" src="./audio?path=${encodeURIComponent(result.audio_path)}"></audio>
+        <audio controls preload="metadata" src="${audioSrc}"></audio>
       </div>
       <p class="text-sm text-muted mt-s">
         耗时 ${result.elapsed_ms}ms · 字符 ${result.usage_chars}
@@ -1162,14 +1179,27 @@ function resetUiConfig() {
   showToast("已恢复默认（需点击保存生效）", "info");
 }
 
+/** 将后端返回的 base64 音频转为 Blob URL（绕开插件页相对路径路由问题） */
+function base64ToBlobUrl(b64, mime) {
+  if (!b64) return "";
+  try {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: mime || "audio/wav" });
+    return URL.createObjectURL(blob);
+  } catch (_) { return ""; }
+}
+
 // ========== 工具 ==========
-function playAudio(path, label) {
+function playAudio(path, label, isBlobUrl) {
   const container = document.createElement("div");
   container.className = "toast";
   container.style.cssText = "min-width:320px;padding:12px";
+  const src = isBlobUrl ? path : `./audio?path=${encodeURIComponent(path)}`;
   container.innerHTML = `
     <div class="text-sm text-bold mb-s">${label || "试听"}</div>
-    <audio controls autoplay preload="metadata" src="./audio?path=${encodeURIComponent(path)}" style="width:100%"></audio>
+    <audio controls autoplay preload="metadata" src="${src}" style="width:100%"></audio>
   `;
   // 接入波形可视化器（同源 ./audio 可用 WebAudio 分析）
   const audioEl = container.querySelector('audio');
