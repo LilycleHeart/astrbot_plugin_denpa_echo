@@ -615,23 +615,14 @@ function linkColorPicker(pickerId, textId) {
   const picker = document.getElementById(pickerId);
   const text = document.getElementById(textId);
   if (!picker || !text) return;
-  // 取色器拖动也要实时触发预览（否则只有文本框直接输入才生效，静态色/品牌主题色不会实时变化）
+  // 取色器拖动也要实时触发预览（否则只有文本框直接输入才生效）
   picker.addEventListener("input", () => {
     text.value = picker.value;
-    // 拖动品牌色时强制切到静态模式, 否则 dynamic 模式下品牌色被背景图取色覆盖、看起来"没生效"
-    if (pickerId === "ui-brand-color-picker") {
-      const modeSel = document.getElementById("ui-color-mode");
-      if (modeSel) modeSel.value = "static";
-    }
     previewUiConfig();
   });
   text.addEventListener("input", () => {
     if (/^#[0-9a-fA-F]{6}$/.test(text.value)) {
       picker.value = text.value;
-      if (pickerId === "ui-brand-color-picker") {
-        const modeSel = document.getElementById("ui-color-mode");
-        if (modeSel) modeSel.value = "static";
-      }
       previewUiConfig();
     }
   });

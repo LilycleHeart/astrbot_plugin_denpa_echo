@@ -420,7 +420,7 @@
         "type": "string",
         "options": ["theme", "brand_gradient", "custom", "image"],
         "default": "theme",
-        "hint": "theme 跟随主题；brand_gradient 品牌色渐变；custom 使用自定义背景色；image 使用上传的背景图"
+        "hint": "theme 跟随主题；brand_gradient 主题色渐变；custom 使用自定义背景色；image 使用上传的背景图"
       },
       "background_image": {
         "description": "背景图路径（由控制台面板上传，无需手动填写）",
