@@ -33,6 +33,7 @@ const state = {
     glow_intensity: 40,
     shadow_enabled: true,
     shadow_intensity: 60,
+    bg_scrim: 40,
   },
   voices: [],
 };
@@ -165,8 +166,11 @@ function applyUiConfig() {
   // 材质 / 模糊（单令牌统一，全表面一致；设置面板可调）
   root.style.setProperty("--material-opacity", ((ui.material_opacity ?? 45) / 100).toString());
   root.style.setProperty("--material-blur", `${ui.material_blur ?? 5}px`);
+  // 背景图暗色遮罩强度
+  root.style.setProperty("--bg-scrim", (ui.bg_scrim ?? 40) / 100);
   const appEl = document.getElementById("app");
   if (appEl) {
+    appEl.classList.toggle("bg-image-active", !!(ui.background_mode === "image" && ui.background_image));
     if (ui.acrylic_enabled === false) appEl.classList.add("acrylic-off");
     else appEl.classList.remove("acrylic-off");
 
@@ -241,6 +245,10 @@ function syncSettingsInputs() {
   if (si) si.value = ui.shadow_intensity ?? 50;
   const soVal = document.getElementById("ui-shadow-val");
   if (soVal) soVal.textContent = `${ui.shadow_intensity ?? 50}%`;
+  const scrim = document.getElementById("ui-scrim");
+  if (scrim) scrim.value = ui.bg_scrim ?? 40;
+  const scrimVal = document.getElementById("ui-scrim-val");
+  if (scrimVal) scrimVal.textContent = `${ui.bg_scrim ?? 40}%`;
 }
 
 // ========== 品牌色引擎 (Material Color Utilities / M3) ==========
@@ -616,6 +624,7 @@ function bindEvents() {
     ["ui-blur", "ui-blur-val", (v) => `${v}px`],
     ["ui-glow", "ui-glow-val", (v) => `${v}%`],
     ["ui-shadow", "ui-shadow-val", (v) => `${v}%`],
+    ["ui-scrim", "ui-scrim-val", (v) => `${v}%`],
   ];
   _sliderPairs.forEach(([sliderId, valId, fmt]) => {
     const slider = document.getElementById(sliderId);
@@ -633,7 +642,7 @@ function bindEvents() {
   // 实时预览
   ["ui-color-mode", "ui-brand-color", "ui-bg-mode", "ui-radius",
    "ui-custom-bg", "ui-custom-bg-dark", "ui-material", "ui-blur", "ui-acrylic-on",
-   "ui-material-type", "ui-font", "ui-glow-on", "ui-glow", "ui-shadow-on", "ui-shadow"].forEach((id) => {
+   "ui-material-type", "ui-font", "ui-glow-on", "ui-glow", "ui-shadow-on", "ui-shadow", "ui-scrim"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("input", previewUiConfig);
   });
@@ -699,6 +708,7 @@ function previewUiConfig() {
     glow_intensity: giEl ? (parseInt(giEl.value, 10) || 0) : 15,
     shadow_enabled: soEl ? soEl.checked : false,
     shadow_intensity: siEl ? (parseInt(siEl.value, 10) || 0) : 60,
+    bg_scrim: (() => { const s = document.getElementById("ui-scrim"); return s ? (parseInt(s.value, 10) || 0) : 40; })(),
   };
   // 数值即时更新；重计算（含 MCU 调色板推导）用 rAF 合并到下一帧，拖动顺滑、首帧不再卡
   if (_applyRaf) cancelAnimationFrame(_applyRaf);
