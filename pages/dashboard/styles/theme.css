@@ -42,7 +42,9 @@ body {
   display: flex;
   align-items: flex-start;
   gap: var(--space-l);
+  visibility: hidden;
 }
+.app-shell.ready { visibility: visible; }
 .main-area {
   flex: 1;
   min-width: 0;

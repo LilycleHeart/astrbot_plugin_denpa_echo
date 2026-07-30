@@ -69,6 +69,7 @@ async function init() {
   bindEvents();
   applyUiConfig();
   syncThemeIcon();
+  document.getElementById("app").classList.add("ready");
   loadOverview();
   await _loadPersistedVoices();  // 恢复已持久化的用户音色列表
   loadStaticVoices();  // 填充调试下拉
