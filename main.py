@@ -62,19 +62,16 @@ class Main(Star):
             "voice_modify", "pronunciation_dict", "send_mode",
             "text_processing", "polish", "auto_emotion", "advanced",
         )
-        if "ui" in config and isinstance(config["ui"], dict):
-            ui_dict = config["ui"]  # 直接引用，非副本
-            need_migrate = any(k in ui_dict for k in _NESTED_KEYS) and not config.get("api_key")
-            if need_migrate:
-                for k in _NESTED_KEYS:
-                    if k in ui_dict:
-                        config[k] = ui_dict[k]
-                        del ui_dict[k]
-                try:
-                    config.save_config()
-                    logger.warning("[Denpa Echo] 反向迁移完成：配置已从 ui 嵌套恢复至顶层")
-                except Exception as e:
-                    logger.warning(f"[Denpa Echo] 反向迁移保存失败: {e}")
+        ui_section = config.get("ui", {}) or {}
+        if not config.get("api_key") and ui_section.get("api_key"):
+            for k in _NESTED_KEYS:
+                if k in ui_section and k not in config:
+                    config[k] = ui_section.pop(k)
+            try:
+                config.save_config()
+                logger.info("[Denpa Echo] 配置已从 ui 嵌套结构恢复至顶层")
+            except Exception:
+                pass
 
         # 初始化 Minimax 客户端
         adv = config.get("advanced", {}) or {}
