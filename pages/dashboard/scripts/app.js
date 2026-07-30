@@ -192,9 +192,7 @@ function applyUiConfig() {
   // 背景图暗色遮罩强度
   root.style.setProperty("--bg-scrim", (ui.bg_scrim ?? 40) / 100);
   // 声纹可视化模式
-  if (window.Waveform && typeof Waveform.setVizMode === "function") {
-    Waveform.setVizMode(ui.viz_mode || "spectrum");
-  }
+  try { Waveform.setVizMode(ui.viz_mode || "spectrum"); } catch (_) {}
   const appEl = document.getElementById("app");
   if (appEl) {
     appEl.classList.toggle("bg-image-active", !!(ui.background_mode === "image" && ui.background_image));
@@ -766,7 +764,7 @@ function switchTab(name) {
   if (name === "voices") renderVoices(state.voices);
   if (["settings", "synth", "send", "ai", "advanced"].includes(name)) loadPluginConfig();
   // 切到含声纹画布的视图变为可见后, 重新测量画布尺寸, 消除过期 backing store 造成的锯齿/细线
-  if (window.Waveform && typeof Waveform.refresh === "function") Waveform.refresh();
+  try { Waveform.refresh(); } catch (_) {}
 }
 
 // ========== 状态总览 ==========
