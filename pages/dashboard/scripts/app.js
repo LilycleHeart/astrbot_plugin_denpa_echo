@@ -1763,10 +1763,10 @@ const Waveform = (() => {
   /* ── 流动波形（空闲态 ↔ 音频驱动态平滑过渡）── */
   function drawWave(freqData, C, dark) {
     const lineC = dark ? lighten(C, 0.35) : C;
-    idlePhase += 0.008 * (1 + audioMix * 1.5);
+    idlePhase += 0.008 * (1 + audioMix * 2);
     const cy = h / 2;
     const lines = 22;
-    const mix = audioMix;  // 0=空闲, 1=音频驱动
+    const mix = audioMix;
 
     if (dark) { ctx.shadowColor = rgba(lineC, 0.80); ctx.shadowBlur = 10 + mix * 8; }
     else { ctx.shadowColor = rgba(lineC, 0.35); ctx.shadowBlur = 4 + mix * 4; }
@@ -1775,27 +1775,24 @@ const Waveform = (() => {
       const off = li / lines - 0.5;
       const baseY = cy + off * (h * 0.58);
 
-      // 空闲振幅 vs 音频驱动振幅（从频谱数据取值）
+      // 基础振幅（空闲态），始终保底不为零
       const idleAmp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4);
+      // 音频驱动：从频谱取对应 bin 的能量，映射为额外振幅
       const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
-      const audioAmp = (freqData[binIdx] / 255) * h * 0.35 * (1 - Math.abs(off) * 0.8);
-      const amp = idleAmp * (1 - mix) + audioAmp * mix;
+      const binVal = freqData[binIdx] / 255;
+      // 混合振幅：空闲保底 + 音频叠加，确保任何状态下线条都有波动
+      const amp = idleAmp + mix * binVal * h * 0.28 * (1 - Math.abs(off) * 0.6);
 
       const freq = 0.007 + li * 0.00055;
-      const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * 0.15;
+      const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * binVal * 0.2;
 
       ctx.beginPath();
       ctx.strokeStyle = rgba(lineC, Math.min(1, alpha));
-      ctx.lineWidth = 1 + mix * 0.5;
+      ctx.lineWidth = 1 + mix * binVal * 0.8;
       for (let x = 0; x <= w; x += 3) {
-        // 空闲正弦波
-        const idleY = Math.sin(freq * x + idlePhase + li * 0.75)
-                    + 0.33 * Math.sin(freq * 2.4 * x + idlePhase * 1.35 + li * 1.15);
-        // 音频驱动波形（用频谱数据调制频率和相位）
-        const audioFreq = freq * (1 + (freqData[binIdx] / 255) * 2);
-        const audioY = Math.sin(audioFreq * x + idlePhase * 2 + li * 0.5)
-                     + 0.5 * Math.sin(audioFreq * 1.8 * x + idlePhase * 1.6 + li);
-        const n = idleY * (1 - mix) + audioY * mix;
+        // 始终使用同一组正弦叠加，保持视觉语言一致
+        const n = Math.sin(freq * x + idlePhase + li * 0.75)
+                + 0.33 * Math.sin(freq * 2.4 * x + idlePhase * 1.35 + li * 1.15);
         const y = baseY + amp * n;
         x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
@@ -1807,17 +1804,14 @@ const Waveform = (() => {
     ctx.shadowBlur = dark ? 20 : 6;
     ctx.beginPath();
     ctx.strokeStyle = rgba(lineC, dark ? 1.0 : 0.70);
-    ctx.lineWidth = 2 + mix;
-    const mainBin = Math.floor(freqData.length * 0.3);
-    const mainEnergy = freqData[mainBin] / 255;
-    const mainAmp = 46 * (1 - mix) + (h * 0.3 * mainEnergy) * mix;
+    const mainBin = Math.floor(freqData.length * 0.25);
+    const mainVal = freqData[mainBin] / 255;
+    ctx.lineWidth = 2 + mix * mainVal * 1.5;
+    const mainAmp = 46 + mix * mainVal * h * 0.25;
     for (let x = 0; x <= w; x += 2) {
-      const idleN = Math.sin(0.0105 * x + idlePhase * 0.58)
-                  + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
-                  + 0.15 * Math.sin(0.052 * x + idlePhase * 1.85);
-      const audioN = Math.sin(0.015 * x * (1 + mainEnergy) + idlePhase * 1.2)
-                   + 0.4 * Math.sin(0.035 * x + idlePhase * 2.0);
-      const n = idleN * (1 - mix) + audioN * mix;
+      const n = Math.sin(0.0105 * x + idlePhase * 0.58)
+              + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
+              + 0.15 * Math.sin(0.052 * x + idlePhase * 1.85);
       const y = cy + mainAmp * n;
       x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
