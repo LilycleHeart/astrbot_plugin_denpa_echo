@@ -580,6 +580,7 @@ input[type="color"].input {
   padding: var(--space-3xl) var(--space-l);
   color: var(--color-fg-3);
   text-align: center;
+  grid-column: 1 / -1;
 }
 .empty-state-icon {
   font-size: 32px;
