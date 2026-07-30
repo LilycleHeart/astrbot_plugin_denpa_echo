@@ -36,6 +36,7 @@ const state = {
     bg_scrim: 40,
   },
   voices: [],
+  hiddenVoices: new Set(),
 };
 
 // ========== 初始化 ==========
@@ -541,6 +542,7 @@ function bindEvents() {
   document.getElementById("btn-load-voices").onclick = loadVoices;
   document.getElementById("voice-filter").oninput = filterVoices;
   document.getElementById("voice-type").onchange = loadVoices;
+  document.getElementById("voice-show-hidden").onchange = filterVoices;
 
   // 克隆
   const cloneInput = document.getElementById("clone-source");
@@ -724,7 +726,6 @@ function switchTab(name) {
   });
   if (name === "logs") loadLogs();
   if (name === "overview") loadOverview();
-  if (name === "voices") loadVoices();   // 进入音色页自动拉取（含克隆音色）
   if (["settings", "synth", "send", "ai", "advanced"].includes(name)) loadPluginConfig();
   // 切到含声纹画布的视图变为可见后, 重新测量画布尺寸, 消除过期 backing store 造成的锯齿/细线
   if (window.Waveform && typeof Waveform.refresh === "function") Waveform.refresh();
@@ -813,11 +814,13 @@ async function loadVoices() {
 
 function renderVoices(voices) {
   const filter = document.getElementById("voice-filter").value.toLowerCase();
+  const showHidden = document.getElementById("voice-show-hidden")?.checked;
   const filtered = voices.filter(
     (v) =>
-      !filter ||
-      (v.name || "").toLowerCase().includes(filter) ||
-      (v.voice_id || "").toLowerCase().includes(filter),
+      (showHidden || !state.hiddenVoices.has(v.voice_id)) &&
+      (!filter ||
+        (v.name || "").toLowerCase().includes(filter) ||
+        (v.voice_id || "").toLowerCase().includes(filter)),
   );
   const listEl = document.getElementById("voice-list");
   if (filtered.length === 0) {
@@ -827,15 +830,16 @@ function renderVoices(voices) {
   listEl.innerHTML = filtered
     .map(
       (v) => `
-    <div class="stat-card">
+    <div class="stat-card" style="${state.hiddenVoices.has(v.voice_id) ? 'opacity:0.5' : ''}">
       <div class="flex-between">
         <div style="overflow:hidden">
           <div class="text-bold truncate">${v.name || "未命名"}</div>
           <div class="text-mono text-sm text-muted truncate">${v.voice_id || ""}</div>
         </div>
-        <button class="btn btn-subtle btn-sm" data-voice="${v.voice_id}" data-name="${v.name || ""}">
-          ▶ 试听
-        </button>
+        <div class="flex gap-s">
+          <button class="btn btn-subtle btn-sm" data-voice="${v.voice_id}" data-name="${v.name || ""}">▶ 试听</button>
+          <button class="btn btn-subtle btn-sm" data-hide="${v.voice_id}" title="${state.hiddenVoices.has(v.voice_id) ? '取消隐藏' : '隐藏'}">${state.hiddenVoices.has(v.voice_id) ? '👁' : '✕'}</button>
+        </div>
       </div>
     </div>
   `,
@@ -843,6 +847,14 @@ function renderVoices(voices) {
     .join("");
   listEl.querySelectorAll("button[data-voice]").forEach((btn) => {
     btn.onclick = () => previewVoice(btn.dataset.voice, btn.dataset.name);
+  });
+  listEl.querySelectorAll("button[data-hide]").forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.dataset.hide;
+      if (state.hiddenVoices.has(id)) state.hiddenVoices.delete(id);
+      else state.hiddenVoices.add(id);
+      renderVoices(state.voices);
+    };
   });
 }
 
@@ -982,11 +994,22 @@ async function loadVoiceById() {
         ${note}
         <div class="flex gap-s mt-m">
           <button class="btn btn-subtle btn-sm" id="btn-preview-loaded">▶ 试听</button>
+          <button class="btn btn-subtle btn-sm" id="btn-add-to-list">＋ 加入列表</button>
           <button class="btn btn-primary btn-sm" id="btn-set-default">设为默认音色</button>
         </div>
       </div>`;
     document.getElementById("btn-preview-loaded").onclick = () =>
       previewVoice(voiceId, label);
+    document.getElementById("btn-add-to-list").onclick = () => {
+      if (!state.voices.some((v) => v.voice_id === voiceId)) {
+        state.voices.push({ voice_id: voiceId, name: label, type: data.voice?.type || "voice_cloning" });
+        fillDebugVoiceSelect();
+        renderVoices(state.voices);
+        showToast(`已加入列表: ${label}`, "success");
+      } else {
+        showToast("该音色已在列表中", "info");
+      }
+    };
     document.getElementById("btn-set-default").onclick = () =>
       setDefaultVoice(voiceId, label);
     showToast(data.found ? "已找到该音色" : "未在列表中找到，仍可试听", data.found ? "success" : "info");
