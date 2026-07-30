@@ -154,13 +154,11 @@ function applyUiConfig() {
     }
   }
 
-  // 背景（挂在 body 上，铺满视口；#app 是限宽内容列，挂在它上面铺不满）
+  // 背景（挂在固定定位的 #bg-layer 上，脱离文档流，tab 切换不影响）
   const body = document.body;
+  const bgLayer = document.getElementById("bg-layer");
   body.classList.remove("bg-mode-brand-gradient", "bg-mode-custom");
-  body.style.backgroundImage = "";
-  body.style.backgroundSize = "";
-  body.style.backgroundPosition = "";
-  body.style.backgroundAttachment = "";
+  if (bgLayer) bgLayer.style.backgroundImage = "";
   if (ui.background_mode === "brand_gradient") {
     body.classList.add("bg-mode-brand-gradient");
   } else if (ui.background_mode === "custom") {
@@ -170,14 +168,10 @@ function applyUiConfig() {
     root.style.setProperty("--color-app-bg", bg);
     body.classList.add("bg-mode-custom");
   } else if (ui.background_mode === "image" && ui.background_image) {
-    // data: 前缀表示 base64 内联存储，直接使用；否则走 /bg 端点兼容旧路径配置
     const bgSrc = ui.background_image.startsWith("data:")
       ? ui.background_image
       : `./bg?t=${Date.now()}`;
-    body.style.backgroundImage = `url('${bgSrc}')`;
-    body.style.backgroundSize = "cover";
-    body.style.backgroundPosition = "center";
-    body.style.backgroundAttachment = "fixed";
+    if (bgLayer) bgLayer.style.backgroundImage = `url('${bgSrc}')`;
   }
 
   // 圆角（同时驱动 large/xlarge/medium/small，确保整页可见生效；始终应用，避免配置缺失时静默失效）
@@ -1270,10 +1264,8 @@ async function uploadBgImage() {
     // 直接应用背景（不依赖 previewUiConfig 重建 state 的时序）
     const body = document.body;
     body.classList.remove("bg-mode-brand-gradient", "bg-mode-custom");
-    body.style.backgroundImage = `url('${dataUri}')`;
-    body.style.backgroundSize = "cover";
-    body.style.backgroundPosition = "center";
-    body.style.backgroundAttachment = "fixed";
+    const bgLayer = document.getElementById("bg-layer");
+    if (bgLayer) bgLayer.style.backgroundImage = `url('${dataUri}')`;
     const appEl = document.getElementById("app");
     if (appEl) appEl.classList.add("bg-image-active");
     // 立即触发动态取色
