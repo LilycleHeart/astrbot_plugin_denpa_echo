@@ -443,6 +443,64 @@
         "type": "int",
         "default": 10,
         "hint": "Fluent UI 2 默认 4/6/8；本插件推荐 10"
+      },
+      "acrylic_enabled": {
+        "description": "启用材质",
+        "type": "bool",
+        "default": true
+      },
+      "material_opacity": {
+        "description": "材质不透明度",
+        "type": "int",
+        "default": 45
+      },
+      "material_blur": {
+        "description": "模糊强度",
+        "type": "int",
+        "default": 5
+      },
+      "material_type": {
+        "description": "材质类型",
+        "type": "string",
+        "options": ["acrylic", "mica"],
+        "default": "acrylic"
+      },
+      "font_mode": {
+        "description": "字体",
+        "type": "string",
+        "options": ["misans", "builtin"],
+        "default": "misans"
+      },
+      "glow_enabled": {
+        "description": "启用泛光",
+        "type": "bool",
+        "default": true
+      },
+      "glow_intensity": {
+        "description": "泛光强度",
+        "type": "int",
+        "default": 40
+      },
+      "shadow_enabled": {
+        "description": "启用阴影",
+        "type": "bool",
+        "default": true
+      },
+      "shadow_intensity": {
+        "description": "阴影强度",
+        "type": "int",
+        "default": 60
+      },
+      "bg_scrim": {
+        "description": "背景图暗色遮罩强度",
+        "type": "int",
+        "default": 40
+      },
+      "viz_mode": {
+        "description": "声纹可视化模式",
+        "type": "string",
+        "options": ["spectrum", "wave"],
+        "default": "spectrum"
       }
     }
   },

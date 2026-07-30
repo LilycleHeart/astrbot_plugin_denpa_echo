@@ -532,6 +532,22 @@ function bindEvents() {
 
   // 刷新
   document.getElementById("btn-refresh-all").onclick = loadOverview;
+  document.getElementById("btn-local-audio").onclick = async () => {
+    const label = document.getElementById("btn-local-audio-label");
+    if (Waveform.isLocalCapturing()) {
+      Waveform.stopLocalCapture();
+      label.textContent = "监听音频";
+      showToast("已停止监听本地音频", "info");
+    } else {
+      try {
+        await Waveform.startLocalCapture();
+        label.textContent = "停止监听";
+        showToast("正在监听本地音频输出", "success");
+      } catch (e) {
+        showToast(`监听失败: ${e.message}`, "error");
+      }
+    }
+  };
   document.getElementById("btn-refresh-logs").onclick = loadLogs;
 
   // 主题切换：从点击位置生成圆形遮罩外扩，View Transitions 让新旧主题同帧渲染
@@ -1818,7 +1834,48 @@ const Waveform = (() => {
     ctx.stroke();
   }
 
-  return { init, attachAudio, refresh, setVizMode };
+  let localStream = null;
+  let localSource = null;
+
+  /** 开始监听本地系统音频输出 */
+  async function startLocalCapture() {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === "suspended") await audioCtx.resume();
+      localStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+      // 只需要音频轨，关掉视频轨
+      localStream.getVideoTracks().forEach(t => t.enabled = false);
+      const audioTracks = localStream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        stopLocalCapture();
+        throw new Error("未获取到音频轨道，请确保勾选了「分享系统音频」");
+      }
+      if (localSource) { try { localSource.disconnect(); } catch (_) {} }
+      localSource = audioCtx.createMediaStreamSource(localStream);
+      localSource.connect(analyser);
+      // 监听轨道结束（用户点击停止分享）
+      audioTracks[0].onended = () => stopLocalCapture();
+      return true;
+    } catch (e) {
+      stopLocalCapture();
+      throw e;
+    }
+  }
+
+  /** 停止监听本地音频 */
+  function stopLocalCapture() {
+    if (localSource) { try { localSource.disconnect(); } catch (_) {} localSource = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  }
+
+  function isLocalCapturing() { return !!localStream; }
+
+  return { init, attachAudio, refresh, setVizMode, startLocalCapture, stopLocalCapture, isLocalCapturing };
 })();
 
 // 暴露给 HTML inline onclick（ES module 不自动挂全局）
