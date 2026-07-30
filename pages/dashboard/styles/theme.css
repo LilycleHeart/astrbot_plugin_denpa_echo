@@ -393,6 +393,9 @@ body {
 .tab-panels {
   min-height: 320px;
 }
+#voice-list {
+  transition: opacity 0.2s var(--motion-ease);
+}
 .tab-content {
   display: none;
   animation: signal-fade-in var(--motion-base) var(--motion-ease) both;
