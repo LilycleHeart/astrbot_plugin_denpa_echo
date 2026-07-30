@@ -37,6 +37,7 @@ const state = {
   },
   voices: [],
   hiddenVoices: new Set(),
+  voiceManageMode: false,
 };
 
 // ========== 初始化 ==========
@@ -544,6 +545,11 @@ function bindEvents() {
   document.getElementById("voice-type").onchange = loadVoices;
   document.getElementById("voice-show-hidden").onchange = filterVoices;
   _bindBatchBar();
+  document.getElementById("btn-voice-manage").onclick = () => {
+    state.voiceManageMode = !state.voiceManageMode;
+    document.getElementById("btn-voice-manage").textContent = state.voiceManageMode ? "完成管理" : "管理音色";
+    renderVoices(state.voices);
+  };
 
   // 克隆
   const cloneInput = document.getElementById("clone-source");
@@ -816,6 +822,7 @@ async function loadVoices() {
 function renderVoices(voices) {
   const filter = document.getElementById("voice-filter").value.toLowerCase();
   const showHidden = document.getElementById("voice-show-hidden")?.checked;
+  const manage = state.voiceManageMode;
   const filtered = voices.filter(
     (v) =>
       (showHidden || !state.hiddenVoices.has(v.voice_id)) &&
@@ -825,7 +832,7 @@ function renderVoices(voices) {
   );
   const listEl = document.getElementById("voice-list");
   const batchBar = document.getElementById("voice-batch-bar");
-  if (batchBar) batchBar.style.display = voices.length ? "" : "none";
+  if (batchBar) batchBar.style.display = (manage && voices.length) ? "" : "none";
   if (filtered.length === 0) {
     listEl.innerHTML = '<div class="empty-state"><p>无匹配音色</p></div>';
     return;
@@ -836,7 +843,7 @@ function renderVoices(voices) {
     <div class="stat-card" style="${state.hiddenVoices.has(v.voice_id) ? 'opacity:0.5' : ''}">
       <div class="flex-between">
         <div style="display:flex;align-items:center;gap:8px;overflow:hidden">
-          <input type="checkbox" class="voice-chk" value="${v.voice_id}" style="width:16px;height:16px;accent-color:var(--color-brand);flex-shrink:0" />
+          ${manage ? `<input type="checkbox" class="voice-chk" value="${v.voice_id}" style="width:16px;height:16px;accent-color:var(--color-brand);flex-shrink:0" />` : ""}
           <div style="overflow:hidden">
             <div class="text-bold truncate">${v.name || "未命名"}</div>
             <div class="text-mono text-sm text-muted truncate">${v.voice_id || ""}</div>
@@ -845,7 +852,7 @@ function renderVoices(voices) {
         <div class="flex gap-s">
           <button class="btn btn-subtle btn-sm" data-voice="${v.voice_id}" data-name="${v.name || ""}">▶</button>
           <button class="btn btn-subtle btn-sm" data-rename="${v.voice_id}" title="重命名">✎</button>
-          <button class="btn btn-subtle btn-sm" data-hide="${v.voice_id}" title="${state.hiddenVoices.has(v.voice_id) ? '取消隐藏' : '隐藏'}">${state.hiddenVoices.has(v.voice_id) ? '👁' : '✕'}</button>
+          ${manage ? `<button class="btn btn-subtle btn-sm" data-hide="${v.voice_id}" title="${state.hiddenVoices.has(v.voice_id) ? '取消隐藏' : '隐藏'}">${state.hiddenVoices.has(v.voice_id) ? '👁' : '✕'}</button>` : ""}
         </div>
       </div>
     </div>

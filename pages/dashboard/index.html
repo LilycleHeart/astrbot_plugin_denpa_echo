@@ -170,7 +170,14 @@
                 <input class="input" id="voice-filter" placeholder="搜索音色..." style="width:200px" />
                 <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" id="voice-show-hidden" style="width:15px;height:15px;accent-color:var(--color-brand)" />显示已隐藏</label>
                 <button class="btn" id="btn-load-voices" data-i18n="voices.load">加载音色</button>
+                <button class="btn btn-subtle" id="btn-voice-manage">管理音色</button>
               </div>
+            </div>
+            <div class="flex gap-s mt-s" id="voice-batch-bar" style="display:none">
+              <button class="btn btn-subtle btn-sm" id="btn-voice-select-all">全选</button>
+              <button class="btn btn-subtle btn-sm" id="btn-voice-deselect">取消全选</button>
+              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-hide">批量隐藏</button>
+              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-show">批量取消隐藏</button>
             </div>
             <div id="voice-list" class="grid grid-2">
               <div class="empty-state">
@@ -178,11 +185,6 @@
                 <p>点击「加载音色」获取列表</p>
               </div>
             </div>
-            <div class="flex gap-s mt-m" id="voice-batch-bar" style="display:none">
-              <button class="btn btn-subtle btn-sm" id="btn-voice-select-all">全选</button>
-              <button class="btn btn-subtle btn-sm" id="btn-voice-deselect">取消全选</button>
-              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-hide">批量隐藏选中</button>
-              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-show">批量取消隐藏</button>
             </div>
           </div>
         </section>
