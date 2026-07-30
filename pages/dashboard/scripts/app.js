@@ -1775,13 +1775,13 @@ const Waveform = (() => {
       const off = li / lines - 0.5;
       const baseY = cy + off * (h * 0.58);
 
-      // 基础振幅（空闲态），始终保底不为零
-      const idleAmp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4);
+      // 基础振幅（空闲态），播放时压缩为音频腾出空间
+      const idleAmp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * (1 - mix * 0.6);
       // 音频驱动：从频谱取对应 bin 的能量，映射为额外振幅
       const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
       const binVal = freqData[binIdx] / 255;
-      // 混合振幅：空闲保底 + 音频叠加，确保任何状态下线条都有波动
-      const amp = idleAmp + mix * binVal * h * 0.28 * (1 - Math.abs(off) * 0.6);
+      // 混合振幅：空闲压缩保底 + 音频叠加
+      const amp = idleAmp + mix * binVal * h * 0.22 * (1 - Math.abs(off) * 0.6);
 
       const freq = 0.007 + li * 0.00055;
       const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * binVal * 0.2;
@@ -1807,7 +1807,7 @@ const Waveform = (() => {
     const mainBin = Math.floor(freqData.length * 0.25);
     const mainVal = freqData[mainBin] / 255;
     ctx.lineWidth = 2 + mix * mainVal * 1.5;
-    const mainAmp = 46 + mix * mainVal * h * 0.25;
+    const mainAmp = 46 * (1 - mix * 0.5) + mix * mainVal * h * 0.2;
     for (let x = 0; x <= w; x += 2) {
       const n = Math.sin(0.0105 * x + idlePhase * 0.58)
               + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
