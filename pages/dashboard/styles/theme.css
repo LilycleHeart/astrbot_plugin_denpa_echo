@@ -414,6 +414,7 @@ body {
   display: grid;
   gap: var(--space-m);
 }
+.grid > * { min-width: 0; }
 .grid-2 { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
