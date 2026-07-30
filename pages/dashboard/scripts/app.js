@@ -1754,7 +1754,7 @@ const Waveform = (() => {
     if (vizMode === "wave") {
       // 流动波形模式：平滑过渡空闲态 ↔ 音频驱动态
       const mixTarget = hasSignal ? 1 : 0;
-      audioMix += (mixTarget - audioMix) * (hasSignal ? 0.006 : 0.035);
+      audioMix += (mixTarget - audioMix) * (hasSignal ? 0.035 : 0.006);
       if (audioMix < 0.003) audioMix = 0;
       drawWave(freqData, C, dark);
     } else {
