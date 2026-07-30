@@ -1242,14 +1242,28 @@ async function uploadBgImage() {
   btn.textContent = "上传中...";
   try {
     const resp = await bridge.upload("bg/upload", file);
-    state.uiConfig.background_image = resp.data;
-    state.uiConfig.background_accent = ""; // 新图重置取色，下次进入会重新提取并持久化
+    const dataUri = resp.data;
+    state.uiConfig.background_image = dataUri;
+    state.uiConfig.background_accent = "";
+    state.uiConfig.background_mode = "image";
     document.getElementById("bg-file-name").textContent = resp.filename || file.name;
-    updateBgPreview();
-    // 自动切换到图片背景模式并预览
     document.getElementById("ui-bg-mode").value = "image";
-    previewUiConfig();
-    applyUiConfig();  // 同步立即应用，不等 rAF（否则上传后背景不即时刷新）
+    updateBgPreview();
+    // 直接应用背景（不依赖 previewUiConfig 重建 state 的时序）
+    const body = document.body;
+    body.classList.remove("bg-mode-brand-gradient", "bg-mode-custom");
+    body.style.backgroundImage = `url('${dataUri}')`;
+    body.style.backgroundSize = "cover";
+    body.style.backgroundPosition = "center";
+    body.style.backgroundAttachment = "fixed";
+    const appEl = document.getElementById("app");
+    if (appEl) appEl.classList.add("bg-image-active");
+    // 立即触发动态取色
+    if (state.uiConfig.color_mode === "dynamic") {
+      applyDynamicAccent(dataUri);
+    }
+    // 持久化
+    bridge.apiPost("config/save", { ui: state.uiConfig }).catch(() => {});
     showToast("背景图上传成功，已切换为图片背景", "success");
   } catch (e) {
     showToast(`上传失败: ${e.message}`, "error");
