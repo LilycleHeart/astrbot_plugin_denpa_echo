@@ -1809,7 +1809,7 @@ const Waveform = (() => {
       const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
       const binVal = freqData[binIdx] / 255;
       // 混合振幅：空闲压缩保底 + 音频叠加
-      const amp = idleAmp + mix * binVal * h * 0.35 * (1 - Math.abs(off) * 0.6);
+      const amp = idleAmp + mix * binVal * h * 0.3 * (1 - Math.abs(off) * 0.6);
 
       const freq = 0.007 + li * 0.00055;
       const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * binVal * 0.2;
