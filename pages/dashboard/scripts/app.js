@@ -777,14 +777,11 @@ async function loadOverview() {
 
 // ========== 音色管理 ==========
 async function loadStaticVoices() {
-  // 加载全部音色（含系统/克隆/生成），让合成下拉与试听都能选到克隆音色
+  // 仅填充调试合成下拉，不渲染音色列表（列表由用户手动点击「加载音色」触发）
   try {
     const data = await bridge.apiGet("voices");
     state.voices = data.voices || [];
     fillDebugVoiceSelect();
-    if (document.getElementById("voice-list").querySelector(".empty-state")) {
-      renderVoices(state.voices);
-    }
   } catch (_) {
     // 兜底：仅内置系统音色
     try {
@@ -875,13 +872,25 @@ function renderVoices(voices) {
       const id = btn.dataset.rename;
       const v = state.voices.find((x) => x.voice_id === id);
       if (!v) return;
-      const newName = prompt("输入新名称：", v.name || "");
-      if (newName !== null && newName.trim()) {
-        v.name = newName.trim();
-        fillDebugVoiceSelect();
+      const card = btn.closest(".stat-card");
+      const nameEl = card.querySelector(".text-bold");
+      if (!nameEl || nameEl.querySelector("input")) return;
+      const old = v.name || "";
+      nameEl.innerHTML = `<input class="input" style="padding:2px 6px;font-size:inherit;font-weight:inherit;width:100%" value="${old.replace(/"/g, "&quot;")}" />`;
+      const inp = nameEl.querySelector("input");
+      inp.focus();
+      inp.select();
+      const commit = () => {
+        const nv = inp.value.trim();
+        if (nv && nv !== old) {
+          v.name = nv;
+          fillDebugVoiceSelect();
+          showToast(`已重命名为: ${nv}`, "success");
+        }
         renderVoices(state.voices);
-        showToast(`已重命名为: ${newName.trim()}`, "success");
-      }
+      };
+      inp.onkeydown = (e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") renderVoices(state.voices); };
+      inp.onblur = commit;
     };
   });
 }
