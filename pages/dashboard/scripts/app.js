@@ -543,15 +543,11 @@ function bindEvents() {
 
   // 音色
   document.getElementById("btn-load-voices").onclick = browseVoices;
-  document.getElementById("voice-filter").oninput = () => {
-    if (state.voiceBrowseMode) _renderBrowseFiltered();
-    else filterVoices();
-  };
+  document.getElementById("btn-voice-back").onclick = backToMyVoices;
+  document.getElementById("voice-filter").oninput = () => _renderBrowseFiltered();
   document.getElementById("btn-voice-search").onclick = voiceSearch;
-  document.getElementById("voice-type").onchange = () => {
-    if (state.voiceBrowseMode) _renderBrowseList();
-  };
-  document.getElementById("voice-show-hidden").onchange = filterVoices;
+  document.getElementById("voice-type").onchange = () => _renderBrowseList();
+  document.getElementById("voice-show-hidden").onchange = () => renderVoices(state.voices);
   _bindBatchBar();
   document.getElementById("btn-voice-manage").onclick = () => {
     state.voiceManageMode = !state.voiceManageMode;
@@ -824,20 +820,21 @@ function addToMyVoices(voice) {
 }
 
 async function browseVoices() {
-  state.voiceBrowseMode = !state.voiceBrowseMode;
-  const btn = document.getElementById("btn-load-voices");
-  const hint = document.getElementById("voice-mode-hint");
-  const batchBar = document.getElementById("voice-batch-bar");
-  if (state.voiceBrowseMode) {
-    btn.innerHTML = "返回我的列表";
-    hint.textContent = "官方音色库（点击 + 添加）";
-    if (batchBar) batchBar.style.display = "none";
-    await _renderBrowseList();
-  } else {
-    btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>浏览音色';
-    hint.textContent = "我的音色列表";
-    renderVoices(state.voices);
-  }
+  state.voiceBrowseMode = true;
+  document.getElementById("voice-toolbar-mine").style.display = "none";
+  document.getElementById("voice-toolbar-browse").style.display = "";
+  document.getElementById("voice-mode-hint").textContent = "官方音色库（点击 + 添加）";
+  document.getElementById("voice-batch-bar").style.display = "none";
+  await _renderBrowseList();
+}
+
+function backToMyVoices() {
+  state.voiceBrowseMode = false;
+  document.getElementById("voice-toolbar-browse").style.display = "none";
+  document.getElementById("voice-toolbar-mine").style.display = "";
+  document.getElementById("voice-mode-hint").textContent = "我的音色列表";
+  document.getElementById("voice-filter").value = "";
+  renderVoices(state.voices);
 }
 
 async function _renderBrowseList() {
@@ -897,40 +894,32 @@ function _renderBrowseFiltered() {
 }
 
 function voiceSearch() {
-  if (state.voiceBrowseMode) {
-    _renderBrowseFiltered();
-    return;
-  }
-  // 我的列表模式：先过滤，若无结果则尝试按 ID 查询添加
   const q = (document.getElementById("voice-filter").value || "").trim();
-  const matches = state.voices.filter((v) =>
+  const matches = (state._browseVoices || []).filter((v) =>
     (v.name || "").toLowerCase().includes(q.toLowerCase()) || (v.voice_id || "").toLowerCase().includes(q.toLowerCase())
   );
   if (matches.length > 0 || !q) {
-    renderVoices(state.voices);
-  } else {
-    // 无匹配，尝试按 ID 查询
-    bridge.apiGet("voice/get", { voice_id: q }).then((data) => {
-      const label = (data.voice && (data.voice.name || data.voice.voice_id)) || q;
-      addToMyVoices({ voice_id: q, name: label, type: data.voice?.type || "voice_cloning" });
-      document.getElementById("voice-filter").value = "";
-    }).catch(() => {
-      addToMyVoices({ voice_id: q, name: q, type: "voice_cloning" });
-      document.getElementById("voice-filter").value = "";
-    });
+    _renderBrowseFiltered();
+    return;
   }
+  // 无匹配，尝试按 ID 查询添加
+  bridge.apiGet("voice/get", { voice_id: q }).then((data) => {
+    const label = (data.voice && (data.voice.name || data.voice.voice_id)) || q;
+    addToMyVoices({ voice_id: q, name: label, type: data.voice?.type || "voice_cloning" });
+    document.getElementById("voice-filter").value = "";
+    _renderBrowseFiltered();
+  }).catch(() => {
+    addToMyVoices({ voice_id: q, name: q, type: "voice_cloning" });
+    document.getElementById("voice-filter").value = "";
+    _renderBrowseFiltered();
+  });
 }
 
 function renderVoices(voices) {
-  const filter = document.getElementById("voice-filter").value.toLowerCase();
   const showHidden = document.getElementById("voice-show-hidden")?.checked;
   const manage = state.voiceManageMode;
   const filtered = voices.filter(
-    (v) =>
-      (showHidden || !state.hiddenVoices.has(v.voice_id)) &&
-      (!filter ||
-        (v.name || "").toLowerCase().includes(filter) ||
-        (v.voice_id || "").toLowerCase().includes(filter)),
+    (v) => (showHidden || !state.hiddenVoices.has(v.voice_id)),
   );
   const listEl = document.getElementById("voice-list");
   const batchBar = document.getElementById("voice-batch-bar");
@@ -1028,10 +1017,6 @@ function _bindBatchBar() {
     renderVoices(state.voices);
     showToast("已批量取消隐藏", "success");
   };
-}
-
-function filterVoices() {
-  renderVoices(state.voices);
 }
 
 function fillDebugVoiceSelect() {
