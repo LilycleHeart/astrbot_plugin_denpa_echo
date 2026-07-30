@@ -543,6 +543,7 @@ function bindEvents() {
   document.getElementById("voice-filter").oninput = filterVoices;
   document.getElementById("voice-type").onchange = loadVoices;
   document.getElementById("voice-show-hidden").onchange = filterVoices;
+  _bindBatchBar();
 
   // 克隆
   const cloneInput = document.getElementById("clone-source");
@@ -823,6 +824,8 @@ function renderVoices(voices) {
         (v.voice_id || "").toLowerCase().includes(filter)),
   );
   const listEl = document.getElementById("voice-list");
+  const batchBar = document.getElementById("voice-batch-bar");
+  if (batchBar) batchBar.style.display = voices.length ? "" : "none";
   if (filtered.length === 0) {
     listEl.innerHTML = '<div class="empty-state"><p>无匹配音色</p></div>';
     return;
@@ -832,12 +835,16 @@ function renderVoices(voices) {
       (v) => `
     <div class="stat-card" style="${state.hiddenVoices.has(v.voice_id) ? 'opacity:0.5' : ''}">
       <div class="flex-between">
-        <div style="overflow:hidden">
-          <div class="text-bold truncate">${v.name || "未命名"}</div>
-          <div class="text-mono text-sm text-muted truncate">${v.voice_id || ""}</div>
+        <div style="display:flex;align-items:center;gap:8px;overflow:hidden">
+          <input type="checkbox" class="voice-chk" value="${v.voice_id}" style="width:16px;height:16px;accent-color:var(--color-brand);flex-shrink:0" />
+          <div style="overflow:hidden">
+            <div class="text-bold truncate">${v.name || "未命名"}</div>
+            <div class="text-mono text-sm text-muted truncate">${v.voice_id || ""}</div>
+          </div>
         </div>
         <div class="flex gap-s">
-          <button class="btn btn-subtle btn-sm" data-voice="${v.voice_id}" data-name="${v.name || ""}">▶ 试听</button>
+          <button class="btn btn-subtle btn-sm" data-voice="${v.voice_id}" data-name="${v.name || ""}">▶</button>
+          <button class="btn btn-subtle btn-sm" data-rename="${v.voice_id}" title="重命名">✎</button>
           <button class="btn btn-subtle btn-sm" data-hide="${v.voice_id}" title="${state.hiddenVoices.has(v.voice_id) ? '取消隐藏' : '隐藏'}">${state.hiddenVoices.has(v.voice_id) ? '👁' : '✕'}</button>
         </div>
       </div>
@@ -856,6 +863,45 @@ function renderVoices(voices) {
       renderVoices(state.voices);
     };
   });
+  listEl.querySelectorAll("button[data-rename]").forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.dataset.rename;
+      const v = state.voices.find((x) => x.voice_id === id);
+      if (!v) return;
+      const newName = prompt("输入新名称：", v.name || "");
+      if (newName !== null && newName.trim()) {
+        v.name = newName.trim();
+        fillDebugVoiceSelect();
+        renderVoices(state.voices);
+        showToast(`已重命名为: ${newName.trim()}`, "success");
+      }
+    };
+  });
+}
+
+function _getCheckedVoiceIds() {
+  return [...document.querySelectorAll(".voice-chk:checked")].map((c) => c.value);
+}
+function _bindBatchBar() {
+  const bar = document.getElementById("voice-batch-bar");
+  if (!bar || bar._bound) return;
+  bar._bound = true;
+  document.getElementById("btn-voice-select-all").onclick = () => {
+    document.querySelectorAll(".voice-chk").forEach((c) => { c.checked = true; });
+  };
+  document.getElementById("btn-voice-deselect").onclick = () => {
+    document.querySelectorAll(".voice-chk").forEach((c) => { c.checked = false; });
+  };
+  document.getElementById("btn-voice-batch-hide").onclick = () => {
+    _getCheckedVoiceIds().forEach((id) => state.hiddenVoices.add(id));
+    renderVoices(state.voices);
+    showToast("已批量隐藏", "success");
+  };
+  document.getElementById("btn-voice-batch-show").onclick = () => {
+    _getCheckedVoiceIds().forEach((id) => state.hiddenVoices.delete(id));
+    renderVoices(state.voices);
+    showToast("已批量取消隐藏", "success");
+  };
 }
 
 function filterVoices() {
@@ -974,12 +1020,15 @@ async function loadVoiceById() {
   try {
     const data = await bridge.apiGet("voice/get", { voice_id: voiceId });
     const label = (data.voice && (data.voice.name || data.voice.voice_id)) || voiceId;
-    const typeBadge = data.found
-      ? (data.voice.type === "system"
-          ? '<span class="badge badge-info">系统音色</span>'
-          : '<span class="badge badge-brand">克隆音色</span>')
-      : '<span class="badge badge-warning">未在列表中</span>';
-    const note = data.found
+    const inLocalList = state.voices.some((v) => v.voice_id === voiceId);
+    const typeBadge = inLocalList
+      ? '<span class="badge badge-brand">已在列表中</span>'
+      : data.found
+        ? (data.voice.type === "system"
+            ? '<span class="badge badge-info">系统音色</span>'
+            : '<span class="badge badge-brand">克隆音色</span>')
+        : '<span class="badge badge-warning">未在列表中</span>';
+    const note = (data.found || inLocalList)
       ? ""
       : `<p class="text-sm text-muted mt-s">${escapeHtml(data.note || "若 Minimax 端仍有效即可试听/设为默认")}</p>`;
     resultEl.innerHTML = `
@@ -994,7 +1043,7 @@ async function loadVoiceById() {
         ${note}
         <div class="flex gap-s mt-m">
           <button class="btn btn-subtle btn-sm" id="btn-preview-loaded">▶ 试听</button>
-          <button class="btn btn-subtle btn-sm" id="btn-add-to-list">＋ 加入列表</button>
+          <button class="btn btn-subtle btn-sm" id="btn-add-to-list" ${inLocalList ? "disabled" : ""}>${inLocalList ? "✓ 已在列表" : "＋ 加入列表"}</button>
           <button class="btn btn-primary btn-sm" id="btn-set-default">设为默认音色</button>
         </div>
       </div>`;
@@ -1012,7 +1061,7 @@ async function loadVoiceById() {
     };
     document.getElementById("btn-set-default").onclick = () =>
       setDefaultVoice(voiceId, label);
-    showToast(data.found ? "已找到该音色" : "未在列表中找到，仍可试听", data.found ? "success" : "info");
+    showToast(inLocalList ? "该音色已在列表中" : data.found ? "已找到该音色" : "未在列表中找到，仍可试听", inLocalList ? "info" : data.found ? "success" : "info");
   } catch (e) {
     resultEl.innerHTML = `<div class="stat-card">
       <span class="badge badge-danger">查询失败</span>
