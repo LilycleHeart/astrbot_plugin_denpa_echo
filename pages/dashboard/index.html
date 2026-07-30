@@ -183,8 +183,8 @@
             <div class="flex gap-s mt-s" id="voice-batch-bar" style="display:none">
               <button class="btn btn-subtle btn-sm" id="btn-voice-select-all">全选</button>
               <button class="btn btn-subtle btn-sm" id="btn-voice-deselect">取消全选</button>
-              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-hide">批量隐藏</button>
-              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-show">批量取消隐藏</button>
+              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-hide">隐藏</button>
+              <button class="btn btn-subtle btn-sm" id="btn-voice-batch-show">取消隐藏</button>
             </div>
             <!-- 音色列表 -->
             <div id="voice-list" class="grid grid-2 mt-s">
@@ -225,9 +225,9 @@
               <div class="form-row">
                 <label class="form-label" data-i18n="clone.model">克隆模型</label>
                 <select class="select" id="clone-model">
-                  <option value="speech-02-hd">speech-02-hd（推荐）</option>
+                  <option value="speech-2.8-hd">speech-2.8-hd（推荐）</option>
                   <option value="speech-2.6-hd">speech-2.6-hd</option>
-                  <option value="speech-2.8-hd">speech-2.8-hd</option>
+                  <option value="speech-02-hd">speech-02-hd</option>
                 </select>
               </div>
               <div style="grid-column: 1 / -1">
@@ -468,7 +468,7 @@
           <div class="card mt-m">
             <div class="card-header"><div><h2 class="card-title">语音合成</h2><p class="card-subtitle">Minimax T2A 核心参数</p></div></div>
             <div class="grid grid-2">
-              <div class="form-row"><label class="form-label">模型版本</label><select class="select" id="cfg-tts-model"><option value="speech-02-hd">speech-02-hd</option><option value="speech-02-turbo">speech-02-turbo</option><option value="speech-2.8-hd">speech-2.8-hd</option><option value="speech-2.8-turbo">speech-2.8-turbo</option><option value="speech-2.6-hd">speech-2.6-hd</option><option value="speech-2.6-turbo">speech-2.6-turbo</option></select></div>
+              <div class="form-row"><label class="form-label">模型版本</label><select class="select" id="cfg-tts-model"><option value="speech-2.8-hd">speech-2.8-hd（推荐）</option><option value="speech-2.8-turbo">speech-2.8-turbo</option><option value="speech-2.6-hd">speech-2.6-hd</option><option value="speech-2.6-turbo">speech-2.6-turbo</option><option value="speech-02-hd">speech-02-hd</option><option value="speech-02-turbo">speech-02-turbo</option></select></div>
               <div class="form-row"><label class="form-label">音色 ID</label><input class="input" id="cfg-tts-voice-id" value="female-shaonv" placeholder="系统或克隆音色 ID" /></div>
               <div class="form-row"><label class="form-label">语速 [0.5, 2.0]</label><input type="number" class="input" id="cfg-tts-speed" value="1.0" min="0.5" max="2" step="0.1" /></div>
               <div class="form-row"><label class="form-label">音量 (0, 10]</label><input type="number" class="input" id="cfg-tts-vol" value="1.0" min="0.1" max="10" step="0.1" /></div>

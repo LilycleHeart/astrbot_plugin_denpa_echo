@@ -1051,13 +1051,14 @@ function _bindBatchBar() {
 function fillDebugVoiceSelect() {
   const sel = document.getElementById("debug-voice");
   const cur = sel.value;
-  sel.innerHTML = state.voices
+  const visible = state.voices.filter((v) => !state.hiddenVoices.has(v.voice_id));
+  sel.innerHTML = visible
     .map(
       (v) =>
         `<option value="${v.voice_id}">${v.name} (${v.voice_id})</option>`,
     )
     .join("");
-  if (cur && state.voices.some((v) => v.voice_id === cur)) {
+  if (cur && visible.some((v) => v.voice_id === cur)) {
     sel.value = cur;
   }
 }
@@ -1425,7 +1426,7 @@ async function loadPluginConfig() {
     set("cfg-group-id", cfg.group_id || "");
     set("cfg-api-region", cfg.api_region || "china");
     // TTS
-    set("cfg-tts-model", tts.model || "speech-02-hd");
+    set("cfg-tts-model", tts.model || "speech-2.8-hd");
     set("cfg-tts-voice-id", tts.voice_id || "female-shaonv");
     set("cfg-tts-speed", tts.speed ?? 1.0);
     set("cfg-tts-vol", tts.vol ?? 1.0);
@@ -1781,7 +1782,7 @@ const Waveform = (() => {
       const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
       const binVal = freqData[binIdx] / 255;
       // 混合振幅：空闲压缩保底 + 音频叠加
-      const amp = idleAmp + mix * binVal * h * 0.33 * (1 - Math.abs(off) * 0.6);
+      const amp = idleAmp + mix * binVal * h * 0.5 * (1 - Math.abs(off) * 0.6);
 
       const freq = 0.007 + li * 0.00055;
       const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * binVal * 0.2;

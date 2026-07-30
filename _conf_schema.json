@@ -36,7 +36,7 @@
           "speech-02-hd",
           "speech-02-turbo"
         ],
-        "default": "speech-02-hd",
+        "default": "speech-2.8-hd",
         "hint": "2.8 系列支持语气词标签 (laughs)/(sighs) 等；02 系列稳定性好"
       },
       "voice_id": {
