@@ -56,32 +56,39 @@ class Main(Star):
             pass
         os.makedirs(self.plugin_data_dir, exist_ok=True)
 
-        # ── 反向迁移：修复曾被 ui 嵌套的配置文件 ──
-        _NESTED_KEYS = (
+        # ── 兼容读取：顶层优先，回退到 config["ui"] 嵌套（历史迁移残留）──
+        _ui = config.get("ui") if isinstance(config.get("ui"), dict) else {}
+
+        def _cfg(key, default=None):
+            v = config.get(key)
+            if v is not None and v != "":
+                return v
+            return _ui.get(key, default)
+
+        # 将嵌套残留提回顶层，确保后续所有 self.config.get() 正常
+        _BACK_KEYS = (
             "api_key", "group_id", "api_region", "tts", "audio",
             "voice_modify", "pronunciation_dict", "send_mode",
             "text_processing", "polish", "auto_emotion", "advanced",
         )
-        if "ui" in config and isinstance(config["ui"], dict):
-            ui_dict = config["ui"]  # 直接引用，非副本
-            need_migrate = any(k in ui_dict for k in _NESTED_KEYS) and not config.get("api_key")
-            if need_migrate:
-                for k in _NESTED_KEYS:
-                    if k in ui_dict:
-                        config[k] = ui_dict[k]
-                        del ui_dict[k]
-                try:
-                    config.save_config()
-                    logger.warning("[Denpa Echo] 反向迁移完成：配置已从 ui 嵌套恢复至顶层")
-                except Exception as e:
-                    logger.warning(f"[Denpa Echo] 反向迁移保存失败: {e}")
+        _dirty = False
+        for _k in _BACK_KEYS:
+            if (config.get(_k) is None or config.get(_k) == "") and _ui.get(_k) is not None:
+                config[_k] = _ui[_k]
+                _dirty = True
+        if _dirty:
+            try:
+                config.save_config()
+                logger.warning("[Denpa Echo] 配置兼容：已将 ui 嵌套字段提回顶层")
+            except Exception:
+                pass
 
         # 初始化 Minimax 客户端
-        adv = config.get("advanced", {}) or {}
+        adv = _cfg("advanced", {}) or {}
         self.client = MinimaxClient(
-            api_key=config.get("api_key", ""),
-            group_id=config.get("group_id", ""),
-            region=config.get("api_region", "china"),
+            api_key=_cfg("api_key", ""),
+            group_id=_cfg("group_id", ""),
+            region=_cfg("api_region", "china"),
             timeout=int(adv.get("request_timeout", 60)),
             retry_times=int(adv.get("retry_times", 2)),
             retry_backoff=float(adv.get("retry_backoff", 1.5)),
