@@ -1036,6 +1036,7 @@ async function uploadBgImage() {
     // 自动切换到图片背景模式并预览
     document.getElementById("ui-bg-mode").value = "image";
     previewUiConfig();
+    applyUiConfig();  // 同步立即应用，不等 rAF（否则上传后背景不即时刷新）
     showToast("背景图上传成功，已切换为图片背景", "success");
   } catch (e) {
     showToast(`上传失败: ${e.message}`, "error");
