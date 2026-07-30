@@ -428,6 +428,11 @@
         "default": "",
         "hint": "在控制台「界面设置」上传图片后自动填入"
       },
+      "background_accent": {
+        "description": "背景图提取色（自动填充，无需手动）",
+        "type": "string",
+        "default": ""
+      },
       "custom_background": {
         "description": "自定义亮色背景",
         "type": "string",

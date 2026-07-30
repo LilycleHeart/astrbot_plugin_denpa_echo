@@ -478,21 +478,30 @@ function applyPalette(sourceHex, isDark) {
 // 动态取色: 用 MCU 官方算法从背景图提取主色(替代手写 extractImageAccent / clampAccent)
 function applyDynamicAccent(imageSrc) {
   const isDark = currentIsDark();
-  if (dynamicSourceCache[imageSrc]) {
-    applyPalette(dynamicSourceCache[imageSrc], isDark);
+  const cacheKey = imageSrc.substring(0, 64);
+  if (dynamicSourceCache[cacheKey]) {
+    applyPalette(dynamicSourceCache[cacheKey], isDark);
     return;
   }
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = async () => {
     try {
-      const srcArgb = await sourceColorFromImage(img);
+      // 缩小到 64x64 再取色，避免处理全分辨率大图卡顿
+      const size = 64;
+      const cvs = document.createElement("canvas");
+      cvs.width = size; cvs.height = size;
+      const c = cvs.getContext("2d");
+      c.drawImage(img, 0, 0, size, size);
+      const small = new Image();
+      small.src = cvs.toDataURL("image/png");
+      await new Promise((res) => { small.onload = res; });
+      const srcArgb = await sourceColorFromImage(small);
       const hex = hexFromArgb(srcArgb);
-      dynamicSourceCache[imageSrc] = hex;
+      dynamicSourceCache[cacheKey] = hex;
       const ui = state.uiConfig;
       if (ui.color_mode === "dynamic" && ui.background_mode === "image") {
         applyPalette(hex, currentIsDark());
-        // 持久化提取结果，避免每次重进都重新取色（值未变则不写，避免反复落盘）
         if (ui.background_accent !== hex) {
           ui.background_accent = hex;
           bridge.apiPost("config/save", { ui: state.uiConfig }).catch(() => {});
