@@ -850,26 +850,20 @@ function addToMyVoices(voice) {
 
 async function browseVoices() {
   state.voiceBrowseMode = true;
-  const listEl = document.getElementById("voice-list");
-  listEl.style.opacity = "0";
   document.getElementById("voice-toolbar-mine").style.display = "none";
   document.getElementById("voice-toolbar-browse").style.display = "";
   document.getElementById("voice-mode-hint").textContent = "官方音色库（点击 + 添加）";
   document.getElementById("voice-batch-bar").style.display = "none";
   await _renderBrowseList();
-  listEl.style.opacity = "1";
 }
 
 function backToMyVoices() {
   state.voiceBrowseMode = false;
-  const listEl = document.getElementById("voice-list");
-  listEl.style.opacity = "0";
   document.getElementById("voice-toolbar-browse").style.display = "none";
   document.getElementById("voice-toolbar-mine").style.display = "";
   document.getElementById("voice-mode-hint").textContent = "我的音色列表";
   document.getElementById("voice-filter").value = "";
   renderVoices(state.voices);
-  requestAnimationFrame(() => { listEl.style.opacity = "1"; });
 }
 
 async function _renderBrowseList() {
