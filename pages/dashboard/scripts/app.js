@@ -34,6 +34,7 @@ const state = {
     shadow_enabled: true,
     shadow_intensity: 60,
     bg_scrim: 40,
+    viz_mode: "spectrum",
   },
   voices: [],
   hiddenVoices: new Set(),
@@ -190,6 +191,10 @@ function applyUiConfig() {
   root.style.setProperty("--material-blur", `${ui.material_blur ?? 5}px`);
   // 背景图暗色遮罩强度
   root.style.setProperty("--bg-scrim", (ui.bg_scrim ?? 40) / 100);
+  // 声纹可视化模式
+  if (window.Waveform && typeof Waveform.setVizMode === "function") {
+    Waveform.setVizMode(ui.viz_mode || "spectrum");
+  }
   const appEl = document.getElementById("app");
   if (appEl) {
     appEl.classList.toggle("bg-image-active", !!(ui.background_mode === "image" && ui.background_image));
@@ -271,6 +276,8 @@ function syncSettingsInputs() {
   if (scrim) scrim.value = ui.bg_scrim ?? 40;
   const scrimVal = document.getElementById("ui-scrim-val");
   if (scrimVal) scrimVal.textContent = `${ui.bg_scrim ?? 40}%`;
+  const vizMode = document.getElementById("ui-viz-mode");
+  if (vizMode) vizMode.value = ui.viz_mode || "spectrum";
 }
 
 // ========== 品牌色引擎 (Material Color Utilities / M3) ==========
@@ -673,7 +680,7 @@ function bindEvents() {
   // 实时预览
   ["ui-color-mode", "ui-brand-color", "ui-bg-mode", "ui-radius",
    "ui-custom-bg", "ui-custom-bg-dark", "ui-material", "ui-blur", "ui-acrylic-on",
-   "ui-material-type", "ui-font", "ui-glow-on", "ui-glow", "ui-shadow-on", "ui-shadow", "ui-scrim"].forEach((id) => {
+   "ui-material-type", "ui-font", "ui-glow-on", "ui-glow", "ui-shadow-on", "ui-shadow", "ui-scrim", "ui-viz-mode"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("input", previewUiConfig);
   });
@@ -740,6 +747,7 @@ function previewUiConfig() {
     shadow_enabled: soEl ? soEl.checked : false,
     shadow_intensity: siEl ? (parseInt(siEl.value, 10) || 0) : 60,
     bg_scrim: (() => { const s = document.getElementById("ui-scrim"); return s ? (parseInt(s.value, 10) || 0) : 40; })(),
+    viz_mode: document.getElementById("ui-viz-mode")?.value || "spectrum",
   };
   // 数值即时更新；重计算（含 MCU 调色板推导）用 rAF 合并到下一帧，拖动顺滑、首帧不再卡
   if (_applyRaf) cancelAnimationFrame(_applyRaf);
@@ -1393,6 +1401,7 @@ function resetUiConfig() {
     glow_intensity: 40,
     shadow_enabled: true,
     shadow_intensity: 60,
+    viz_mode: "spectrum",
   };
   applyUiConfig();
   showToast("已恢复默认（需点击保存生效）", "info");
@@ -1616,6 +1625,10 @@ const Waveform = (() => {
   let raf = null;
   let audioCtx = null, analyser = null, sourceNode = null;
   let idlePhase = 0;
+  let energy = 1;          // 音频能量（1=空闲，>1=有信号）
+  let vizMode = "spectrum"; // "spectrum" | "wave"
+
+  function setVizMode(mode) { vizMode = mode; }
 
   /** 读取品牌色（--color-brand），失败回退信号粉 */
   function brandRGB() {
@@ -1639,11 +1652,7 @@ const Waveform = (() => {
     canvas = document.getElementById('waveform-canvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    // 延迟到下一帧布局稳定后再测量，避免初始化时尺寸未定（视口切换/全宽布局）导致
-    // backing store 过期 → 画布被 CSS 拉伸 → 线条变细、出现锯齿
     requestAnimationFrame(() => resize());
-    // 布局变化（全宽侧栏改造 / 切 tab）时 canvas 尺寸会变，
-    // 仅 window.resize 不够，用 ResizeObserver 兜底重测
     if (window.ResizeObserver) {
       const ro = new ResizeObserver(() => resize());
       ro.observe(canvas);
@@ -1652,18 +1661,14 @@ const Waveform = (() => {
     loop();
   }
 
-  // 切到含画布的视图变为可见后重新测量尺寸，消除过期 backing store 造成的锯齿/细线
   function refresh() {
     if (canvas) resize();
   }
 
   function resize() {
-    // 使用 canvas 自身的 CSS 渲染尺寸（非父容器），确保 backing store 与显示区域 1:1
-    // 父容器 .hero 含标题/按钮/padding 远高于 canvas 的 188px，用父尺寸会导致
-    // backing store 过大 → CSS 缩小 → 线条变细、锯齿（与本地 preview.html 的差异根因）
     let cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (cw < 2 || ch < 2) { const r = canvas.getBoundingClientRect(); cw = r.width; ch = r.height; }
-    if (cw < 2 || ch < 2) return;  // 不可见时跳过，等下次 ResizeObserver 触发
+    if (cw < 2 || ch < 2) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = cw; h = ch;
     canvas.width = Math.max(1, Math.round(w * dpr));
@@ -1682,8 +1687,6 @@ const Waveform = (() => {
         analyser = audioCtx.createAnalyser();
         analyser.fftSize = 256;
       }
-      // 关键修复：上下文常在用户手势外（await 之后）创建而处于 suspended，
-      // 音频经 MediaElementSource 重路由进挂起上下文会静音 → 必须 resume 才能出声
       if (audioCtx.state === "suspended") {
         audioCtx.resume().then(() => audioEl.play().catch(() => {})).catch(() => {});
       } else {
@@ -1715,7 +1718,22 @@ const Waveform = (() => {
 
     const hasSignal = freqData.some(v => v > 12);
 
-    hasSignal ? drawSpectrum(freqData, C, dark) : drawIdle(C, dark);
+    // 平滑跟踪音频能量
+    let target = 1;
+    if (hasSignal) {
+      let sum = 0;
+      for (let i = 0; i < freqData.length; i++) sum += freqData[i];
+      target = 1 + (sum / freqData.length / 255) * 2.5;  // 1 ~ 3.5
+    }
+    energy += (target - energy) * 0.08;
+
+    if (vizMode === "wave") {
+      // 流动波形模式：始终画流动线，音频能量驱动振幅和速度
+      drawIdle(C, dark);
+    } else {
+      // 频谱模式：有信号画柱状图，否则画空闲流动线
+      hasSignal ? drawSpectrum(freqData, C, dark) : drawIdle(C, dark);
+    }
   }
 
   /* ── 频谱柱状图（有音频播放时）── */
@@ -1739,10 +1757,10 @@ const Waveform = (() => {
     ctx.shadowBlur = 0;
   }
 
-  /* ── 环境波形动画（空闲态）── */
+  /* ── 环境波形动画（空闲态 / 流动可视化模式）── */
   function drawIdle(C, dark) {
-    const lineC = dark ? lighten(C, 0.35) : C;   // 暗色提亮, 与本地预览一致（否则发虚、质量低）
-    idlePhase += 0.008;
+    const lineC = dark ? lighten(C, 0.35) : C;
+    idlePhase += 0.008 * (0.6 + energy * 0.8);  // 能量越高流动越快
     const cy = h / 2;
     const lines = 22;
     if (dark) { ctx.shadowColor = rgba(lineC, 0.80); ctx.shadowBlur = 10; }
@@ -1751,9 +1769,8 @@ const Waveform = (() => {
     for (let li = 0; li < lines; li++) {
       const off = li / lines - 0.5;
       const baseY = cy + off * (h * 0.58);
-      const amp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4);
+      const amp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * energy;
       const freq = 0.007 + li * 0.00055;
-      // 暗色主题下线条更亮 + 更强泛光, 亮色主题也更明亮但不刺眼
       const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32);
 
       ctx.beginPath();
@@ -1778,13 +1795,13 @@ const Waveform = (() => {
       const n = Math.sin(0.0105 * x + idlePhase * 0.58)
                 + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
                 + 0.15 * Math.sin(0.052 * x + idlePhase * 1.85);
-      const y = cy + 46 * n;
+      const y = cy + 46 * energy * n;
       x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
 
-  return { init, attachAudio, refresh };
+  return { init, attachAudio, refresh, setVizMode };
 })();
 
 // 暴露给 HTML inline onclick（ES module 不自动挂全局）
