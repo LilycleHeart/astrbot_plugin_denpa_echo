@@ -206,33 +206,31 @@
               </div>
             </div>
             <div class="grid grid-2">
-              <div>
-                <div class="form-row">
-                  <label class="form-label" data-i18n="clone.source">源音频文件</label>
-                  <label class="file-drop" id="clone-drop">
-                    <input type="file" id="clone-source" accept=".mp3,.wav,.m4a" />
-                    <div id="clone-file-name" data-i18n="clone.dropHint">点击或拖拽文件到此处（10s–5min，mp3/wav/m4a）</div>
-                  </label>
-                </div>
-                <div class="form-row">
-                  <label class="form-label" data-i18n="clone.preview">试听文本</label>
-                  <textarea class="textarea" id="clone-preview-text" rows="3">你好，这是克隆音色的试听样本。</textarea>
-                </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="clone.source">源音频文件</label>
+                <label class="file-drop" id="clone-drop">
+                  <input type="file" id="clone-source" accept=".mp3,.wav,.m4a" />
+                  <div id="clone-file-name" data-i18n="clone.dropHint">点击或拖拽文件到此处（10s–5min，mp3/wav/m4a）</div>
+                </label>
               </div>
-              <div>
-                <div class="form-row">
-                  <label class="form-label" data-i18n="clone.voiceId">自定义音色 ID</label>
-                  <input class="input" id="clone-voice-id" placeholder="my_custom_voice_001" />
-                  <p class="form-hint" data-i18n="clone.voiceIdHint">仅字母数字下划线，将作为后续合成的 voice_id</p>
-                </div>
-                <div class="form-row">
-                  <label class="form-label" data-i18n="clone.model">克隆模型</label>
-                  <select class="select" id="clone-model">
-                    <option value="speech-02-hd">speech-02-hd（推荐）</option>
-                    <option value="speech-2.6-hd">speech-2.6-hd</option>
-                    <option value="speech-2.8-hd">speech-2.8-hd</option>
-                  </select>
-                </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="clone.voiceId">自定义音色 ID</label>
+                <input class="input" id="clone-voice-id" placeholder="my_custom_voice_001" />
+                <p class="form-hint" data-i18n="clone.voiceIdHint">仅字母数字下划线，将作为后续合成的 voice_id</p>
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="clone.preview">试听文本</label>
+                <textarea class="textarea" id="clone-preview-text" rows="3">你好，这是克隆音色的试听样本。</textarea>
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="clone.model">克隆模型</label>
+                <select class="select" id="clone-model">
+                  <option value="speech-02-hd">speech-02-hd（推荐）</option>
+                  <option value="speech-2.6-hd">speech-2.6-hd</option>
+                  <option value="speech-2.8-hd">speech-2.8-hd</option>
+                </select>
+              </div>
+              <div style="grid-column: 1 / -1">
                 <button class="btn btn-primary" id="btn-clone" data-i18n="clone.start">开始克隆</button>
                 <div id="clone-result" class="mt-m"></div>
               </div>
