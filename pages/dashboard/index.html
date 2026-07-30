@@ -344,13 +344,6 @@
                 </select>
               </div>
               <div class="form-row">
-                <label class="form-label" data-i18n="settings.brandColor">主题色</label>
-                <div class="flex gap-s">
-                  <input type="color" class="input" id="ui-brand-color-picker" value="#ff8ab9" style="width:60px;padding:4px" />
-                  <input class="input" id="ui-brand-color" value="#ff8ab9" />
-                </div>
-              </div>
-              <div class="form-row">
                 <label class="form-label" data-i18n="settings.bgMode">背景模式</label>
                 <select class="select" id="ui-bg-mode">
                   <option value="theme" data-i18n="settings.bgTheme">跟随主题</option>
@@ -360,20 +353,50 @@
                 </select>
               </div>
               <div class="form-row">
-                <label class="form-label" data-i18n="settings.radius">圆角大小（px） <span id="ui-radius-val" class="text-mono">14px</span></label>
-                <input type="number" class="input" id="ui-radius" value="14" min="0" max="40" />
-              </div>
-              <div class="form-row" style="display:flex;align-items:center;gap:8px">
-                <input type="checkbox" id="ui-acrylic-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
-                <label class="form-label" style="margin:0" data-i18n="settings.acrylicOn">启用材质（关闭则转实底）</label>
-              </div>
-              <div class="form-row">
                 <label class="form-label">材质类型</label>
                 <select class="select" id="ui-material-type">
                   <option value="acrylic">亚克力（Acrylic，半透明模糊）</option>
                   <option value="mica">云母（Mica，低模糊带壁纸色调）</option>
                 </select>
               </div>
+              <div class="form-row">
+                <label class="form-label">字体</label>
+                <select class="select" id="ui-font">
+                  <option value="misans">MiSans（默认，需联网加载）</option>
+                  <option value="builtin">内置字体（系统字体栈）</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label">声纹可视化模式</label>
+                <select class="select" id="ui-viz-mode">
+                  <option value="spectrum">频谱柱状图（播放时切换为柱状）</option>
+                  <option value="wave">流动波形（始终流动，音频驱动振幅）</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.radius">圆角大小（px） <span id="ui-radius-val" class="text-mono">14px</span></label>
+                <input type="number" class="input" id="ui-radius" value="14" min="0" max="40" />
+              </div>
+            </div>
+
+            <!-- 开关 -->
+            <div class="grid grid-2" style="margin-top:var(--space-s)">
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="ui-acrylic-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0" data-i18n="settings.acrylicOn">启用材质（关闭则转实底）</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="ui-glow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用主题泛光</label>
+              </div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="ui-shadow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
+                <label class="form-label" style="margin:0">启用投影阴影</label>
+              </div>
+            </div>
+
+            <!-- 滑条 -->
+            <div class="grid grid-2" style="margin-top:var(--space-s)">
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.material">材质不透明度 <span id="ui-material-val" class="text-mono">62%</span></label>
                 <input type="range" class="slider" id="ui-material" min="0" max="100" value="62" />
@@ -383,34 +406,27 @@
                 <input type="range" class="slider" id="ui-blur" min="0" max="100" value="28" />
               </div>
               <div class="form-row">
-                <label class="form-label">字体</label>
-                <select class="select" id="ui-font">
-                  <option value="misans">MiSans（默认，需联网加载）</option>
-                  <option value="builtin">内置字体（系统字体栈）</option>
-                </select>
-              </div>
-              <div class="form-row" style="display:flex;align-items:center;gap:8px">
-                <input type="checkbox" id="ui-glow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
-                <label class="form-label" style="margin:0">启用主题泛光</label>
-              </div>
-              <div class="form-row">
                 <label class="form-label">泛光强度 <span id="ui-glow-val" class="text-mono">40%</span></label>
                 <input type="range" class="slider" id="ui-glow" min="0" max="100" value="40" />
-              </div>
-              <div class="form-row" style="display:flex;align-items:center;gap:8px">
-                <input type="checkbox" id="ui-shadow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
-                <label class="form-label" style="margin:0">启用投影阴影</label>
               </div>
               <div class="form-row">
                 <label class="form-label">阴影强度 <span id="ui-shadow-val" class="text-mono">60%</span></label>
                 <input type="range" class="slider" id="ui-shadow" min="0" max="100" value="60" />
               </div>
               <div class="form-row">
-                <label class="form-label">声纹可视化模式</label>
-                <select class="select" id="ui-viz-mode">
-                  <option value="spectrum">频谱柱状图（播放时切换为柱状）</option>
-                  <option value="wave">流动波形（始终流动，音频驱动振幅）</option>
-                </select>
+                <label class="form-label">背景图暗色遮罩 <span id="ui-scrim-val" class="text-mono">40%</span></label>
+                <input type="range" class="slider" id="ui-scrim" min="0" max="80" value="40" />
+              </div>
+            </div>
+
+            <!-- 颜色 -->
+            <div class="grid grid-2" style="margin-top:var(--space-s)">
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.brandColor">主题色</label>
+                <div class="flex gap-s">
+                  <input type="color" class="input" id="ui-brand-color-picker" value="#ff8ab9" style="width:60px;padding:4px" />
+                  <input class="input" id="ui-brand-color" value="#ff8ab9" />
+                </div>
               </div>
               <div class="form-row">
                 <label class="form-label" data-i18n="settings.customBg">自定义亮色背景</label>
@@ -425,10 +441,6 @@
                   <input type="color" class="input" id="ui-custom-bg-dark-picker" value="#0C0E13" style="width:60px;padding:4px" />
                   <input class="input" id="ui-custom-bg-dark" value="#0C0E13" />
                 </div>
-              </div>
-              <div class="form-row">
-                <label class="form-label">背景图暗色遮罩 <span id="ui-scrim-val" class="text-mono">40%</span></label>
-                <input type="range" class="slider" id="ui-scrim" min="0" max="80" value="40" />
               </div>
             </div>
 
