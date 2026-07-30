@@ -532,22 +532,6 @@ function bindEvents() {
 
   // 刷新
   document.getElementById("btn-refresh-all").onclick = loadOverview;
-  document.getElementById("btn-local-audio").onclick = async () => {
-    const label = document.getElementById("btn-local-audio-label");
-    if (Waveform.isLocalCapturing()) {
-      Waveform.stopLocalCapture();
-      label.textContent = "监听音频";
-      showToast("已停止监听本地音频", "info");
-    } else {
-      try {
-        await Waveform.startLocalCapture();
-        label.textContent = "停止监听";
-        showToast("正在监听本地音频输出", "success");
-      } catch (e) {
-        showToast(`监听失败: ${e.message}`, "error");
-      }
-    }
-  };
   document.getElementById("btn-refresh-logs").onclick = loadLogs;
 
   // 主题切换：从点击位置生成圆形遮罩外扩，View Transitions 让新旧主题同帧渲染
@@ -1745,9 +1729,7 @@ const Waveform = (() => {
     if (vizMode === "wave") {
       // 流动波形模式：平滑过渡空闲态 ↔ 音频驱动态
       const mixTarget = hasSignal ? 1 : 0;
-      // 上升快（0.06），下降分两段：高位较快（0.02），低位很慢（0.006）形成自然余韵
-      const decayRate = audioMix > 0.5 ? 0.02 : 0.006;
-      audioMix += (mixTarget - audioMix) * (hasSignal ? 0.06 : decayRate);
+      audioMix += (mixTarget - audioMix) * 0.015;
       if (audioMix < 0.003) audioMix = 0;
       drawWave(freqData, C, dark);
     } else {
@@ -1836,57 +1818,7 @@ const Waveform = (() => {
     ctx.stroke();
   }
 
-  let localStream = null;
-  let localSource = null;
-
-  /** 开始监听本地音频（优先系统音频，回退麦克风） */
-  async function startLocalCapture() {
-    try {
-      if (!navigator.mediaDevices) {
-        throw new Error("当前环境不支持音频捕获（需通过 HTTPS 或 localhost 访问）");
-      }
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.connect(audioCtx.destination);
-      }
-      if (audioCtx.state === "suspended") await audioCtx.resume();
-
-      // 优先尝试系统音频捕获
-      try {
-        localStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
-        localStream.getVideoTracks().forEach(t => t.enabled = false);
-      } catch (_) {
-        // 回退：麦克风捕获
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      }
-
-      const audioTracks = localStream.getAudioTracks();
-      if (audioTracks.length === 0) {
-        stopLocalCapture();
-        throw new Error("未获取到音频轨道");
-      }
-      if (localSource) { try { localSource.disconnect(); } catch (_) {} }
-      localSource = audioCtx.createMediaStreamSource(localStream);
-      localSource.connect(analyser);
-      audioTracks[0].onended = () => stopLocalCapture();
-      return true;
-    } catch (e) {
-      stopLocalCapture();
-      throw e;
-    }
-  }
-
-  /** 停止监听本地音频 */
-  function stopLocalCapture() {
-    if (localSource) { try { localSource.disconnect(); } catch (_) {} localSource = null; }
-    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  }
-
-  function isLocalCapturing() { return !!localStream; }
-
-  return { init, attachAudio, refresh, setVizMode, startLocalCapture, stopLocalCapture, isLocalCapturing };
+  return { init, attachAudio, refresh, setVizMode };
 })();
 
 // 暴露给 HTML inline onclick（ES module 不自动挂全局）
