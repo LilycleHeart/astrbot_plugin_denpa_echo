@@ -395,6 +395,8 @@ body {
 }
 #voice-list {
   transition: opacity 0.2s var(--motion-ease);
+  max-height: 520px;
+  overflow-y: auto;
 }
 .tab-content {
   display: none;
