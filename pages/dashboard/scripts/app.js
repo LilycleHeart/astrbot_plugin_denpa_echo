@@ -1745,8 +1745,10 @@ const Waveform = (() => {
     if (vizMode === "wave") {
       // 流动波形模式：平滑过渡空闲态 ↔ 音频驱动态
       const mixTarget = hasSignal ? 1 : 0;
-      audioMix += (mixTarget - audioMix) * (hasSignal ? 0.06 : 0.03);
-      if (audioMix < 0.005) audioMix = 0;
+      // 上升快（0.06），下降分两段：高位较快（0.02），低位很慢（0.006）形成自然余韵
+      const decayRate = audioMix > 0.5 ? 0.02 : 0.006;
+      audioMix += (mixTarget - audioMix) * (hasSignal ? 0.06 : decayRate);
+      if (audioMix < 0.003) audioMix = 0;
       drawWave(freqData, C, dark);
     } else {
       // 频谱模式：有信号画柱状图，否则画空闲流动线
