@@ -1625,6 +1625,7 @@ const Waveform = (() => {
   let idlePhase = 0;
   let energy = 1;          // 音频能量（1=空闲，>1=有信号）
   let audioMix = 0;        // 0=空闲形态, 1=音频驱动形态（平滑过渡）
+  let smoothFreq = null;   // 平滑频谱缓冲（避免停止时瞬间归零）
   let vizMode = "spectrum"; // "spectrum" | "wave"
 
   function setVizMode(mode) { vizMode = mode; }
@@ -1717,6 +1718,12 @@ const Waveform = (() => {
 
     const hasSignal = freqData.some(v => v > 12);
 
+    // 平滑频谱缓冲：逐帧向实际数据靠拢，停止时缓慢衰减而非瞬间归零
+    if (!smoothFreq || smoothFreq.length !== binCount) smoothFreq = new Float32Array(binCount);
+    for (let i = 0; i < binCount; i++) {
+      smoothFreq[i] += (freqData[i] - smoothFreq[i]) * 0.015;
+    }
+
     // 平滑跟踪音频能量和形态混合
     let target = 1;
     if (hasSignal) {
@@ -1731,7 +1738,7 @@ const Waveform = (() => {
       const mixTarget = hasSignal ? 1 : 0;
       audioMix += (mixTarget - audioMix) * 0.015;
       if (audioMix < 0.003) audioMix = 0;
-      drawWave(freqData, C, dark);
+      drawWave(smoothFreq, C, dark);
     } else {
       // 频谱模式：有信号画柱状图，否则画空闲流动线
       audioMix = 0;
