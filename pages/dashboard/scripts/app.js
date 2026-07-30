@@ -38,6 +38,8 @@ const state = {
   voices: [],
   hiddenVoices: new Set(),
   voiceManageMode: false,
+  voiceBrowseMode: false,
+  _browseVoices: [],
 };
 
 // ========== 初始化 ==========
@@ -541,27 +543,20 @@ function bindEvents() {
 
   // 音色
   document.getElementById("btn-load-voices").onclick = browseVoices;
-  document.getElementById("voice-filter").oninput = filterVoices;
+  document.getElementById("voice-filter").oninput = () => {
+    if (state.voiceBrowseMode) _renderBrowseFiltered();
+    else filterVoices();
+  };
+  document.getElementById("btn-voice-search").onclick = voiceSearch;
+  document.getElementById("voice-type").onchange = () => {
+    if (state.voiceBrowseMode) _renderBrowseList();
+  };
   document.getElementById("voice-show-hidden").onchange = filterVoices;
   _bindBatchBar();
   document.getElementById("btn-voice-manage").onclick = () => {
     state.voiceManageMode = !state.voiceManageMode;
     document.getElementById("btn-voice-manage").textContent = state.voiceManageMode ? "完成管理" : "管理音色";
     renderVoices(state.voices);
-  };
-  document.getElementById("btn-voice-add-by-id").onclick = async () => {
-    const voiceId = document.getElementById("voice-id-input").value.trim();
-    if (!voiceId) { showToast("请输入音色 ID", "warning"); return; }
-    try {
-      const data = await bridge.apiGet("voice/get", { voice_id: voiceId });
-      const label = (data.voice && (data.voice.name || data.voice.voice_id)) || voiceId;
-      addToMyVoices({ voice_id: voiceId, name: label, type: data.voice?.type || "voice_cloning" });
-      document.getElementById("voice-id-input").value = "";
-    } catch (e) {
-      // 即使 API 查不到也允许添加（Minimax 端可能仍有效）
-      addToMyVoices({ voice_id: voiceId, name: voiceId, type: "voice_cloning" });
-      document.getElementById("voice-id-input").value = "";
-    }
   };
 
   // 克隆
@@ -824,64 +819,105 @@ function addToMyVoices(voice) {
   }
   state.voices.push(voice);
   fillDebugVoiceSelect();
-  renderVoices(state.voices);
+  if (!state.voiceBrowseMode) renderVoices(state.voices);
   showToast(`已添加: ${voice.name || voice.voice_id}`, "success");
 }
 
 async function browseVoices() {
-  const panel = document.getElementById("voice-browse-panel");
-  const listEl = document.getElementById("voice-browse-list");
-  if (!panel) return;
-  // 切换显示/隐藏
-  if (panel.style.display !== "none") {
-    panel.style.display = "none";
-    document.getElementById("btn-load-voices").innerHTML = document.getElementById("btn-load-voices").dataset.label || "浏览音色";
-    return;
+  state.voiceBrowseMode = !state.voiceBrowseMode;
+  const btn = document.getElementById("btn-load-voices");
+  const hint = document.getElementById("voice-mode-hint");
+  const batchBar = document.getElementById("voice-batch-bar");
+  if (state.voiceBrowseMode) {
+    btn.innerHTML = "返回我的列表";
+    hint.textContent = "官方音色库（点击 + 添加）";
+    if (batchBar) batchBar.style.display = "none";
+    await _renderBrowseList();
+  } else {
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>浏览音色';
+    hint.textContent = "我的音色列表";
+    renderVoices(state.voices);
   }
-  panel.style.display = "";
-  document.getElementById("btn-load-voices").innerHTML = "收起";
+}
+
+async function _renderBrowseList() {
+  const listEl = document.getElementById("voice-list");
   listEl.innerHTML = '<div class="skeleton" style="height:60px"></div>';
   try {
     const voiceType = document.getElementById("voice-type").value;
     const data = await bridge.apiGet("voices");
     let voices = data.voices || [];
     if (voiceType !== "all") voices = voices.filter((v) => (v.type || "") === voiceType);
-    if (voices.length === 0) {
-      listEl.innerHTML = '<p class="text-sm text-muted">无可用音色</p>';
-      return;
-    }
-    const _ico = (d, s = 16) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor" style="vertical-align:-2px"><path d="${d}"/></svg>`;
-    const ICO_ADD = "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z";
-    const ICO_PLAY = "M8 5v14l11-7z";
-    listEl.innerHTML = voices.map((v) => {
-      const inList = state.voices.some((x) => x.voice_id === v.voice_id);
-      return `<div class="stat-card">
-        <div class="flex-between">
-          <div style="overflow:hidden">
-            <div class="text-bold truncate">${v.name || "未命名"}</div>
-            <div class="text-mono text-sm text-muted truncate">${v.voice_id}</div>
-          </div>
-          <div class="flex gap-s">
-            <button class="btn btn-subtle btn-sm" data-bplay="${v.voice_id}" data-bname="${v.name || ""}" title="试听">${_ico(ICO_PLAY)}</button>
-            <button class="btn btn-subtle btn-sm" data-badd="${v.voice_id}" ${inList ? "disabled" : ""} title="添加到我的列表">${inList ? "✓" : _ico(ICO_ADD)}</button>
-          </div>
-        </div>
-      </div>`;
-    }).join("");
-    // 绑定事件
-    listEl.querySelectorAll("button[data-bplay]").forEach((btn) => {
-      btn.onclick = () => previewVoice(btn.dataset.bplay, btn.dataset.bname);
-    });
-    listEl.querySelectorAll("button[data-badd]").forEach((btn) => {
-      btn.onclick = () => {
-        const v = voices.find((x) => x.voice_id === btn.dataset.badd);
-        if (v) addToMyVoices(v);
-        btn.disabled = true;
-        btn.textContent = "✓";
-      };
-    });
+    state._browseVoices = voices;
+    _renderBrowseFiltered();
   } catch (e) {
-    listEl.innerHTML = `<p class="text-sm text-muted">加载失败: ${e.message}</p>`;
+    listEl.innerHTML = `<div class="empty-state"><p>加载失败: ${e.message}</p></div>`;
+  }
+}
+
+function _renderBrowseFiltered() {
+  const listEl = document.getElementById("voice-list");
+  const filter = (document.getElementById("voice-filter").value || "").toLowerCase();
+  const voices = (state._browseVoices || []).filter((v) =>
+    !filter || (v.name || "").toLowerCase().includes(filter) || (v.voice_id || "").toLowerCase().includes(filter)
+  );
+  if (voices.length === 0) {
+    listEl.innerHTML = '<div class="empty-state"><p>无匹配音色</p></div>';
+    return;
+  }
+  const _ico = (d, s = 16) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor" style="vertical-align:-2px"><path d="${d}"/></svg>`;
+  const ICO_ADD = "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z";
+  const ICO_PLAY = "M8 5v14l11-7z";
+  listEl.innerHTML = voices.map((v) => {
+    const inList = state.voices.some((x) => x.voice_id === v.voice_id);
+    return `<div class="stat-card">
+      <div class="flex-between">
+        <div style="overflow:hidden">
+          <div class="text-bold truncate">${v.name || "未命名"}</div>
+          <div class="text-mono text-sm text-muted truncate">${v.voice_id}</div>
+        </div>
+        <div class="flex gap-s">
+          <button class="btn btn-subtle btn-sm" data-bplay="${v.voice_id}" data-bname="${v.name || ""}" title="试听">${_ico(ICO_PLAY)}</button>
+          <button class="btn btn-subtle btn-sm" data-badd="${v.voice_id}" ${inList ? "disabled" : ""} title="添加">${inList ? "✓" : _ico(ICO_ADD)}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  listEl.querySelectorAll("button[data-bplay]").forEach((btn) => {
+    btn.onclick = () => previewVoice(btn.dataset.bplay, btn.dataset.bname);
+  });
+  listEl.querySelectorAll("button[data-badd]").forEach((btn) => {
+    btn.onclick = () => {
+      const v = (state._browseVoices || []).find((x) => x.voice_id === btn.dataset.badd);
+      if (v) addToMyVoices(v);
+      btn.disabled = true;
+      btn.textContent = "✓";
+    };
+  });
+}
+
+function voiceSearch() {
+  if (state.voiceBrowseMode) {
+    _renderBrowseFiltered();
+    return;
+  }
+  // 我的列表模式：先过滤，若无结果则尝试按 ID 查询添加
+  const q = (document.getElementById("voice-filter").value || "").trim();
+  const matches = state.voices.filter((v) =>
+    (v.name || "").toLowerCase().includes(q.toLowerCase()) || (v.voice_id || "").toLowerCase().includes(q.toLowerCase())
+  );
+  if (matches.length > 0 || !q) {
+    renderVoices(state.voices);
+  } else {
+    // 无匹配，尝试按 ID 查询
+    bridge.apiGet("voice/get", { voice_id: q }).then((data) => {
+      const label = (data.voice && (data.voice.name || data.voice.voice_id)) || q;
+      addToMyVoices({ voice_id: q, name: label, type: data.voice?.type || "voice_cloning" });
+      document.getElementById("voice-filter").value = "";
+    }).catch(() => {
+      addToMyVoices({ voice_id: q, name: q, type: "voice_cloning" });
+      document.getElementById("voice-filter").value = "";
+    });
   }
 }
 

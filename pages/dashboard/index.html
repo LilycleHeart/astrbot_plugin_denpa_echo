@@ -159,29 +159,20 @@
             <div class="card-header">
               <div>
                 <h2 class="card-title" data-i18n="voices.title">音色管理</h2>
-                <p class="card-subtitle">我的音色列表，从官方库浏览添加或按 ID 查询</p>
+                <p class="card-subtitle" id="voice-mode-hint">我的音色列表</p>
               </div>
-              <div class="flex gap-s flex-wrap">
-                <input class="input" id="voice-filter" placeholder="搜索我的音色..." style="width:180px" />
+              <div class="flex gap-s flex-wrap" style="align-items:center">
+                <input class="input" id="voice-filter" placeholder="搜索音色 / 输入 ID 查询..." style="width:220px" />
+                <button class="btn btn-subtle btn-sm" id="btn-voice-search" title="搜索"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>
                 <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" id="voice-show-hidden" style="width:15px;height:15px;accent-color:var(--color-brand)" />显示已隐藏</label>
                 <button class="btn btn-subtle" id="btn-voice-manage">管理音色</button>
+                <select class="select" id="voice-type" style="width:auto">
+                  <option value="all">全部</option>
+                  <option value="system">系统音色</option>
+                  <option value="voice_cloning">克隆音色</option>
+                </select>
+                <button class="btn" id="btn-load-voices"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>浏览音色</button>
               </div>
-            </div>
-            <!-- 添加音色：按 ID 查询 + 浏览官方库 -->
-            <div class="flex gap-s mt-s flex-wrap" style="align-items:center">
-              <input class="input" id="voice-id-input" placeholder="输入音色 ID 查询添加..." style="width:260px" />
-              <button class="btn btn-subtle btn-sm" id="btn-voice-add-by-id">查询添加</button>
-              <select class="select" id="voice-type" style="width:auto">
-                <option value="all">全部</option>
-                <option value="system">系统音色</option>
-                <option value="voice_cloning">克隆音色</option>
-              </select>
-              <button class="btn" id="btn-load-voices" data-label="浏览音色"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>浏览音色</button>
-            </div>
-            <!-- 浏览面板（默认隐藏） -->
-            <div id="voice-browse-panel" style="display:none" class="mt-s">
-              <p class="text-sm text-muted mb-s">官方音色库（点击 + 添加到我的列表）</p>
-              <div id="voice-browse-list" class="grid grid-2" style="max-height:360px;overflow-y:auto"></div>
             </div>
             <!-- 批量操作栏 -->
             <div class="flex gap-s mt-s" id="voice-batch-bar" style="display:none">
@@ -190,11 +181,11 @@
               <button class="btn btn-subtle btn-sm" id="btn-voice-batch-hide">批量隐藏</button>
               <button class="btn btn-subtle btn-sm" id="btn-voice-batch-show">批量取消隐藏</button>
             </div>
-            <!-- 我的音色列表 -->
+            <!-- 音色列表（我的 / 官方库 切换） -->
             <div id="voice-list" class="grid grid-2 mt-s">
               <div class="empty-state">
                 <div class="empty-state-icon"><svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor" opacity="0.4"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 5h-3v5.5c0 1.38-1.12 2.5-2.5 2.5S10 13.88 10 12.5s1.12-2.5 2.5-2.5c.57 0 1.08.19 1.5.51V5h4v2zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z"/></svg></div>
-                <p>暂无音色，请从官方库浏览添加或按 ID 查询</p>
+                <p>暂无音色，点击「浏览音色」从官方库添加</p>
               </div>
             </div>
           </div>
