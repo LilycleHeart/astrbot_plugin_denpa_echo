@@ -63,10 +63,10 @@ async function _loadPersistedVoices() {
 // ========== 初始化 ==========
 async function init() {
   state.ctx = await bridge.ready();
+  await loadUiConfig();   // 先加载配置，避免 applyTheme 用默认色闪一下
   applyTheme(state.ctx);
   applyI18n(state.ctx);
   bindEvents();
-  await loadUiConfig();
   applyUiConfig();
   syncThemeIcon();
   loadOverview();
