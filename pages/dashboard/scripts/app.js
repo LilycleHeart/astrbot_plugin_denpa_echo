@@ -540,15 +540,28 @@ function bindEvents() {
   }
 
   // 音色
-  document.getElementById("btn-load-voices").onclick = loadVoices;
+  document.getElementById("btn-load-voices").onclick = browseVoices;
   document.getElementById("voice-filter").oninput = filterVoices;
-  document.getElementById("voice-type").onchange = loadVoices;
   document.getElementById("voice-show-hidden").onchange = filterVoices;
   _bindBatchBar();
   document.getElementById("btn-voice-manage").onclick = () => {
     state.voiceManageMode = !state.voiceManageMode;
     document.getElementById("btn-voice-manage").textContent = state.voiceManageMode ? "完成管理" : "管理音色";
     renderVoices(state.voices);
+  };
+  document.getElementById("btn-voice-add-by-id").onclick = async () => {
+    const voiceId = document.getElementById("voice-id-input").value.trim();
+    if (!voiceId) { showToast("请输入音色 ID", "warning"); return; }
+    try {
+      const data = await bridge.apiGet("voice/get", { voice_id: voiceId });
+      const label = (data.voice && (data.voice.name || data.voice.voice_id)) || voiceId;
+      addToMyVoices({ voice_id: voiceId, name: label, type: data.voice?.type || "voice_cloning" });
+      document.getElementById("voice-id-input").value = "";
+    } catch (e) {
+      // 即使 API 查不到也允许添加（Minimax 端可能仍有效）
+      addToMyVoices({ voice_id: voiceId, name: voiceId, type: "voice_cloning" });
+      document.getElementById("voice-id-input").value = "";
+    }
   };
 
   // 克隆
@@ -733,6 +746,7 @@ function switchTab(name) {
   });
   if (name === "logs") loadLogs();
   if (name === "overview") loadOverview();
+  if (name === "voices") renderVoices(state.voices);
   if (["settings", "synth", "send", "ai", "advanced"].includes(name)) loadPluginConfig();
   // 切到含声纹画布的视图变为可见后, 重新测量画布尺寸, 消除过期 backing store 造成的锯齿/细线
   if (window.Waveform && typeof Waveform.refresh === "function") Waveform.refresh();
@@ -777,42 +791,97 @@ async function loadOverview() {
 
 // ========== 音色管理 ==========
 async function loadStaticVoices() {
-  // 仅填充调试合成下拉，不渲染音色列表（列表由用户手动点击「加载音色」触发）
+  // 仅填充调试合成下拉，不影响用户音色列表
   try {
     const data = await bridge.apiGet("voices");
-    state.voices = data.voices || [];
-    fillDebugVoiceSelect();
+    const all = data.voices || [];
+    _fillDebugSelect(all);
   } catch (_) {
-    // 兜底：仅内置系统音色
     try {
       const data = await bridge.apiGet("voices/static");
-      state.voices = data.voices || [];
-      fillDebugVoiceSelect();
+      _fillDebugSelect(data.voices || []);
     } catch (__) {}
   }
 }
 
-async function loadVoices() {
-  const listEl = document.getElementById("voice-list");
-  listEl.innerHTML = '<div class="empty-state"><div class="skeleton" style="height:60px"></div></div>';
-  const voiceType = document.getElementById("voice-type").value;
+function _fillDebugSelect(all) {
+  const sel = document.getElementById("debug-voice");
+  if (!sel) return;
+  const cur = sel.value;
+  // 合并用户列表 + 全部音色（去重），确保调试下拉能选到所有
+  const merged = [...state.voices];
+  all.forEach((v) => { if (!merged.some((x) => x.voice_id === v.voice_id)) merged.push(v); });
+  sel.innerHTML = merged
+    .map((v) => `<option value="${v.voice_id}">${v.name || v.voice_id} (${v.voice_id})</option>`)
+    .join("");
+  if (cur && merged.some((v) => v.voice_id === cur)) sel.value = cur;
+}
+
+function addToMyVoices(voice) {
+  if (state.voices.some((v) => v.voice_id === voice.voice_id)) {
+    showToast("该音色已在列表中", "info");
+    return;
+  }
+  state.voices.push(voice);
+  fillDebugVoiceSelect();
+  renderVoices(state.voices);
+  showToast(`已添加: ${voice.name || voice.voice_id}`, "success");
+}
+
+async function browseVoices() {
+  const panel = document.getElementById("voice-browse-panel");
+  const listEl = document.getElementById("voice-browse-list");
+  if (!panel) return;
+  // 切换显示/隐藏
+  if (panel.style.display !== "none") {
+    panel.style.display = "none";
+    document.getElementById("btn-load-voices").innerHTML = document.getElementById("btn-load-voices").dataset.label || "浏览音色";
+    return;
+  }
+  panel.style.display = "";
+  document.getElementById("btn-load-voices").innerHTML = "收起";
+  listEl.innerHTML = '<div class="skeleton" style="height:60px"></div>';
   try {
+    const voiceType = document.getElementById("voice-type").value;
     const data = await bridge.apiGet("voices");
     let voices = data.voices || [];
-    if (voiceType !== "all") {
-      voices = voices.filter((v) => (v.type || "") === voiceType);
+    if (voiceType !== "all") voices = voices.filter((v) => (v.type || "") === voiceType);
+    if (voices.length === 0) {
+      listEl.innerHTML = '<p class="text-sm text-muted">无可用音色</p>';
+      return;
     }
-    state.voices = voices;
-    renderVoices(voices);
-    fillDebugVoiceSelect();
-    showToast(`已加载 ${voices.length} 个音色`, "success");
+    const _ico = (d, s = 16) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor" style="vertical-align:-2px"><path d="${d}"/></svg>`;
+    const ICO_ADD = "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z";
+    const ICO_PLAY = "M8 5v14l11-7z";
+    listEl.innerHTML = voices.map((v) => {
+      const inList = state.voices.some((x) => x.voice_id === v.voice_id);
+      return `<div class="stat-card">
+        <div class="flex-between">
+          <div style="overflow:hidden">
+            <div class="text-bold truncate">${v.name || "未命名"}</div>
+            <div class="text-mono text-sm text-muted truncate">${v.voice_id}</div>
+          </div>
+          <div class="flex gap-s">
+            <button class="btn btn-subtle btn-sm" data-bplay="${v.voice_id}" data-bname="${v.name || ""}" title="试听">${_ico(ICO_PLAY)}</button>
+            <button class="btn btn-subtle btn-sm" data-badd="${v.voice_id}" ${inList ? "disabled" : ""} title="添加到我的列表">${inList ? "✓" : _ico(ICO_ADD)}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+    // 绑定事件
+    listEl.querySelectorAll("button[data-bplay]").forEach((btn) => {
+      btn.onclick = () => previewVoice(btn.dataset.bplay, btn.dataset.bname);
+    });
+    listEl.querySelectorAll("button[data-badd]").forEach((btn) => {
+      btn.onclick = () => {
+        const v = voices.find((x) => x.voice_id === btn.dataset.badd);
+        if (v) addToMyVoices(v);
+        btn.disabled = true;
+        btn.textContent = "✓";
+      };
+    });
   } catch (e) {
-    listEl.innerHTML = `<div class="empty-state">
-      <div class="empty-state-icon">⚠️</div>
-      <p>加载失败：${e.message}</p>
-      <p class="text-sm text-muted">已显示内置音色列表</p>
-    </div>`;
-    renderVoices(state.voices);
+    listEl.innerHTML = `<p class="text-sm text-muted">加载失败: ${e.message}</p>`;
   }
 }
 
