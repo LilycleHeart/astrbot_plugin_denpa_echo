@@ -566,7 +566,7 @@ class Main(Star):
         # 插件功能配置段（合并更新，保留未提交的子键）
         for section in ("tts", "audio", "send_mode", "advanced",
                         "voice_modify", "text_processing", "polish",
-                        "auto_emotion", "pronunciation_dict"):
+                        "auto_emotion", "pronunciation_dict", "dashboard"):
             data = payload.get(section)
             if data and isinstance(data, dict):
                 self.config.setdefault(section, {}).update(data)

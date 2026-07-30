@@ -42,6 +42,26 @@ const state = {
   _browseVoices: [],
 };
 
+/** 持久化用户音色列表到后端 config.dashboard */
+function _persistVoices() {
+  bridge.apiPost("config/save", {
+    dashboard: {
+      my_voices: state.voices,
+      hidden_voices: [...state.hiddenVoices],
+    },
+  }).catch(() => {});
+}
+
+/** 从后端加载已持久化的音色列表 */
+async function _loadPersistedVoices() {
+  try {
+    const cfg = await bridge.apiGet("config/full");
+    const dash = cfg.dashboard || {};
+    if (Array.isArray(dash.my_voices)) state.voices = dash.my_voices;
+    if (Array.isArray(dash.hidden_voices)) state.hiddenVoices = new Set(dash.hidden_voices);
+  } catch (_) {}
+}
+
 // ========== 初始化 ==========
 async function init() {
   state.ctx = await bridge.ready();
@@ -52,7 +72,8 @@ async function init() {
   applyUiConfig();
   syncThemeIcon();
   loadOverview();
-  loadStaticVoices();  // 先加载内置音色填充下拉
+  await _loadPersistedVoices();  // 恢复已持久化的用户音色列表
+  loadStaticVoices();  // 填充调试下拉
   Waveform.init();     // 启动波形可视化器
 
   bridge.onContext((newCtx) => {
@@ -814,6 +835,7 @@ function addToMyVoices(voice) {
     return;
   }
   state.voices.push(voice);
+  _persistVoices();
   fillDebugVoiceSelect();
   if (!state.voiceBrowseMode) renderVoices(state.voices);
   showToast(`已添加: ${voice.name || voice.voice_id}`, "success");
@@ -963,6 +985,7 @@ function renderVoices(voices) {
       const id = btn.dataset.hide;
       if (state.hiddenVoices.has(id)) state.hiddenVoices.delete(id);
       else state.hiddenVoices.add(id);
+      _persistVoices();
       renderVoices(state.voices);
     };
   });
@@ -983,6 +1006,7 @@ function renderVoices(voices) {
         const nv = inp.value.trim();
         if (nv && nv !== old) {
           v.name = nv;
+          _persistVoices();
           fillDebugVoiceSelect();
           showToast(`已重命名为: ${nv}`, "success");
         }
@@ -1009,11 +1033,13 @@ function _bindBatchBar() {
   };
   document.getElementById("btn-voice-batch-hide").onclick = () => {
     _getCheckedVoiceIds().forEach((id) => state.hiddenVoices.add(id));
+    _persistVoices();
     renderVoices(state.voices);
     showToast("已批量隐藏", "success");
   };
   document.getElementById("btn-voice-batch-show").onclick = () => {
     _getCheckedVoiceIds().forEach((id) => state.hiddenVoices.delete(id));
+    _persistVoices();
     renderVoices(state.voices);
     showToast("已批量取消隐藏", "success");
   };
