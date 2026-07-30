@@ -1752,10 +1752,13 @@ const Waveform = (() => {
     energy += (target - energy) * 0.08;
 
     if (vizMode === "wave") {
-      // 流动波形模式：平滑过渡空闲态 ↔ 音频驱动态
-      const mixTarget = hasSignal ? 1 : 0;
-      audioMix += (mixTarget - audioMix) * (hasSignal ? 0.035 : 0.006);
-      if (audioMix < 0.003) audioMix = 0;
+      // 流动波形模式：上升快(指数)，下降匀速10秒
+      if (hasSignal) {
+        audioMix += (1 - audioMix) * 0.035;
+      } else {
+        audioMix -= 1 / 600;  // 匀速，60fps下恰好10秒归零
+        if (audioMix < 0) audioMix = 0;
+      }
       drawWave(freqData, C, dark);
     } else {
       // 频谱模式：有信号画柱状图，否则画空闲流动线
@@ -1806,7 +1809,7 @@ const Waveform = (() => {
       const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
       const binVal = freqData[binIdx] / 255;
       // 混合振幅：空闲压缩保底 + 音频叠加
-      const amp = idleAmp + mix * binVal * h * 0.5 * (1 - Math.abs(off) * 0.6);
+      const amp = idleAmp + mix * binVal * h * 0.35 * (1 - Math.abs(off) * 0.6);
 
       const freq = 0.007 + li * 0.00055;
       const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * binVal * 0.2;
