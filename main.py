@@ -56,6 +56,23 @@ class Main(Star):
             pass
         os.makedirs(self.plugin_data_dir, exist_ok=True)
 
+        # ── 反向迁移：修复曾被 ui 嵌套的配置文件 ──
+        _NESTED_KEYS = (
+            "api_key", "group_id", "api_region", "tts", "audio",
+            "voice_modify", "pronunciation_dict", "send_mode",
+            "text_processing", "polish", "auto_emotion", "advanced",
+        )
+        ui_section = config.get("ui", {}) or {}
+        if not config.get("api_key") and ui_section.get("api_key"):
+            for k in _NESTED_KEYS:
+                if k in ui_section and k not in config:
+                    config[k] = ui_section.pop(k)
+            try:
+                config.save_config()
+                logger.info("[Denpa Echo] 配置已从 ui 嵌套结构恢复至顶层")
+            except Exception:
+                pass
+
         # 初始化 Minimax 客户端
         adv = config.get("advanced", {}) or {}
         self.client = MinimaxClient(
