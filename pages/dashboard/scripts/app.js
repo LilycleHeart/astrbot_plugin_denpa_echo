@@ -1242,11 +1242,14 @@ async function uploadBgImage() {
   btn.textContent = "上传中...";
   try {
     const resp = await bridge.upload("bg/upload", file);
-    const dataUri = resp.data;
+    console.log("[bg/upload] resp:", JSON.stringify(resp).substring(0, 200));
+    // bridge.upload 返回格式不固定，兼容多种结构
+    const dataUri = resp.data || (resp.body && resp.body.data) || (typeof resp === "string" && resp.startsWith("data:") ? resp : "");
+    if (!dataUri) throw new Error("上传响应中未找到背景图数据");
     state.uiConfig.background_image = dataUri;
     state.uiConfig.background_accent = "";
     state.uiConfig.background_mode = "image";
-    document.getElementById("bg-file-name").textContent = resp.filename || file.name;
+    document.getElementById("bg-file-name").textContent = (resp && resp.filename) || file.name;
     document.getElementById("ui-bg-mode").value = "image";
     updateBgPreview();
     // 直接应用背景（不依赖 previewUiConfig 重建 state 的时序）
