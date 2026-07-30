@@ -1842,6 +1842,9 @@ const Waveform = (() => {
   /** 开始监听本地系统音频输出 */
   async function startLocalCapture() {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        throw new Error("当前环境不支持音频捕获（需通过 HTTPS 或 localhost 访问面板）");
+      }
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioCtx.createAnalyser();
