@@ -529,6 +529,12 @@
         "type": "float",
         "default": 1.5
       },
+      "cache_dir": {
+        "description": "缓存目录（相对路径基于插件数据目录）",
+        "type": "string",
+        "default": "cache",
+        "hint": "留空则禁用缓存；相对路径自动拼接插件数据目录"
+      },
       "cache_max_size_mb": {
         "description": "缓存最大体积（MB）",
         "type": "int",
