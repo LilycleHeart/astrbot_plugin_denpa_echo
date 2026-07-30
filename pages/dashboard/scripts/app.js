@@ -1839,11 +1839,11 @@ const Waveform = (() => {
   let localStream = null;
   let localSource = null;
 
-  /** 开始监听本地系统音频输出 */
+  /** 开始监听本地音频（优先系统音频，回退麦克风） */
   async function startLocalCapture() {
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        throw new Error("当前环境不支持音频捕获（需通过 HTTPS 或 localhost 访问面板）");
+      if (!navigator.mediaDevices) {
+        throw new Error("当前环境不支持音频捕获（需通过 HTTPS 或 localhost 访问）");
       }
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1852,18 +1852,24 @@ const Waveform = (() => {
         analyser.connect(audioCtx.destination);
       }
       if (audioCtx.state === "suspended") await audioCtx.resume();
-      localStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
-      // 只需要音频轨，关掉视频轨
-      localStream.getVideoTracks().forEach(t => t.enabled = false);
+
+      // 优先尝试系统音频捕获
+      try {
+        localStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+        localStream.getVideoTracks().forEach(t => t.enabled = false);
+      } catch (_) {
+        // 回退：麦克风捕获
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
       const audioTracks = localStream.getAudioTracks();
       if (audioTracks.length === 0) {
         stopLocalCapture();
-        throw new Error("未获取到音频轨道，请确保勾选了「分享系统音频」");
+        throw new Error("未获取到音频轨道");
       }
       if (localSource) { try { localSource.disconnect(); } catch (_) {} }
       localSource = audioCtx.createMediaStreamSource(localStream);
       localSource.connect(analyser);
-      // 监听轨道结束（用户点击停止分享）
       audioTracks[0].onended = () => stopLocalCapture();
       return true;
     } catch (e) {
