@@ -485,18 +485,6 @@ body {
   100% { left: 100%; }
 }
 
-/* 自定义滚动条：细条半透明，hover 时品牌色 */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--color-fg-3) 40%, transparent);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--color-brand) 60%, transparent);
-}
-* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--color-fg-3) 40%, transparent) transparent; }
-
 /* 响应式 */
 @media (max-width: 880px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
