@@ -42,23 +42,20 @@ const state = {
   _browseVoices: [],
 };
 
-/** 持久化用户音色列表到后端 config.dashboard */
+/** 持久化用户音色列表到后端独立文件 */
 function _persistVoices() {
-  bridge.apiPost("config/save", {
-    dashboard: {
-      my_voices: state.voices,
-      hidden_voices: [...state.hiddenVoices],
-    },
+  bridge.apiPost("dashboard/voices", {
+    my_voices: state.voices,
+    hidden_voices: [...state.hiddenVoices],
   }).catch(() => {});
 }
 
 /** 从后端加载已持久化的音色列表 */
 async function _loadPersistedVoices() {
   try {
-    const cfg = await bridge.apiGet("config/full");
-    const dash = cfg.dashboard || {};
-    if (Array.isArray(dash.my_voices)) state.voices = dash.my_voices;
-    if (Array.isArray(dash.hidden_voices)) state.hiddenVoices = new Set(dash.hidden_voices);
+    const data = await bridge.apiGet("dashboard/voices");
+    if (Array.isArray(data.my_voices)) state.voices = data.my_voices;
+    if (Array.isArray(data.hidden_voices)) state.hiddenVoices = new Set(data.hidden_voices);
   } catch (_) {}
 }
 

@@ -107,6 +107,7 @@ class Main(Star):
             ("config/ui", self._api_config_ui, ["GET"], "UI 配置"),
             ("config/full", self._api_config_full, ["GET"], "完整配置"),
             ("config/save", self._api_config_save, ["POST"], "保存配置"),
+            ("dashboard/voices", self._api_dashboard_voices, ["GET", "POST"], "面板音色持久化"),
             ("audio", self._api_audio, ["GET"], "音频文件"),
             ("bg/upload", self._api_bg_upload, ["POST"], "上传背景图"),
             ("bg", self._api_bg, ["GET"], "背景图文件"),
@@ -575,6 +576,26 @@ class Main(Star):
             return json_response({"saved": True})
         except Exception as e:
             return error_response(f"保存失败: {e}", status_code=500)
+
+    async def _api_dashboard_voices(self):
+        """面板音色列表持久化（独立 JSON 文件，不依赖 config schema）。"""
+        import json as _json
+        path = os.path.join(self.plugin_data_dir, "dashboard_voices.json")
+        if request.method == "GET":
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return json_response(_json.load(f))
+            except (FileNotFoundError, _json.JSONDecodeError):
+                return json_response({"my_voices": [], "hidden_voices": []})
+        else:
+            payload = await request.json(default={})
+            try:
+                os.makedirs(self.plugin_data_dir, exist_ok=True)
+                with open(path, "w", encoding="utf-8") as f:
+                    _json.dump(payload, f, ensure_ascii=False)
+                return json_response({"saved": True})
+            except Exception as e:
+                return error_response(f"保存失败: {e}", status_code=500)
 
     async def _api_audio(self):
         """返回音频文件（供面板 <audio> 播放）。"""
