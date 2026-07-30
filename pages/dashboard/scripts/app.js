@@ -1801,7 +1801,7 @@ const Waveform = (() => {
       const baseY = cy + off * (h * 0.58);
 
       // 基础振幅（空闲态），播放时压缩为音频腾出空间
-      const idleAmp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * (1 - mix * 0.6);
+      const idleAmp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * (1 - mix * 0.8);
       // 音频驱动：从频谱取对应 bin 的能量，映射为额外振幅
       const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
       const binVal = freqData[binIdx] / 255;
@@ -1832,7 +1832,7 @@ const Waveform = (() => {
     const mainBin = Math.floor(freqData.length * 0.25);
     const mainVal = freqData[mainBin] / 255;
     ctx.lineWidth = 2 + mix * mainVal * 1.5;
-    const mainAmp = 46 * (1 - mix * 0.5) + mix * mainVal * h * 0.2;
+    const mainAmp = 46 * (1 - mix * 0.8) + mix * mainVal * h * 0.2;
     for (let x = 0; x <= w; x += 2) {
       const n = Math.sin(0.0105 * x + idlePhase * 0.58)
               + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
