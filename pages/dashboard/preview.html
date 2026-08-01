@@ -322,7 +322,7 @@
         else { ctx.shadowColor = rgba(lineC, 0.35); ctx.shadowBlur = 4; }
         for (let li = 0; li < lines; li++) {
           const off = li / lines - 0.5;
-          const baseY = cy + off * (h * 0.58);
+          const baseY = cy + off * (h * 0.38);
           const amp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * energy;
           const freq = 0.007 + li * 0.00055;
           const alpha = (dark ? 0.20 : 0.18) + (1 - Math.abs(off)) * (dark ? 0.50 : 0.36);

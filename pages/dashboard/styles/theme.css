@@ -76,7 +76,7 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-large);
-  padding: var(--space-4xl) var(--space-2xl) 322px;
+  padding: var(--space-3xl) var(--space-2xl) 282px;
   /* 亚克力 hero: 低抬升表面(与侧栏同级), 品牌光晕半透明(不遮蔽玻璃感) */
   background:
     radial-gradient(120% 90% at 82% -10%, color-mix(in srgb, var(--color-brand) 9%, transparent), transparent 60%),
@@ -488,7 +488,7 @@ body {
 /* 响应式 */
 @media (max-width: 880px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .hero { padding-bottom: 265px; }
+  .hero { padding-bottom: 235px; }
   .hero-wave { height: 225px; }
 }
 @media (max-width: 560px) {

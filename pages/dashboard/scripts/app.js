@@ -1801,7 +1801,7 @@ const Waveform = (() => {
 
     for (let li = 0; li < lines; li++) {
       const off = li / lines - 0.5;
-      const baseY = cy + off * (h * 0.58);
+      const baseY = cy + off * (h * 0.38);
 
       // 基础振幅（空闲态），播放时压缩为音频腾出空间
       const idleAmp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * (1 - mix * 0.8);
