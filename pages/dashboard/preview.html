@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>电波，回响 面板预览（侧边栏 + 亚克力/Mica）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <!-- MiSans（默认字体，官方 CDN；加载失败时回退到内置字体栈） -->
+    <link href="https://cdn-font.hyperos.mi.com/font/css?family=MiSans:100,200,300,400,450,500,600,650,700,900:Chinese_Simplify,Latin&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles/tokens.css" />
+    <link rel="stylesheet" href="./styles/theme.css" />
+    <link rel="stylesheet" href="./styles/components.css" />
+  </head>
+  <body>
+    <div class="app-shell" id="app">
+
+      <!-- ═══ Sidebar ═══ -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-logo" aria-hidden="true">
+            <svg class="soundwave-logo" viewBox="0 0 24 24" fill="currentColor">
+              <rect class="bar" x="3"  y="8"  width="3.2" height="8"  rx="1.6"/>
+              <rect class="bar" x="8"  y="5"  width="3.2" height="14" rx="1.6"/>
+              <rect class="bar" x="13" y="3"  width="3.2" height="18" rx="1.6"/>
+              <rect class="bar" x="18" y="6"  width="3.2" height="12" rx="1.6"/>
+            </svg>
+          </span>
+          <span class="sidebar-title">Denpa Echo</span>
+        </div>
+
+        <nav class="tabs" role="tablist">
+          <button class="tab active" data-tab="overview" title="状态总览">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <span class="tab-label">状态总览</span>
+          </button>
+          <button class="tab" data-tab="voices" title="音色管理">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h2V6H7v12zm4 4h2V2h-2v20zm-8-8h2v-4H3v4zm12 4h2V6h-2v12zm4-8v4h2v-4h-2z"/></svg>
+            <span class="tab-label">音色管理</span>
+          </button>
+          <button class="tab" data-tab="clone" title="语音克隆">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>
+            <span class="tab-label">语音克隆</span>
+          </button>
+          <button class="tab" data-tab="debug" title="调试试听">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            <span class="tab-label">调试试听</span>
+          </button>
+          <button class="tab" data-tab="logs" title="运行日志">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span class="tab-label">运行日志</span>
+          </button>
+          <button class="tab" data-tab="settings" title="界面设置">
+            <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            <span class="tab-label">界面设置</span>
+          </button>
+        </nav>
+
+        <button class="sidebar-toggle" id="sidebar-toggle" title="收起 / 展开侧边栏">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z"/></svg>
+          <span class="tab-label">收起侧栏</span>
+        </button>
+      </aside>
+
+      <!-- ═══ 主内容列 ═══ -->
+      <div class="main-area">
+
+      <header class="hero">
+        <div class="hero-content">
+          <h1>电波，回响 <span class="hero-en">Denpa Echo</span></h1>
+          <p class="subtitle">语音合成 · 语音克隆 · 发音词典 · 运行状态</p>
+        </div>
+        <canvas id="waveform-canvas" class="hero-wave"></canvas>
+        <div class="hero-actions">
+          <span class="badge badge-brand">API 正常</span>
+          <button class="btn btn-subtle btn-sm" id="btn-theme">
+            <svg id="icon-theme" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px">
+              <path id="icon-theme-path" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 0 0 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>
+            </svg><span id="btn-theme-label">切换主题</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="tab-panels">
+
+        <section class="tab-content active" id="tab-overview">
+          <div class="grid grid-4">
+            <div class="stat-card"><span class="stat-label">API 状态</span><span class="stat-value-sm">已连接</span></div>
+            <div class="stat-card"><span class="stat-label">今日合成</span><span class="stat-value">128</span></div>
+            <div class="stat-card"><span class="stat-label">缓存大小</span><span class="stat-value-sm">36.2 MB</span></div>
+            <div class="stat-card"><span class="stat-label">ffmpeg</span><span class="stat-value-sm">可用</span></div>
+          </div>
+          <div class="card mt-m">
+            <div class="card-header"><h2 class="card-title">当前配置摘要</h2></div>
+            <div class="grid grid-2">
+              <div class="stat-card"><span class="stat-label">发送模式</span><span class="stat-value-sm text-mono">intercept</span></div>
+              <div class="stat-card"><span class="stat-label">模型</span><span class="stat-value-sm text-mono">speech-02-hd</span></div>
+              <div class="stat-card"><span class="stat-label">默认音色</span><span class="stat-value-sm text-mono">female-tianmei</span></div>
+              <div class="stat-card"><span class="stat-label">LLM 润色</span><span class="stat-value-sm">开启</span></div>
+            </div>
+          </div>
+
+          <div class="card mt-m">
+            <div class="card-header"><h2 class="card-title">M3 次要 / 三级色角色演示</h2></div>
+            <div class="card-subtitle mb-s">Secondary（克制低强调）· Tertiary（差异化点缀，真·第二色相）</div>
+
+            <div class="form-label" style="margin-bottom:6px">Filter Chip（Secondary Container）</div>
+            <div class="flex gap-s" style="flex-wrap:wrap">
+              <button class="chip selected"><span class="chip-icon">●</span>全部</button>
+              <button class="chip">中文</button>
+              <button class="chip">英文</button>
+              <button class="chip">日语</button>
+              <button class="chip">克隆音色</button>
+            </div>
+
+            <div class="form-label mt-m" style="margin-bottom:6px">Segmented（选中段 = Secondary Container）</div>
+            <div class="segmented">
+              <button class="segmented-option active">亚克力</button>
+              <button class="segmented-option">云母</button>
+            </div>
+
+            <div class="form-label mt-m" style="margin-bottom:6px">徽章 / 标签</div>
+            <div class="flex gap-s" style="flex-wrap:wrap;align-items:center">
+              <span class="badge badge-brand">主题</span>
+              <span class="badge badge-feature">特惠 NEW</span>
+              <span class="badge badge-tertiary">特征</span>
+              <span class="badge badge-success">成功</span>
+              <span class="badge badge-neutral">中性</span>
+              <span class="text-tertiary" style="font-weight:600">· 三级色内联强调文字</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-content" id="tab-voices">
+          <div class="card">
+            <div class="card-header">
+              <div><h2 class="card-title">音色管理</h2><p class="card-subtitle">系统音色与克隆音色，点击试听</p></div>
+              <div class="flex gap-s flex-wrap">
+                <input class="input" placeholder="搜索音色..." style="width:200px" />
+                <button class="btn">加载音色</button>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="stat-card"><span class="stat-label">系统音色</span><span class="stat-value-sm">female-tianmei 甜美女声</span></div>
+              <div class="stat-card"><span class="stat-label">克隆音色</span><span class="stat-value-sm text-mono">moss_audio_5bb1…</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-content" id="tab-clone">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">语音克隆</h2><p class="card-subtitle">上传音频文件，克隆自定义音色</p></div></div>
+            <div class="grid grid-2">
+              <div>
+                <div class="form-row">
+                  <label class="form-label">源音频文件</label>
+                  <label class="file-drop"><div>点击或拖拽文件到此处（10s–5min，mp3/wav/m4a）</div></label>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">自定义音色 ID</label>
+                  <input class="input" placeholder="my_custom_voice_001" />
+                </div>
+              </div>
+              <div>
+                <div class="form-row">
+                  <label class="form-label">试听文本</label>
+                  <textarea class="textarea" rows="3">你好，这是克隆音色的试听样本。</textarea>
+                </div>
+                <button class="btn btn-primary">开始克隆</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-content" id="tab-debug">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">调试试听</h2><p class="card-subtitle">输入文本即时合成试听</p></div></div>
+            <div class="form-row">
+              <label class="form-label">合成文本</label>
+              <textarea class="textarea" rows="3">你好，这是 电波，回响 的试听样本。</textarea>
+            </div>
+            <div class="grid grid-3">
+              <div class="form-row"><label class="form-label">音色</label><select class="select"><option>female-tianmei</option></select></div>
+              <div class="form-row"><label class="form-label">语速 1.0</label><input type="range" class="slider" min="0" max="2" step="0.1" value="1.0" /></div>
+              <div class="form-row"><label class="form-label">情绪</label><select class="select"><option>默认</option><option>happy</option></select></div>
+            </div>
+            <button class="btn btn-primary" id="btn-synth">合成试听</button>
+            <div class="mt-m"><div class="progress" style="display:none" id="synth-progress"><div class="progress-bar indeterminate"></div></div></div>
+          </div>
+        </section>
+
+        <section class="tab-content" id="tab-logs">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">运行日志</h2><p class="card-subtitle">最近 200 条合成记录</p></div><button class="btn btn-subtle btn-sm">刷新</button></div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>时间</th><th>模式</th><th>字符</th><th>耗时</th><th>缓存</th></tr></thead>
+                <tbody>
+                  <tr><td class="text-mono">09:31:02</td><td>intercept</td><td>84</td><td>1.2s</td><td><span class="badge badge-brand">HIT</span></td></tr>
+                  <tr><td class="text-mono">09:28:47</td><td>append</td><td>212</td><td>2.8s</td><td><span class="badge badge-neutral">MISS</span></td></tr>
+                  <tr><td class="text-mono">09:20:15</td><td>intercept</td><td>56</td><td>0.9s</td><td><span class="badge badge-brand">HIT</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-content" id="tab-settings">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">界面设置</h2><p class="card-subtitle">取色、背景、材质、字体与效果</p></div></div>
+            <div class="grid grid-2">
+              <div class="form-row"><label class="form-label">取色模式</label><select class="select" id="pv-color-mode"><option value="static" selected>静态（自定义颜色）</option><option value="dynamic">动态（背景图 Material 取色）</option></select></div>
+              <div class="form-row"><label class="form-label">主题色</label><div class="flex gap-s" style="width:100%"><input type="color" class="input" id="pv-brand-picker" value="#ff8ab9" style="width:56px;flex:0 0 56px" /><input class="input" id="pv-brand-hex" value="#ff8ab9" style="flex:1" /></div></div>
+              <div class="form-row"><label class="form-label">背景模式</label><select class="select" id="pv-bg-mode"><option value="theme">跟随主题</option><option value="brand">主题色渐变</option><option value="image">背景图片</option></select></div>
+              <div class="form-row"><label class="form-label">圆角大小（px）</label><input type="number" class="input" id="pv-radius" value="14" /></div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="pv-acrylic" checked style="width:18px;height:18px;accent-color:var(--color-brand)" /><label class="form-label" style="margin:0">启用材质（关闭则转实底）</label></div>
+              <div class="form-row"><label class="form-label">材质类型</label><select class="select" id="pv-material-type"><option value="acrylic">亚克力（Acrylic，半透明模糊）</option><option value="mica">云母（Mica，低模糊）</option></select></div>
+              <div class="form-row"><label class="form-label">材质不透明度 <span id="pv-material-val" class="text-mono">45%</span></label><input type="range" class="slider" id="pv-material" min="0" max="100" value="45" /></div>
+              <div class="form-row"><label class="form-label">模糊强度 <span id="pv-blur-val" class="text-mono">5px</span></label><input type="range" class="slider" id="pv-blur" min="0" max="100" value="5" /></div>
+              <div class="form-row"><label class="form-label">字体</label><select class="select" id="pv-font"><option value="misans">MiSans（默认，需联网加载）</option><option value="builtin">内置字体（系统字体栈）</option></select></div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="pv-glow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" /><label class="form-label" style="margin:0">泛光（主题色 bloom）</label></div>
+              <div class="form-row"><label class="form-label">泛光强度 <span id="pv-glow-val" class="text-mono">15%</span></label><input type="range" class="slider" id="pv-glow" min="0" max="100" value="15" /></div>
+              <div class="form-row"><label class="form-label">泛光范围 <span id="pv-glow-range-val" class="text-mono">10px</span></label><input type="range" class="slider" id="pv-glow-range" min="0" max="60" value="10" /></div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="pv-shadow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" /><label class="form-label" style="margin:0">阴影</label></div>
+              <div class="form-row"><label class="form-label">阴影强度 <span id="pv-shadow-val" class="text-mono">60%</span></label><input type="range" class="slider" id="pv-shadow" min="0" max="100" value="60" /></div>
+            </div>
+
+            <div class="form-row mt-m">
+              <label class="form-label">背景图片上传</label>
+              <div class="flex gap-s flex-wrap">
+                <label class="file-drop" id="pv-bg-drop" style="flex:1;min-width:200px">
+                  <input type="file" id="pv-bg-file" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                  <div id="pv-bg-name">点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）</div>
+                </label>
+                <button class="btn" id="pv-bg-upload">上传</button>
+                <button class="btn btn-subtle" id="pv-bg-remove">移除</button>
+              </div>
+              <div id="pv-bg-preview-wrap" class="mt-s" style="display:none">
+                <img id="pv-bg-preview" alt="背景预览"
+                     style="max-width:100%;max-height:160px;border-radius:var(--radius-xlarge);border:1px solid var(--color-stroke-2)" />
+              </div>
+            </div>
+            <div class="flex gap-s mt-m"><button class="btn btn-primary" id="pv-save">保存设置</button><button class="btn btn-subtle" id="pv-reset">恢复默认</button></div>
+          </div>
+        </section>
+
+      </main>
+      </div><!-- /main-area -->
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- 全局 IIFE 版 material-color-utilities（经典脚本, file:// 与 http 均可加载, 设 window.MCU） -->
+    <script src="scripts/vendor/material-color-utilities.global.js"></script>
+    <script>
+      // ——— 预览专用 stub（真实面板由 app.js 驱动） ———
+      // Tab 切换
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
+          document.querySelectorAll(".tab-content").forEach((c) => c.classList.toggle("active", c.id === "tab-" + tab.dataset.tab));
+        });
+      });
+      // Sidebar 收缩
+      const sidebar = document.getElementById("sidebar");
+      document.getElementById("sidebar-toggle").addEventListener("click", () => {
+        const collapsed = sidebar.classList.toggle("collapsed");
+        try { localStorage.setItem("mmtts_sidebar_collapsed", collapsed ? "1" : "0"); } catch (_) {}
+      });
+      // 侧边栏默认收起(仅当用户显式展开并存储 "0" 才展开)
+      let pvCollapsedPref;
+      try { pvCollapsedPref = localStorage.getItem("mmtts_sidebar_collapsed"); } catch (_) {}
+      if (pvCollapsedPref !== "0") sidebar.classList.add("collapsed");
+      // 主题切换（Material 图标：亮色显示"太阳"，暗色显示"月亮"）
+      const ICON_SUN = "M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 0 0 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z";
+      const ICON_MOON = "M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z";
+      function syncThemeIcon() {
+        const dark = document.documentElement.dataset.theme === "dark";
+        document.getElementById("icon-theme-path").setAttribute("d", dark ? ICON_SUN : ICON_MOON);
+        document.getElementById("btn-theme-label").textContent = dark ? "亮色主题" : "暗色主题";
+      }
+      document.getElementById("btn-theme").addEventListener("click", () => {
+        const html = document.documentElement;
+        html.dataset.theme = html.dataset.theme === "light" ? "dark" : "light";
+        syncThemeIcon();
+        pvApplyColorMode(); // 主题切换后按 M3 重新派生品牌调色板(亮深/暗浅 tone 翻转)
+      });
+      syncThemeIcon();
+      // 波形动画（原版"声纹"：与真实面板 app.js drawIdle 同款多层流动线波）
+      const canvas = document.getElementById("waveform-canvas");
+      const ctx = canvas.getContext("2d");
+      let energy = 1, idlePhase = 0, cw = 0, ch = 0;
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        cw = canvas.offsetWidth; ch = canvas.offsetHeight;
+        canvas.width = cw * dpr; canvas.height = ch * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      window.addEventListener("resize", resize); resize();
+      function brandRGB() {
+        const v = getComputedStyle(document.documentElement).getPropertyValue("--color-brand").trim() || "#ff8ab9";
+        const m = v.match(/^#?([0-9a-f]{6})$/i);
+        if (!m) return [236, 72, 153];
+        const n = parseInt(m[1], 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+      }
+      function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+      // Material Design 明暗配色: 暗色主题提亮品牌色(更高亮度以在暗底可见), 亮色用本色
+      function lighten(c, amt) { return [Math.round(c[0] + (255 - c[0]) * amt), Math.round(c[1] + (255 - c[1]) * amt), Math.round(c[2] + (255 - c[2]) * amt)]; }
+      function draw() {
+        const w = cw, h = ch, cy = h / 2;
+        ctx.clearRect(0, 0, w, h);
+        const C = brandRGB();
+        const dark = document.documentElement.dataset.theme === "dark";
+        const lineC = dark ? lighten(C, 0.35) : C;   // MD 暗色大幅提亮品牌色, 亮色用本色
+        ctx.shadowBlur = 0;
+        idlePhase += 0.008 * (0.6 + energy * 0.8);
+        const lines = 22;
+        // 暗色: 霓虹泛光 + 高不透明度; 亮色: 更明亮的本色线波(克制但不黯淡)
+        if (dark) { ctx.shadowColor = rgba(lineC, 0.75); ctx.shadowBlur = 12; }
+        else { ctx.shadowColor = rgba(lineC, 0.35); ctx.shadowBlur = 4; }
+        for (let li = 0; li < lines; li++) {
+          const off = li / lines - 0.5;
+          const baseY = cy + off * (h * 0.72);
+          const amp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * energy;
+          const freq = 0.007 + li * 0.00055;
+          const alpha = (dark ? 0.20 : 0.18) + (1 - Math.abs(off)) * (dark ? 0.50 : 0.36);
+          ctx.beginPath();
+          ctx.strokeStyle = rgba(lineC, alpha);
+          ctx.lineWidth = 1;
+          for (let x = 0; x <= w; x += 3) {
+            const n = Math.sin(freq * x + idlePhase + li * 0.75)
+                      + 0.33 * Math.sin(freq * 2.4 * x + idlePhase * 1.35 + li * 1.15);
+            const y = baseY + amp * n;
+            x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        // 中央主波
+        ctx.shadowColor = rgba(lineC, dark ? 0.90 : 0.45);
+        ctx.shadowBlur = dark ? 20 : 6;
+        ctx.beginPath();
+        ctx.strokeStyle = rgba(lineC, dark ? 1.0 : 0.70);
+        ctx.lineWidth = 2;
+        for (let x = 0; x <= w; x += 2) {
+          const n = Math.sin(0.0105 * x + idlePhase * 0.58)
+                    + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
+                    + 0.15 * Math.sin(0.052 * x + idlePhase * 1.85);
+          const y = cy + h * 0.2 * energy * n;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        energy += (1 - energy) * 0.02;
+        requestAnimationFrame(draw);
+      }
+      draw();
+      // 合成模拟：波形能量涌动
+      document.getElementById("btn-synth").addEventListener("click", () => {
+        const p = document.getElementById("synth-progress");
+        p.style.display = "block"; energy = 2.2;
+        setTimeout(() => { p.style.display = "none"; }, 2600);
+      });
+
+      // ——— 背景图上传（预览版：本地 FileReader 转 base64，即传即见）———
+      function pvToast(msg, type) {
+        const t = document.createElement("div");
+        t.className = "toast toast-" + (type || "info");
+        t.textContent = msg;
+        document.getElementById("toast-container").appendChild(t);
+        setTimeout(() => t.remove(), 3200);
+      }
+      // ——— 取色模式：静态自定义 / 背景图 Material 动态取色（与真实 app.js 一致, MCU 派生）———
+      const {
+        argbFromHex, hexFromArgb, TonalPalette, themeFromSourceColor, sourceColorFromImage,
+      } = window.MCU;
+
+      let pvBgDataUri = "";
+      const PV_DEFAULT_SOURCE = "#ff8ab9";
+      const pvPaletteCache = {};
+      const pvDynCache = {};
+      function pvCurrentDark() { return document.documentElement.dataset.theme === "dark"; }
+      // 状态色(成功/警告)规范源色经 MCU 派生, 与 app.js 同源算法
+      const PV_STATUS_SOURCES = { success: "#1B9C5D", warning: "#C98A1B" };
+      const pvStatusCache = {};
+      function pvStatusColors(isDark) {
+        const key = isDark ? "d" : "l";
+        if (pvStatusCache[key]) return pvStatusCache[key];
+        const mk = (src) => {
+          const s = isDark ? themeFromSourceColor(argbFromHex(src)).schemes.dark
+                           : themeFromSourceColor(argbFromHex(src)).schemes.light;
+          return { fg: hexFromArgb(s.primary), bg: hexFromArgb(s.primaryContainer) };
+        };
+        const v = { success: mk(PV_STATUS_SOURCES.success), warning: mk(PV_STATUS_SOURCES.warning) };
+        pvStatusCache[key] = v;
+        return v;
+      }
+      function pvRgbStr(hex) {
+        const h = hex.replace("#", "");
+        return `${parseInt(h.slice(0, 2), 16)}, ${parseInt(h.slice(2, 4), 16)}, ${parseInt(h.slice(4, 6), 16)}`;
+      }
+      // sRGB Alpha 合成: 抬升层 primary 蒙版(与 app.js alphaComposite 同源)
+      function pvAlphaComposite(fg, bg, a) {
+        const ph = fg.replace("#", ""), bh = bg.replace("#", "");
+        const pr = parseInt(ph.slice(0,2),16), pg = parseInt(ph.slice(2,4),16), pb = parseInt(ph.slice(4,6),16);
+        const br = parseInt(bh.slice(0,2),16), bg2 = parseInt(bh.slice(2,4),16), bb = parseInt(bh.slice(4,6),16);
+        const r = Math.round(a*pr + (1-a)*br), g = Math.round(a*pg + (1-a)*bg2), b = Math.round(a*pb + (1-a)*bb);
+        const to = (x) => x.toString(16).padStart(2, "0");
+        return `#${to(r)}${to(g)}${to(b)}`;
+      }
+      const PV_SURFACE_TONES = {
+        light: { appBg: 98, low: 96, mid: 94, high: 92, highest: 90 },
+        dark:  { appBg: 6, low: 10, mid: 12, high: 17, highest: 22 },
+      };
+      const PV_SCRIM = { low: 0.05, mid: 0.08, high: 0.11, highest: 0.14 };
+      // 全量调色板派生: 品牌角色 + 中性层级 + 状态色, 全部来自 MCU (与 app.js 完全一致)
+      function pvDerivePalette(sourceHex, isDark) {
+        sourceHex = sourceHex || PV_DEFAULT_SOURCE;
+        const key = sourceHex.toLowerCase() + (isDark ? ":d" : ":l");
+        if (pvPaletteCache[key]) return pvPaletteCache[key];
+        const argb = argbFromHex(sourceHex);
+        const theme = themeFromSourceColor(argb);
+        const s = isDark ? theme.schemes.dark : theme.schemes.light;
+        const tp = theme.palettes.primary;            // 官方品牌调色板(M3 primary)
+        const neutral = theme.palettes.neutral;        // 官方中性调色板(表面/文字)
+        const nv = theme.palettes.neutralVariant;      // 官方中性变体调色板(描边)
+        const st = PV_SURFACE_TONES[isDark ? "dark" : "light"];
+        const sc = (t) => hexFromArgb(neutral.tone(t));
+        const primaryHex = hexFromArgb(s.primary);
+        const cLow = sc(st.low), cMid = sc(st.mid), cHigh = sc(st.high), cHighest = sc(st.highest);
+        const appBg = sc(st.appBg);
+        const bg1 = pvAlphaComposite(primaryHex, cLow, PV_SCRIM.low);
+        const bg2 = pvAlphaComposite(primaryHex, cMid, PV_SCRIM.mid);
+        const bg3 = pvAlphaComposite(primaryHex, cHigh, PV_SCRIM.high);
+        const bg4 = pvAlphaComposite(primaryHex, cHighest, PV_SCRIM.highest);
+        const pal = {
+          brand: hexFromArgb(s.primary), onBrand: hexFromArgb(s.onPrimary),
+          surface: hexFromArgb(s.primaryContainer), onSurface: hexFromArgb(s.onPrimaryContainer),
+          hover: hexFromArgb(tp.tone(isDark ? 76 : 44)), pressed: hexFromArgb(tp.tone(isDark ? 84 : 36)),
+          tint: hexFromArgb(tp.tone(isDark ? 24 : 90)), weak: hexFromArgb(tp.tone(isDark ? 32 : 88)),
+          line: hexFromArgb(tp.tone(isDark ? 48 : 60)),
+          secondary: hexFromArgb(s.secondary), onSecondary: hexFromArgb(s.onSecondary),
+          secondaryContainer: hexFromArgb(s.secondaryContainer), onSecondaryContainer: hexFromArgb(s.onSecondaryContainer),
+          tertiary: hexFromArgb(s.tertiary), onTertiary: hexFromArgb(s.onTertiary),
+          tertiaryContainer: hexFromArgb(s.tertiaryContainer), onTertiaryContainer: hexFromArgb(s.onTertiaryContainer),
+          fg1: hexFromArgb(s.onSurface), fg2: hexFromArgb(s.onSurfaceVariant),
+          fg3: hexFromArgb(nv.tone(isDark ? 66 : 40)), fg4: hexFromArgb(s.outlineVariant),
+          fgInverted: hexFromArgb(s.inverseOnSurface),
+          appBg: appBg, bg1: bg1, bg2: bg2, bg3: bg3, bg4: bg4, bgInv: hexFromArgb(s.inverseSurface),
+          stroke1: hexFromArgb(s.outline), stroke2: hexFromArgb(s.outlineVariant),
+          stroke3: isDark ? hexFromArgb(nv.tone(40)) : hexFromArgb(nv.tone(90)),
+          fgTinted: hexFromArgb(tp.tone(isDark ? 80 : 36)), fgTinted2: hexFromArgb(tp.tone(isDark ? 70 : 44)),
+          popupBg: isDark ? sc(st.high) : sc(st.highest), popupFg: hexFromArgb(s.onSurface),
+          mica1: sc(isDark ? st.low : st.appBg), mica2: sc(isDark ? st.appBg : st.low),
+          errorFg: hexFromArgb(s.error), errorBg: hexFromArgb(s.errorContainer),
+        };
+        pvPaletteCache[key] = pal;
+        return pal;
+      }
+      function pvApplyPalette(sourceHex, isDark) {
+        const p = pvDerivePalette(sourceHex, isDark);
+        const st = pvStatusColors(isDark);
+        const root = document.documentElement;
+        const set = (k, v) => root.style.setProperty(k, v);
+        set("--color-brand", p.brand); set("--color-brand-on", p.onBrand);
+        set("--color-brand-surface", p.surface); set("--color-on-brand-surface", p.onSurface);
+        set("--color-brand-hover", p.hover); set("--color-brand-pressed", p.pressed);
+        set("--color-brand-tint", p.tint); set("--color-brand-weak", p.weak); set("--color-brand-line", p.line);
+        set("--color-secondary", p.secondary); set("--color-on-secondary", p.onSecondary);
+        set("--color-secondary-container", p.secondaryContainer); set("--color-on-secondary-container", p.onSecondaryContainer);
+        set("--color-tertiary", p.tertiary); set("--color-on-tertiary", p.onTertiary);
+        set("--color-tertiary-container", p.tertiaryContainer); set("--color-on-tertiary-container", p.onTertiaryContainer);
+        set("--color-fg-1", p.fg1); set("--color-fg-2", p.fg2); set("--color-fg-3", p.fg3);
+        set("--color-fg-4", p.fg4); set("--color-fg-inverted", p.fgInverted);
+        set("--color-app-bg", p.appBg); set("--color-bg-1", p.bg1); set("--color-bg-2", p.bg2);
+        set("--color-bg-3", p.bg3); set("--color-bg-4", p.bg4); set("--color-bg-inverted", p.bgInv);
+        set("--color-stroke-1", p.stroke1); set("--color-stroke-2", p.stroke2); set("--color-stroke-3", p.stroke3);
+        set("--color-fg-tinted", p.fgTinted); set("--color-fg-tinted-2", p.fgTinted2);
+        set("--popup-bg", p.popupBg); set("--popup-fg", p.popupFg);
+        set("--mica-tint-1", p.mica1); set("--mica-tint-2", p.mica2);
+        set("--acrylic-rgb", pvRgbStr(p.bg2)); set("--acrylic-rgb-low", pvRgbStr(p.bg1));
+        set("--acrylic-rgb-high", pvRgbStr(p.bg4)); set("--control-rgb", pvRgbStr(p.bg3));
+        set("--color-success-fg", st.success.fg); set("--color-success-bg", st.success.bg);
+        set("--color-warning-fg", st.warning.fg); set("--color-warning-bg", st.warning.bg);
+        set("--color-error-fg", p.errorFg); set("--color-error-bg", p.errorBg);
+      }
+      function pvApplyColorMode() {
+        const mode = document.getElementById("pv-color-mode").value;
+        if (mode === "static") {
+          pvApplyPalette(document.getElementById("pv-brand-hex").value.trim() || PV_DEFAULT_SOURCE, pvCurrentDark());
+        } else if (pvBgDataUri) {
+          if (pvDynCache[pvBgDataUri]) {
+            pvApplyPalette(pvDynCache[pvBgDataUri], pvCurrentDark());
+          } else {
+            const img = new Image();
+            img.onload = async () => {
+              try {
+                const hex = hexFromArgb(await sourceColorFromImage(img));
+                pvDynCache[pvBgDataUri] = hex;
+                pvApplyPalette(hex, pvCurrentDark());
+                pvToast("已从背景图提取主色 " + hex, "success");
+              } catch (e) {
+                pvApplyPalette(PV_DEFAULT_SOURCE, pvCurrentDark());
+                pvToast("背景图取色失败，回退默认粉", "warning");
+              }
+            };
+            img.onerror = () => {
+              pvApplyPalette(PV_DEFAULT_SOURCE, pvCurrentDark());
+              pvToast("背景图取色失败，回退默认粉", "warning");
+            };
+            img.src = pvBgDataUri;
+          }
+        } else {
+          pvApplyPalette(PV_DEFAULT_SOURCE, pvCurrentDark()); // 无背景图 → 默认粉
+        }
+      }
+      document.getElementById("pv-color-mode").addEventListener("change", pvApplyColorMode);
+      document.getElementById("pv-brand-picker").addEventListener("input", (e) => {
+        document.getElementById("pv-brand-hex").value = e.target.value.toUpperCase();
+        pvApplyColorMode(); // 实时：拖动取色即按 M3 重算主题色
+      });
+      document.getElementById("pv-brand-hex").addEventListener("change", (e) => {
+        const v = e.target.value.trim();
+        if (/^#[0-9a-f]{6}$/i.test(v)) {
+          document.getElementById("pv-brand-picker").value = v;
+          pvApplyColorMode(); // 实时：输入即按 M3 重算主题色
+        }
+      });
+
+      // ——— 外观调整（材质 / 模糊 / 亚克力开关 / 类型 / 字体 / 泛光 / 阴影 / 圆角）实时预览 ———
+      // 安全解析滑动条：仅当值为空/NaN 才回退 fb；0 是合法值，绝不被 || 当假值吞掉
+      const pvParse = (id, fb) => {
+        const v = parseInt(document.getElementById(id).value, 10);
+        return Number.isNaN(v) ? fb : v;
+      };
+      function pvApplyMaterial() {
+        const root = document.documentElement;
+        const appEl = document.getElementById("app");
+        // 材质：不透明度 + 模糊（源头变量 → 派生 --acrylic-* → --surface-* 全局统一）
+        const mat = pvParse("pv-material", 45);
+        const blur = pvParse("pv-blur", 5);
+        const acrylic = document.getElementById("pv-acrylic").checked;
+        root.style.setProperty("--material-opacity", (mat / 100).toString());
+        root.style.setProperty("--material-blur", blur + "px");
+        document.getElementById("pv-material-val").textContent = mat + "%";
+        document.getElementById("pv-blur-val").textContent = blur + "px";
+        if (acrylic) appEl.classList.remove("acrylic-off");
+        else appEl.classList.add("acrylic-off");
+        // 材质类型：亚克力 / 云母（共用同一源头变量）
+        const mtype = document.getElementById("pv-material-type").value;
+        if (mtype === "mica") appEl.classList.add("material-mica");
+        else appEl.classList.remove("material-mica");
+        // 字体：MiSans 默认 / 系统内置
+        const font = document.getElementById("pv-font").value;
+        if (font === "builtin") { appEl.classList.add("font-builtin"); appEl.classList.remove("font-misans"); }
+        else { appEl.classList.add("font-misans"); appEl.classList.remove("font-builtin"); }
+        // 泛光：开关 + 强度（默认关；--glow-strength 0..1 缩放品牌 bloom）
+        const glowOn = document.getElementById("pv-glow-on").checked;
+        const gAmt = pvParse("pv-glow", 15);
+        if (glowOn) appEl.classList.remove("glow-off");
+        else appEl.classList.add("glow-off");
+        root.style.setProperty("--glow-strength", (gAmt / 100).toString());
+        document.getElementById("pv-glow-val").textContent = gAmt + "%";
+        // 泛光范围（模糊半径，与强度解耦）
+        const gRange = pvParse("pv-glow-range", 10);
+        root.style.setProperty("--glow-range", gRange + "px");
+        document.getElementById("pv-glow-range-val").textContent = gRange + "px";
+        // 阴影：开关 + 强度（默认开）
+        const shadowOn = document.getElementById("pv-shadow-on").checked;
+        const sAmt = pvParse("pv-shadow", 60);
+        if (shadowOn) appEl.classList.remove("shadow-off");
+        else appEl.classList.add("shadow-off");
+        root.style.setProperty("--shadow-strength", (sAmt / 100).toString());
+        document.getElementById("pv-shadow-val").textContent = sAmt + "%";
+        // 圆角：始终应用（clamp 0–40）
+        const r = Math.max(0, Math.min(40, pvParse("pv-radius", 14)));
+        root.style.setProperty("--radius-large", r + "px");
+        root.style.setProperty("--radius-xlarge", r + "px");
+        root.style.setProperty("--radius-medium", Math.min(r, 12) + "px");
+        root.style.setProperty("--radius-small", Math.min(r, 10) + "px");
+      }
+      // rAF 节流: 拖动滑块时合并到每帧一次, 消除 backdrop-filter 重绘卡顿(尤其模糊强度)
+      let pvApplyRaf = 0;
+      function scheduleApplyMaterial() {
+        if (pvApplyRaf) return;
+        pvApplyRaf = requestAnimationFrame(() => { pvApplyRaf = 0; pvApplyMaterial(); });
+      }
+      ["pv-material", "pv-blur", "pv-acrylic", "pv-material-type", "pv-font",
+       "pv-glow-on", "pv-glow", "pv-glow-range", "pv-shadow-on", "pv-shadow", "pv-radius"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("input", scheduleApplyMaterial);
+      });
+      pvApplyMaterial();
+
+      const pvBgInput = document.getElementById("pv-bg-file");
+      const pvBgDrop = document.getElementById("pv-bg-drop");
+      const pvBgName = document.getElementById("pv-bg-name");
+      const PV_BG_HINT = "点击或拖拽图片到此处（jpg/png/webp/gif，建议 ≤2MB）";
+      pvBgInput.onchange = () => {
+        pvBgName.textContent = pvBgInput.files[0] ? pvBgInput.files[0].name : PV_BG_HINT;
+      };
+      ["dragover", "dragenter"].forEach((evt) =>
+        pvBgDrop.addEventListener(evt, (e) => { e.preventDefault(); pvBgDrop.classList.add("dragover"); }));
+      ["dragleave", "drop"].forEach((evt) =>
+        pvBgDrop.addEventListener(evt, (e) => { e.preventDefault(); pvBgDrop.classList.remove("dragover"); }));
+      pvBgDrop.addEventListener("drop", (e) => {
+        if (e.dataTransfer.files[0]) {
+          pvBgInput.files = e.dataTransfer.files;
+          pvBgName.textContent = e.dataTransfer.files[0].name;
+        }
+      });
+      document.getElementById("pv-bg-upload").onclick = () => {
+        const f = pvBgInput.files[0];
+        if (!f) { pvToast("请选择背景图片", "warning"); return; }
+        if (f.size > 20 * 1024 * 1024) { pvToast("图片不能超过 20MB", "warning"); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+          const uri = reader.result;
+          // 铺到画布（与真实面板 bg-mode image 等价效果）
+          document.body.style.backgroundImage =
+            "linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18)), url('" + uri + "')";
+          document.body.style.backgroundSize = "cover";
+          document.body.style.backgroundPosition = "center";
+          document.body.style.backgroundAttachment = "fixed";
+          // 缩略图预览
+          document.getElementById("pv-bg-preview").src = uri;
+          document.getElementById("pv-bg-preview-wrap").style.display = "block";
+          document.getElementById("pv-bg-mode").value = "image";
+          pvBgDataUri = uri;
+          pvApplyColorMode(); // 动态模式下立即 Material 取色
+          pvToast("背景图已应用（预览页本地效果；真实面板会持久化到插件配置）", "success");
+        };
+        reader.onerror = () => pvToast("读取图片失败", "error");
+        reader.readAsDataURL(f);
+      };
+      document.getElementById("pv-bg-remove").onclick = () => {
+        document.body.style.backgroundImage = "";
+        document.body.style.backgroundSize = "";
+        document.body.style.backgroundPosition = "";
+        document.body.style.backgroundAttachment = "";
+        pvBgInput.value = "";
+        pvBgName.textContent = PV_BG_HINT;
+        document.getElementById("pv-bg-preview-wrap").style.display = "none";
+        pvBgDataUri = "";
+        pvApplyColorMode(); // 动态模式下回退默认粉
+        pvToast("已移除背景图", "info");
+      };
+
+      // ——— 自定义主题下拉 (替代原生 select, 全令牌化, 消除与主题割裂) ———
+      function pvInitSelects() {
+        document.querySelectorAll("select.select").forEach((sel) => {
+          if (sel.dataset.pvSel) return;
+          sel.dataset.pvSel = "1";
+          sel.style.display = "none";
+          const wrap = document.createElement("div");
+          wrap.className = "pv-select";
+          const trigger = document.createElement("button");
+          trigger.type = "button";
+          trigger.className = "pv-select-trigger";
+          trigger.setAttribute("aria-haspopup", "listbox");
+          trigger.setAttribute("aria-expanded", "false");
+          const label = document.createElement("span");
+          label.className = "pv-select-label";
+          const caret = document.createElement("span");
+          caret.className = "pv-select-caret";
+          caret.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>';
+          trigger.appendChild(label);
+          trigger.appendChild(caret);
+          const menu = document.createElement("div");
+          menu.className = "pv-select-menu";
+          menu.setAttribute("role", "listbox");
+          const sync = () => {
+            const cur = sel.value;
+            label.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : "";
+            menu.innerHTML = "";
+            Array.from(sel.options).forEach((opt) => {
+              const li = document.createElement("div");
+              li.className = "pv-select-option";
+              li.setAttribute("role", "option");
+              li.setAttribute("aria-selected", opt.value === cur ? "true" : "false");
+              const t = document.createElement("span");
+              t.textContent = opt.textContent;
+              const ck = document.createElement("span");
+              ck.className = "pv-check";
+              ck.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+              li.appendChild(t);
+              li.appendChild(ck);
+              li.addEventListener("click", () => {
+                sel.value = opt.value;
+                wrap.classList.remove("open");
+                trigger.setAttribute("aria-expanded", "false");
+                sync();
+                sel.dispatchEvent(new Event("change", { bubbles: true }));
+              });
+              menu.appendChild(li);
+            });
+          };
+          trigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const open = wrap.classList.toggle("open");
+            trigger.setAttribute("aria-expanded", open ? "true" : "false");
+            if (open) sync();
+          });
+          wrap.appendChild(trigger);
+          wrap.appendChild(menu);
+          sel.parentNode.insertBefore(wrap, sel);
+          sync();
+        });
+      }
+      // 外部改值(如恢复默认)后, 同步所有自定义下拉的显示
+      function pvSyncAllSelects() {
+        document.querySelectorAll("select.select").forEach((sel) => {
+          const wrap = sel.previousElementSibling;
+          if (wrap && wrap.classList.contains("pv-select")) {
+            const lbl = wrap.querySelector(".pv-select-label");
+            const cur = sel.value;
+            if (lbl) lbl.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : "";
+            wrap.querySelectorAll(".pv-select-option").forEach((li, i) => {
+              li.setAttribute("aria-selected", sel.options[i] && sel.options[i].value === cur ? "true" : "false");
+            });
+          }
+        });
+      }
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".pv-select.open").forEach((w) => {
+          w.classList.remove("open");
+          w.querySelector(".pv-select-trigger").setAttribute("aria-expanded", "false");
+        });
+      });
+      pvInitSelects();
+
+      // ——— 保存 / 恢复默认 ———
+      document.getElementById("pv-save").onclick = () => pvToast("设置已保存（预览页；真实面板会写入插件配置）", "success");
+      document.getElementById("pv-reset").onclick = () => {
+        const def = { "pv-color-mode": "static", "pv-brand-picker": "#ff8ab9", "pv-brand-hex": "#ff8ab9",
+          "pv-bg-mode": "theme", "pv-radius": "14", "pv-material": "45", "pv-blur": "5",
+          "pv-material-type": "acrylic", "pv-font": "misans", "pv-glow-on": true, "pv-glow": "15",
+          "pv-glow-range": "10", "pv-shadow-on": true, "pv-shadow": "60" };
+        for (const k in def) {
+          const el = document.getElementById(k);
+          if (!el) continue;
+          if (el.type === "checkbox") el.checked = def[k]; else el.value = def[k];
+        }
+        pvApplyMaterial(); pvSyncAllSelects();
+        pvToast("已恢复默认（需保存生效）", "info");
+      };
+    </script>
+  </body>
+</html>
