@@ -1809,7 +1809,7 @@ const Waveform = (() => {
       const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
       const binVal = freqData[binIdx] / 255;
       // 混合振幅：空闲压缩保底 + 音频叠加
-      const amp = idleAmp + mix * binVal * h * 0.3 * (1 - Math.abs(off) * 0.6);
+      const amp = idleAmp + mix * binVal * h * 0.22 * (1 - Math.abs(off) * 0.6);
 
       const freq = 0.007 + li * 0.00055;
       const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * binVal * 0.2;
@@ -1821,7 +1821,7 @@ const Waveform = (() => {
         // 始终使用同一组正弦叠加，保持视觉语言一致
         const n = Math.sin(freq * x + idlePhase + li * 0.75)
                 + 0.33 * Math.sin(freq * 2.4 * x + idlePhase * 1.35 + li * 1.15);
-        const y = baseY + amp * n;
+        const y = Math.max(1, Math.min(h - 1, baseY + amp * n));
         x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
       ctx.stroke();
@@ -1840,7 +1840,7 @@ const Waveform = (() => {
       const n = Math.sin(0.0105 * x + idlePhase * 0.58)
               + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
               + 0.15 * Math.sin(0.052 * x + idlePhase * 1.85);
-      const y = cy + mainAmp * n;
+      const y = Math.max(1, Math.min(h - 1, cy + mainAmp * n));
       x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.stroke();
