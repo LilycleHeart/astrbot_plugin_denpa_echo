@@ -787,6 +787,10 @@ async function loadOverview() {
       ? '<span class="badge badge-brand">正常</span>'
       : '<span class="badge badge-danger">异常</span>';
     document.getElementById("stat-today").textContent = stats.today_count || 0;
+    document.getElementById("stat-today-chars").textContent =
+      (stats.today_chars || 0).toLocaleString();
+    document.getElementById("stat-total-chars").textContent =
+      (stats.total_chars || 0).toLocaleString();
     document.getElementById("stat-cache").textContent =
       `${(stats.cache_size_mb || 0).toFixed(1)} MB`;
     document.getElementById("stat-ffmpeg").innerHTML = stats.ffmpeg_available

@@ -15,6 +15,8 @@
     "subtitle": "API 连通性与运行统计",
     "api": "API 状态",
     "today": "今日合成",
+    "todayChars": "今日字符消耗",
+    "totalChars": "累计字符消耗",
     "cache": "缓存大小",
     "ffmpeg": "ffmpeg",
     "configTitle": "当前配置摘要"

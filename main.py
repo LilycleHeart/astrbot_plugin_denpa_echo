@@ -37,6 +37,8 @@ class Main(Star):
         self.config = config
         self._api_ok: bool = False
         self._today_count: int = 0
+        self._today_chars: int = 0
+        self._total_chars: int = 0
         self._today_date: str = time.strftime("%Y-%m-%d")
         self._stats: list[dict] = []  # 最近合成记录
 
@@ -275,6 +277,8 @@ class Main(Star):
         return json_response({
             "api_ok": self._api_ok,
             "today_count": self._today_count,
+            "today_chars": self._today_chars,
+            "total_chars": self._total_chars,
             "cache_size_mb": round(self.tts_engine.cache_size_mb(), 2),
             "mode": self.sender.mode,
             "model": (self.config.get("tts", {}) or {}).get("model", ""),
@@ -722,14 +726,19 @@ class Main(Star):
         if today != self._today_date:
             self._today_date = today
             self._today_count = 0
+            self._today_chars = 0
 
     def _record_stat(self, text: str, meta: dict) -> None:
         """记录一次合成。"""
         self._reset_daily_count_if_needed()
         self._today_count += 1
+        usage_chars = meta.get("usage_chars", 0) or len(text)
+        self._today_chars += usage_chars
+        self._total_chars += usage_chars
         self._stats.append({
             "time": time.strftime("%H:%M:%S"),
             "chars": len(text),
+            "usage_chars": usage_chars,
             "mode": meta.get("mode", ""),
             "elapsed_ms": meta.get("elapsed_ms", 0),
             "cached": meta.get("cached", False),
