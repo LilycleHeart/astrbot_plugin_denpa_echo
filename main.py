@@ -135,6 +135,17 @@ class Main(Star):
             await vm.list_voices("system")
             self._api_ok = True
             logger.info("[Denpa Echo] API 连通性检测通过")
+        except MinimaxAPIError as e:
+            # 中转(如 MoreAI)可能不代理 get_voice 管理接口 → 404；
+            # 能收到响应说明域名与鉴权正常，T2A 不受影响，不阻断插件
+            if e.status_code in (401, 403):
+                self._api_ok = False
+                logger.error(f"[Denpa Echo] API 鉴权失败(请检查 Key): {e}")
+            else:
+                self._api_ok = True
+                logger.warning(
+                    f"[Denpa Echo] 音色列表接口暂不可用({e.status_code})，语音合成功能不受影响"
+                )
         except Exception as e:
             self._api_ok = False
             logger.error(f"[Denpa Echo] API 连通性检测失败: {e}")
@@ -307,8 +318,14 @@ class Main(Star):
                     )
                     voices.append(item)
             return json_response({"voices": voices, "raw": data})
+        except MinimaxAPIError as e:
+            if e.status_code in (401, 403):
+                return error_response(f"获取音色失败(鉴权): {e}", status_code=500)
+            logger.warning(f"[Denpa Echo] get_voice 不可用，回退内置静态音色列表: {e}")
+            return await self._api_voices_static()
         except Exception as e:
-            return error_response(f"获取音色失败: {e}", status_code=500)
+            logger.warning(f"[Denpa Echo] 获取音色失败，回退内置静态音色列表: {e}")
+            return await self._api_voices_static()
 
     async def _api_voices_static(self):
         """返回内置系统音色列表（不调用 API）。"""
