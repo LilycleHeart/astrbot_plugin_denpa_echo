@@ -117,8 +117,7 @@
 .tab-content .textarea,
 .tab-content .file-drop,
 .tab-content .audio-player,
-.tab-content .pv-select-trigger,
-.tab-content .pv-select-menu {
+.tab-content .pv-select-trigger {
   background: var(--control-bg);
   -webkit-backdrop-filter: none;
           backdrop-filter: none;
