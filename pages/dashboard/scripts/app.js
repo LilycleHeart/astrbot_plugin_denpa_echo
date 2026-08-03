@@ -663,6 +663,7 @@ function bindEvents() {
   document.getElementById("btn-save-ui").onclick = saveUiConfig;
   document.getElementById("btn-reset-ui").onclick = resetUiConfig;
   document.getElementById("btn-save-plugin-cfg").onclick = savePluginConfig;
+  document.getElementById("cfg-api-region").addEventListener("change", syncApiCustomRow);
 
   // 滑动条数值即时显示（独立于 previewUiConfig，确保拖动时数值始终同步）
   const _sliderPairs = [
@@ -1445,6 +1446,13 @@ function resetUiConfig() {
   showToast("已恢复默认（需点击保存生效）", "info");
 }
 
+// API 区域切换 → 显示/隐藏自定义地址行
+function syncApiCustomRow() {
+  const region = document.getElementById("cfg-api-region");
+  const row = document.getElementById("cfg-api-custom-row");
+  if (row && region) row.style.display = region.value === "custom" ? "" : "none";
+}
+
 // ========== 插件配置（TTS / 音频 / 发送 / 高级）==========
 async function loadPluginConfig() {
   try {
@@ -1464,6 +1472,8 @@ async function loadPluginConfig() {
     set("cfg-api-key", cfg.api_key || "");
     set("cfg-group-id", cfg.group_id || "");
     set("cfg-api-region", cfg.api_region || "china");
+    set("cfg-api-custom-url", cfg.api_custom_url || "");
+    syncApiCustomRow();
     // TTS
     set("cfg-tts-model", tts.model || "speech-2.8-hd");
     set("cfg-tts-voice-id", tts.voice_id || "female-shaonv");
@@ -1534,6 +1544,7 @@ async function savePluginConfig() {
     api_key: val("cfg-api-key"),
     group_id: val("cfg-group-id"),
     api_region: val("cfg-api-region"),
+    api_custom_url: val("cfg-api-custom-url"),
     tts: {
       model: val("cfg-tts-model"),
       voice_id: val("cfg-tts-voice-id"),

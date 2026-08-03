@@ -491,7 +491,8 @@
             <div class="grid grid-2">
               <div class="form-row"><label class="form-label">API Key</label><input class="input" id="cfg-api-key" type="password" placeholder="Minimax API Key" /></div>
               <div class="form-row"><label class="form-label">Group ID（国内平台必填）</label><input class="input" id="cfg-group-id" placeholder="国际平台留空" /></div>
-              <div class="form-row"><label class="form-label">API 区域</label><select class="select" id="cfg-api-region"><option value="china">china（api.minimaxi.com）</option><option value="international">international（api.minimax.io）</option></select></div>
+              <div class="form-row"><label class="form-label">API 区域</label><select class="select" id="cfg-api-region"><option value="china">china（api.minimaxi.com）</option><option value="international">international（api.minimax.io）</option><option value="custom">custom（自定义地址）</option></select></div>
+              <div class="form-row" id="cfg-api-custom-row" style="display:none;grid-column:1/-1"><label class="form-label">自定义 API 地址</label><input class="input" id="cfg-api-custom-url" type="text" placeholder="https://你的中转/代理地址，仅 custom 时生效" spellcheck="false" /></div>
             </div>
           </div>
           <!-- 语音合成 -->

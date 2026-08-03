@@ -15,9 +15,15 @@
   "api_region": {
     "description": "API 区域",
     "type": "string",
-    "options": ["china", "international"],
+    "options": ["china", "international", "custom"],
     "default": "china",
-    "hint": "china → api.minimaxi.com（需 GroupId）；international → api.minimax.io"
+    "hint": "china → api.minimaxi.com（需 GroupId）；international → api.minimax.io；custom → 见 api_custom_url"
+  },
+  "api_custom_url": {
+    "description": "自定义 API 地址",
+    "type": "string",
+    "default": "",
+    "hint": "仅 api_region = custom 时生效，填完整 base URL，如 https://your-relay.example.com"
   },
 
   "tts": {

@@ -38,6 +38,7 @@ class MinimaxClient:
         api_key: str,
         group_id: str,
         region: str = "china",
+        custom_url: str = "",
         timeout: int = 60,
         retry_times: int = 2,
         retry_backoff: float = 1.5,
@@ -45,7 +46,10 @@ class MinimaxClient:
         self.api_key = api_key
         self.group_id = group_id
         self.region = region
-        self.base_url = self.REGION_URLS.get(region, self.REGION_URLS["china"])
+        if region == "custom" and custom_url:
+            self.base_url = custom_url.rstrip("/")
+        else:
+            self.base_url = self.REGION_URLS.get(region, self.REGION_URLS["china"])
         self.timeout = aiohttp.ClientTimeout(total=timeout)
         self.retry_times = retry_times
         self.retry_backoff = retry_backoff

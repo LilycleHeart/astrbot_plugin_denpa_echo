@@ -64,6 +64,7 @@ class Main(Star):
             api_key=config.get("api_key", ""),
             group_id=config.get("group_id", ""),
             region=config.get("api_region", "china"),
+            custom_url=config.get("api_custom_url", ""),
             timeout=int(adv.get("request_timeout", 60)),
             retry_times=int(adv.get("retry_times", 2)),
             retry_backoff=float(adv.get("retry_backoff", 1.5)),
@@ -561,7 +562,7 @@ class Main(Star):
         """保存配置（全部配置段）。"""
         payload = await request.json(default={})
         # 顶层标量字段
-        for k in ("api_key", "group_id", "api_region"):
+        for k in ("api_key", "group_id", "api_region", "api_custom_url"):
             if k in payload:
                 self.config[k] = payload[k]
         # UI 视觉配置（整体替换）
