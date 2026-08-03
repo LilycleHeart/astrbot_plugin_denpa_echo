@@ -1,11 +1,27 @@
 """同步/异步/流式语音合成。"""
 import asyncio
+import base64
 import json
 from typing import AsyncIterator, Optional
 
 from astrbot.api import logger
 
 from .client import MinimaxClient, MinimaxAPIError
+
+
+def _decode_audio_bytes(encoded: str) -> bytes:
+    """解码合成音频。
+
+    Minimax 官方在 output_format=hex 时返回 hex；MoreAI 等中转默认也返回 hex；
+    部分中转返回 base64。这里自动识别两种编码。
+    """
+    s = encoded.strip()
+    if s and len(s) % 2 == 0 and all(c in "0123456789abcdefABCDEF" for c in s):
+        try:
+            return bytes.fromhex(s)
+        except ValueError:
+            pass
+    return base64.b64decode(s)
 
 
 class T2AResult:
@@ -137,7 +153,7 @@ class T2AService:
 
         extra = resp.get("extra_info", {})
         return T2AResult(
-            audio_bytes=bytes.fromhex(audio_hex),
+            audio_bytes=_decode_audio_bytes(audio_hex),
             audio_format=extra.get("audio_format", params.get("format", "mp3")),
             sample_rate=extra.get("audio_sample_rate", params.get("sample_rate", 32000)),
             audio_length=extra.get("audio_length", 0),
@@ -241,4 +257,4 @@ class T2AService:
                         continue
                     audio_hex = chunk.get("data", {}).get("audio", "")
                     if audio_hex:
-                        yield bytes.fromhex(audio_hex)
+                        yield _decode_audio_bytes(audio_hex)

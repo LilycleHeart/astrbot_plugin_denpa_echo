@@ -23,7 +23,7 @@
     "description": "自定义 API 地址",
     "type": "string",
     "default": "",
-    "hint": "仅 api_region = custom 时生效，填完整 base URL，如 https://your-relay.example.com"
+    "hint": "仅 api_region = custom 时生效，填中转域名（不带 /v1），如 https://api.moreai.cloud"
   },
 
   "tts": {
