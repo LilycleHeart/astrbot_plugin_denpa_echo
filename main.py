@@ -558,6 +558,21 @@ class Main(Star):
             cfg["api_key"] = cfg["api_key"][:4] + "***" + cfg["api_key"][-4:]
         return json_response(cfg)
 
+    def _rebuild_client(self) -> None:
+        """配置变更后重建 Minimax 客户端，使 api_key / api_region / api_custom_url 立即生效（无需重启）。"""
+        adv = self.config.get("advanced", {}) or {}
+        self.client = MinimaxClient(
+            api_key=self.config.get("api_key", ""),
+            group_id=self.config.get("group_id", ""),
+            region=self.config.get("api_region", "china"),
+            custom_url=self.config.get("api_custom_url", ""),
+            timeout=int(adv.get("request_timeout", 60)),
+            retry_times=int(adv.get("retry_times", 2)),
+            retry_backoff=float(adv.get("retry_backoff", 1.5)),
+        )
+        if getattr(self, "tts_engine", None) is not None:
+            self.tts_engine.client = self.client
+
     async def _api_config_save(self):
         """保存配置（全部配置段）。"""
         payload = await request.json(default={})
@@ -578,6 +593,7 @@ class Main(Star):
                 self.config.setdefault(section, {}).update(data)
         try:
             self.config.save_config()
+            self._rebuild_client()
             return json_response({"saved": True})
         except Exception as e:
             return error_response(f"保存失败: {e}", status_code=500)
