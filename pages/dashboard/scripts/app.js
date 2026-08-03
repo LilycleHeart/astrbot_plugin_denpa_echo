@@ -1468,8 +1468,12 @@ async function loadPluginConfig() {
     const pd = cfg.pronunciation_dict || {};
     const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
     const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-    // API
-    set("cfg-api-key", cfg.api_key || "");
+    // API —— Key 不回显到密码框(避免 config/full 的打码值被误存回), 留空表示保持已保存的 Key
+    const keyInput = document.getElementById("cfg-api-key");
+    if (keyInput) {
+      keyInput.value = "";
+      keyInput.placeholder = cfg.api_key ? "已保存，留空保持不变" : "Minimax API Key";
+    }
     set("cfg-group-id", cfg.group_id || "");
     set("cfg-api-region", cfg.api_region || "china");
     set("cfg-api-custom-url", cfg.api_custom_url || "");

@@ -595,8 +595,15 @@ class Main(Star):
         payload = await request.json(default={})
         # 顶层标量字段
         for k in ("api_key", "group_id", "api_region", "api_custom_url"):
-            if k in payload:
-                self.config[k] = payload[k]
+            if k not in payload:
+                continue
+            val = payload[k]
+            if k == "api_key":
+                # 前端密码框不回显完整 Key：空值或含 *** 的打码回传都视为"未修改"，保留已存 Key
+                if val and "***" not in val:
+                    self.config["api_key"] = val
+            else:
+                self.config[k] = val
         # UI 视觉配置（整体替换）
         ui_new = payload.get("ui")
         if ui_new:
