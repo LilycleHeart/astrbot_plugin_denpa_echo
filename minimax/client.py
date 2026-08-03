@@ -47,7 +47,11 @@ class MinimaxClient:
         self.group_id = group_id
         self.region = region
         if region == "custom" and custom_url:
-            self.base_url = custom_url.rstrip("/")
+            base = custom_url.strip().rstrip("/")
+            # 常见误填: https://host/v1 → 插件路径自带 /v1, 去掉尾部 /v1 避免 /v1/v1/xxx
+            if base.lower().endswith("/v1"):
+                base = base[:-3].rstrip("/")
+            self.base_url = base
         else:
             self.base_url = self.REGION_URLS.get(region, self.REGION_URLS["china"])
         self.timeout = aiohttp.ClientTimeout(total=timeout)
@@ -135,7 +139,7 @@ class MinimaxClient:
                         base_resp = payload.get("base_resp", {}) if isinstance(payload, dict) else {}
                         raise MinimaxAPIError(
                             resp.status,
-                            base_resp.get("status_msg", f"HTTP {resp.status}"),
+                            f"{base_resp.get('status_msg', f'HTTP {resp.status}')} @ {url}",
                             payload.get("trace_id", "") if isinstance(payload, dict) else "",
                         )
 
