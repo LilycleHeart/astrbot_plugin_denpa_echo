@@ -3,6 +3,7 @@
 提供鉴权、URL 拼接、重试、错误处理等共享能力，所有具体 API 服务都基于此客户端。
 """
 import asyncio
+import re
 from typing import Any, Optional
 
 import aiohttp
@@ -47,10 +48,11 @@ class MinimaxClient:
         self.group_id = group_id
         self.region = region
         if region == "custom" and custom_url:
+            # 规范化: 剥掉 /v1 及其后的 API 路径(如 /v1、/v1/t2a_v2), 只留域名/base, 避免路径重复
             base = custom_url.strip().rstrip("/")
-            # 常见误填: https://host/v1 → 插件路径自带 /v1, 去掉尾部 /v1 避免 /v1/v1/xxx
-            if base.lower().endswith("/v1"):
-                base = base[:-3].rstrip("/")
+            m = re.search(r"/v1(?:/|$)", base, re.IGNORECASE)
+            if m:
+                base = base[:m.start()].rstrip("/")
             self.base_url = base
         else:
             self.base_url = self.REGION_URLS.get(region, self.REGION_URLS["china"])
