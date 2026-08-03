@@ -75,6 +75,9 @@ async function init() {
   loadStaticVoices();  // 填充调试下拉
   Waveform.init();     // 启动波形可视化器
 
+  // 自定义主题下拉: 将所有 select.select 替换为 pv-select 组件(原生弹层→主题弹层)
+  pvInitSelects();
+
   bridge.onContext((newCtx) => {
     state.ctx = newCtx;
     applyTheme(newCtx);
@@ -271,6 +274,9 @@ function syncSettingsInputs() {
   if (scrimVal) scrimVal.textContent = `${ui.bg_scrim ?? 40}%`;
   const vizMode = document.getElementById("ui-viz-mode");
   if (vizMode) vizMode.value = ui.viz_mode || "spectrum";
+
+  // 自定义下拉(如有)同步显示当前选中项
+  pvSyncAllSelects();
 }
 
 // ========== 品牌色引擎 (Material Color Utilities / M3) ==========
@@ -838,6 +844,8 @@ function _fillDebugSelect(all) {
     .map((v) => `<option value="${v.voice_id}">${v.name || v.voice_id} (${v.voice_id})</option>`)
     .join("");
   if (cur && merged.some((v) => v.voice_id === cur)) sel.value = cur;
+  // 自定义下拉(如有)同步选中显示
+  pvSyncAllSelects();
 }
 
 function addToMyVoices(voice) {
@@ -1074,6 +1082,8 @@ function fillDebugVoiceSelect() {
   if (cur && visible.some((v) => v.voice_id === cur)) {
     sel.value = cur;
   }
+
+  pvSyncAllSelects();
 }
 
 async function previewVoice(voiceId, name) {
@@ -1264,6 +1274,7 @@ async function uploadBgImage() {
     state.uiConfig.background_mode = "image";
     document.getElementById("bg-file-name").textContent = (resp && resp.filename) || file.name;
     document.getElementById("ui-bg-mode").value = "image";
+    pvSyncAllSelects();
     updateBgPreview();
     // 直接应用背景（不依赖 previewUiConfig 重建 state 的时序）
     const body = document.body;
@@ -1505,6 +1516,8 @@ async function loadPluginConfig() {
     setChk("cfg-pd-on", !!pd.enabled);
     const entries = (pd.tone || []).map(t => t.entry || "").filter(Boolean).join("\n");
     set("cfg-pd-entries", entries);
+    // 自定义下拉(如有)同步显示当前选中项
+    pvSyncAllSelects();
   } catch (e) {
     console.warn("加载插件配置失败", e);
   }
@@ -1855,6 +1868,92 @@ const Waveform = (() => {
 
 // 暴露给 HTML inline onclick（ES module 不自动挂全局）
 window.savePluginConfig = savePluginConfig;
+
+// ─── 自定义主题下拉 (替代原生 select, 全令牌化, 消除与主题割裂) — 复刻 preview.html ───
+function pvInitSelects() {
+  document.querySelectorAll("select.select").forEach((sel) => {
+    if (sel.dataset.pvSel) return;
+    sel.dataset.pvSel = "1";
+    // 保留原 select 的内联尺寸(width/max-width), 避免包裹层布局跳动
+    const wrap = document.createElement("div");
+    wrap.className = "pv-select";
+    if (sel.style.width) wrap.style.width = sel.style.width;
+    if (sel.style.maxWidth) wrap.style.maxWidth = sel.style.maxWidth;
+    sel.style.display = "none";
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "pv-select-trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+    const label = document.createElement("span");
+    label.className = "pv-select-label";
+    const caret = document.createElement("span");
+    caret.className = "pv-select-caret";
+    caret.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>';
+    trigger.appendChild(label);
+    trigger.appendChild(caret);
+    const menu = document.createElement("div");
+    menu.className = "pv-select-menu";
+    menu.setAttribute("role", "listbox");
+    const sync = () => {
+      const cur = sel.value;
+      label.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : "";
+      menu.innerHTML = "";
+      Array.from(sel.options).forEach((opt) => {
+        const li = document.createElement("div");
+        li.className = "pv-select-option";
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", opt.value === cur ? "true" : "false");
+        const t = document.createElement("span");
+        t.textContent = opt.textContent;
+        const ck = document.createElement("span");
+        ck.className = "pv-check";
+        ck.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+        li.appendChild(t);
+        li.appendChild(ck);
+        li.addEventListener("click", () => {
+          sel.value = opt.value;
+          wrap.classList.remove("open");
+          trigger.setAttribute("aria-expanded", "false");
+          sync();
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        menu.appendChild(li);
+      });
+    };
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = wrap.classList.toggle("open");
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) sync();
+    });
+    wrap.appendChild(trigger);
+    wrap.appendChild(menu);
+    sel.parentNode.insertBefore(wrap, sel);
+    sync();
+  });
+}
+// 外部改值(加载配置/恢复默认/动态选项/上传背景)后, 同步所有自定义下拉的显示
+function pvSyncAllSelects() {
+  document.querySelectorAll("select.select").forEach((sel) => {
+    const wrap = sel.previousElementSibling;
+    if (wrap && wrap.classList.contains("pv-select")) {
+      const lbl = wrap.querySelector(".pv-select-label");
+      const cur = sel.value;
+      if (lbl) lbl.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : "";
+      wrap.querySelectorAll(".pv-select-option").forEach((li, i) => {
+        li.setAttribute("aria-selected", sel.options[i] && sel.options[i].value === cur ? "true" : "false");
+      });
+    }
+  });
+}
+// 点击页面其他区域关闭所有展开的自定义下拉
+document.addEventListener("click", () => {
+  document.querySelectorAll(".pv-select.open").forEach((w) => {
+    w.classList.remove("open");
+    w.querySelector(".pv-select-trigger").setAttribute("aria-expanded", "false");
+  });
+});
 
 // 启动
 init();
