@@ -247,7 +247,7 @@ function syncSettingsInputs() {
   set("ui-material", ui.material_opacity ?? 45);
   set("ui-blur", ui.material_blur ?? 5);
   const ac = document.getElementById("ui-acrylic-on");
-  if (ac) ac.checked = ui.acrylic_enabled !== false;
+  if (ac) ac.value = ui.acrylic_enabled === false ? "false" : "true";
   const matVal = document.getElementById("ui-material-val");
   if (matVal) matVal.textContent = `${ui.material_opacity ?? 45}%`;
   const blurVal = document.getElementById("ui-blur-val");
@@ -257,13 +257,13 @@ function syncSettingsInputs() {
   const fo = document.getElementById("ui-font");
   if (fo) fo.value = ui.font_mode || "misans";
   const go = document.getElementById("ui-glow-on");
-  if (go) go.checked = ui.glow_enabled === true;
+  if (go) go.value = ui.glow_enabled === true ? "true" : "false";
   const gi = document.getElementById("ui-glow");
   if (gi) gi.value = ui.glow_intensity ?? 15;
   const goVal = document.getElementById("ui-glow-val");
   if (goVal) goVal.textContent = `${ui.glow_intensity ?? 15}%`;
   const so = document.getElementById("ui-shadow-on");
-  if (so) so.checked = ui.shadow_enabled === true;
+  if (so) so.value = ui.shadow_enabled === true ? "true" : "false";
   const si = document.getElementById("ui-shadow");
   if (si) si.value = ui.shadow_intensity ?? 50;
   const soVal = document.getElementById("ui-shadow-val");
@@ -745,14 +745,14 @@ function previewUiConfig() {
     custom_background_dark: document.getElementById("ui-custom-bg-dark").value,
     background_image: state.uiConfig.background_image || "",
     corner_radius: radiusV,
-    acrylic_enabled: ac ? ac.checked : true,
+    acrylic_enabled: ac ? ac.value === "true" : true,
     material_opacity: matV,
     material_blur: blurV,
     material_type: mtEl ? mtEl.value : "acrylic",
     font_mode: foEl ? foEl.value : "misans",
-    glow_enabled: goEl ? goEl.checked : false,
+    glow_enabled: goEl ? goEl.value === "true" : false,
     glow_intensity: giEl ? (parseInt(giEl.value, 10) || 0) : 15,
-    shadow_enabled: soEl ? soEl.checked : false,
+    shadow_enabled: soEl ? soEl.value === "true" : false,
     shadow_intensity: siEl ? (parseInt(siEl.value, 10) || 0) : 60,
     bg_scrim: (() => { const s = document.getElementById("ui-scrim"); return s ? (parseInt(s.value, 10) || 0) : 40; })(),
     viz_mode: document.getElementById("ui-viz-mode")?.value || "spectrum",
@@ -1917,6 +1917,7 @@ function pvInitSelects() {
           trigger.setAttribute("aria-expanded", "false");
           sync();
           sel.dispatchEvent(new Event("change", { bubbles: true }));
+          sel.dispatchEvent(new Event("input", { bubbles: true }));
         });
         menu.appendChild(li);
       });

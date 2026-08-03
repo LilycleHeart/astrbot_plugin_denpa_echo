@@ -389,17 +389,26 @@
 
             <!-- 开关 -->
             <div class="grid grid-2" style="margin-top:var(--space-s)">
-              <div class="form-row" style="display:flex;align-items:center;gap:8px">
-                <input type="checkbox" id="ui-acrylic-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
-                <label class="form-label" style="margin:0" data-i18n="settings.acrylicOn">启用材质（关闭则转实底）</label>
+              <div class="form-row">
+                <label class="form-label" data-i18n="settings.acrylicOn">材质效果</label>
+                <select class="select" id="ui-acrylic-on">
+                  <option value="true">启用（半透明材质）</option>
+                  <option value="false">关闭（实底）</option>
+                </select>
               </div>
-              <div class="form-row" style="display:flex;align-items:center;gap:8px">
-                <input type="checkbox" id="ui-glow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
-                <label class="form-label" style="margin:0">启用主题泛光</label>
+              <div class="form-row">
+                <label class="form-label">主题泛光</label>
+                <select class="select" id="ui-glow-on">
+                  <option value="true">启用</option>
+                  <option value="false">关闭</option>
+                </select>
               </div>
-              <div class="form-row" style="display:flex;align-items:center;gap:8px">
-                <input type="checkbox" id="ui-shadow-on" checked style="width:18px;height:18px;accent-color:var(--color-brand)" />
-                <label class="form-label" style="margin:0">启用投影阴影</label>
+              <div class="form-row">
+                <label class="form-label">投影阴影</label>
+                <select class="select" id="ui-shadow-on">
+                  <option value="true">启用</option>
+                  <option value="false">关闭</option>
+                </select>
               </div>
             </div>
 
