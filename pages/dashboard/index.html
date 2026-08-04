@@ -558,6 +558,8 @@
               <div class="form-row" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="cfg-send-sync" checked style="width:18px;height:18px;accent-color:var(--color-brand)" /><label class="form-label" style="margin:0">使用同步合成</label></div>
               <div class="form-row"><label class="form-label">最短合成长度（字符）</label><input type="number" class="input" id="cfg-send-min" value="1" min="0" /></div>
               <div class="form-row"><label class="form-label">最长合成长度（字符）</label><input type="number" class="input" id="cfg-send-max" value="5000" min="1" /></div>
+              <div class="form-row" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="cfg-send-skip-long" style="width:18px;height:18px;accent-color:var(--color-brand)" /><label class="form-label" style="margin:0">超过长度不合成</label></div>
+              <div class="form-row"><label class="form-label">超长不合成阈值（字符）</label><input type="number" class="input" id="cfg-send-skip-long-length" value="5000" min="1" /></div>
             </div>
           </div>
           <!-- 文本预处理 -->

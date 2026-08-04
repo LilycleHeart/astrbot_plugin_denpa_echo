@@ -64,6 +64,14 @@ class MessageSender:
         return int(self._sm().get("max_length", 5000))
 
     @property
+    def skip_long(self) -> bool:
+        return bool(self._sm().get("skip_long", False))
+
+    @property
+    def skip_long_length(self) -> int:
+        return int(self._sm().get("skip_long_length", 5000))
+
+    @property
     def trigger_scope(self) -> str:
         return self._sm().get("trigger_scope", "all")
 
@@ -98,14 +106,36 @@ class MessageSender:
 
         return True
 
-    def _extract_text(self, chain: list) -> str:
-        """提取消息链中的纯文本并截断。"""
+    def _extract_text(self, chain: list) -> tuple[str, int]:
+        """提取消息链中的纯文本并截断。
+
+        Returns:
+            (合成用文本, 原始长度)。原始长度用于「超长不合成」判断，
+            避免先截断后无法感知原始文本的真实长度。
+        """
         text = extract_plain_text(chain)
         if not text:
-            return ""
-        if len(text) > self.max_length:
+            return "", 0
+        raw_len = len(text)
+        if raw_len > self.max_length:
             text = truncate_text(text, self.max_length)
-        return text
+        return text, raw_len
+
+    def _should_skip_tts(self, text: str, raw_len: int) -> bool:
+        """按长度规则决定是否跳过本次合成。
+
+        - 短于 min_length 的回复不合成（保留原有行为）
+        - 开启 skip_long 且原始长度超过 skip_long_length 时不合成
+        """
+        if len(text) < self.min_length:
+            return True
+        if self.skip_long and raw_len > self.skip_long_length:
+            logger.info(
+                f"[TTS] 超长不合成: 原始 {raw_len}字 > 阈值 "
+                f"{self.skip_long_length}字，跳过语音合成"
+            )
+            return True
+        return False
 
     async def handle_intercept(self, event: AstrMessageEvent) -> None:
         """拦截模式：在 on_decorating_result 钩子中替换消息链。
@@ -118,8 +148,8 @@ class MessageSender:
         """
         result = event.get_result()
         chain = result.chain
-        text = self._extract_text(chain)
-        if len(text) < self.min_length:
+        text, raw_len = self._extract_text(chain)
+        if self._should_skip_tts(text, raw_len):
             return
 
         umo = event.unified_msg_origin
@@ -165,8 +195,8 @@ class MessageSender:
         """
         result = event.get_result()
         chain = result.chain
-        text = self._extract_text(chain)
-        if len(text) < self.min_length:
+        text, raw_len = self._extract_text(chain)
+        if self._should_skip_tts(text, raw_len):
             return
 
         umo = event.unified_msg_origin

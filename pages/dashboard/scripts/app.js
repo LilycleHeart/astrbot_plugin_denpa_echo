@@ -664,6 +664,8 @@ function bindEvents() {
   document.getElementById("btn-reset-ui").onclick = resetUiConfig;
   document.getElementById("btn-save-plugin-cfg").onclick = savePluginConfig;
   document.getElementById("cfg-api-region").addEventListener("change", syncApiCustomRow);
+  document.getElementById("cfg-send-skip-long").addEventListener("change", syncSendSkipState);
+  syncSendSkipState();
 
   // 滑动条数值即时显示（独立于 previewUiConfig，确保拖动时数值始终同步）
   const _sliderPairs = [
@@ -1455,6 +1457,13 @@ function syncApiCustomRow() {
   if (row && region) row.style.display = region.value === "custom" ? "" : "none";
 }
 
+// 超过长度不合成开关 → 阈值输入可用性
+function syncSendSkipState() {
+  const on = document.getElementById("cfg-send-skip-long");
+  const len = document.getElementById("cfg-send-skip-long-length");
+  if (on && len) len.disabled = !on.checked;
+}
+
 // ========== 插件配置（TTS / 音频 / 发送 / 高级）==========
 async function loadPluginConfig() {
   try {
@@ -1502,6 +1511,9 @@ async function loadPluginConfig() {
     setChk("cfg-send-sync", sm.use_sync !== false);
     set("cfg-send-min", sm.min_length ?? 1);
     set("cfg-send-max", sm.max_length ?? 5000);
+    setChk("cfg-send-skip-long", sm.skip_long === true);
+    set("cfg-send-skip-long-length", sm.skip_long_length ?? 5000);
+    syncSendSkipState();
     // Advanced
     set("cfg-adv-timeout", adv.request_timeout ?? 60);
     set("cfg-adv-retry", adv.retry_times ?? 2);
@@ -1575,6 +1587,8 @@ async function savePluginConfig() {
       use_sync: chk("cfg-send-sync"),
       min_length: int("cfg-send-min", 1),
       max_length: int("cfg-send-max", 5000),
+      skip_long: chk("cfg-send-skip-long"),
+      skip_long_length: int("cfg-send-skip-long-length", 5000),
     },
     advanced: {
       request_timeout: int("cfg-adv-timeout", 60),

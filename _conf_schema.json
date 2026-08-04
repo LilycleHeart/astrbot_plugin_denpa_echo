@@ -293,6 +293,19 @@
         "default": 5000,
         "hint": "超过此长度截断"
       },
+      "skip_long": {
+        "description": "超过长度不合成",
+        "type": "bool",
+        "default": false,
+        "hint": "true 开启后，回复超过「超长不合成阈值」直接跳过语音合成（拦截保留原文、追加不追加语音）"
+      },
+      "skip_long_length": {
+        "description": "超长不合成阈值（字符）",
+        "type": "int",
+        "default": 5000,
+        "min": 1,
+        "hint": "开启「超过长度不合成」时，超过此长度的回复不合成语音"
+      },
       "trigger_scope": {
         "description": "触发范围",
         "type": "string",
