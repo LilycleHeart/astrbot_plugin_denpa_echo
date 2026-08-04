@@ -16,6 +16,7 @@
     "api": "API Status",
     "today": "Today",
     "todayChars": "Today Chars",
+    "totalCount": "Total Synths",
     "totalChars": "Total Chars",
     "cache": "Cache Size",
     "ffmpeg": "ffmpeg",

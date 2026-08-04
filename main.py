@@ -7,6 +7,7 @@
 - 拦截/追加双发送模式
 - Signal 声场控制台（亚克力/Mica 材质，动/静态取色）
 """
+import json
 import os
 import time
 from pathlib import Path
@@ -38,9 +39,11 @@ class Main(Star):
         self._api_ok: bool = False
         self._today_count: int = 0
         self._today_chars: int = 0
+        self._total_count: int = 0
         self._total_chars: int = 0
         self._today_date: str = time.strftime("%Y-%m-%d")
         self._stats: list[dict] = []  # 最近合成记录
+        self._stats_path: str = ""
 
         # 插件数据目录
         self.plugin_data_dir = os.path.join(
@@ -57,6 +60,10 @@ class Main(Star):
         except Exception:
             pass
         os.makedirs(self.plugin_data_dir, exist_ok=True)
+        self._stats_path = os.path.join(
+            self.plugin_data_dir, "denpa_echo_stats.json"
+        )
+        self._load_stats()
 
         # 初始化 Minimax 客户端
         adv = config.get("advanced", {}) or {}
@@ -85,6 +92,7 @@ class Main(Star):
             tts_engine=self.tts_engine,
             context=context,
             config=config,
+            record_stat=self._record_stat,
         )
 
         # 注册 Plugin Page 后端 API
@@ -290,6 +298,7 @@ class Main(Star):
             "api_ok": self._api_ok,
             "today_count": self._today_count,
             "today_chars": self._today_chars,
+            "total_count": self._total_count,
             "total_chars": self._total_chars,
             "cache_size_mb": round(self.tts_engine.cache_size_mb(), 2),
             "mode": self.sender.mode,
@@ -761,20 +770,59 @@ class Main(Star):
 
     # ===== 辅助方法 =====
 
+    def _load_stats(self) -> None:
+        """从磁盘加载统计（今日计数跨重启保留，累计计数跨重启累计）。"""
+        if not self._stats_path:
+            return
+        try:
+            with open(self._stats_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self._today_date = str(data.get("today_date", self._today_date))
+            self._today_count = int(data.get("today_count", 0))
+            self._today_chars = int(data.get("today_chars", 0))
+            self._total_count = int(data.get("total_count", 0))
+            self._total_chars = int(data.get("total_chars", 0))
+        except Exception:
+            return
+        # 距上次写入已跨天则今日计数归零（累计保留）
+        self._reset_daily_count_if_needed()
+
+    def _save_stats(self) -> None:
+        """持久化统计（跨重启累计）。"""
+        if not self._stats_path:
+            return
+        try:
+            os.makedirs(os.path.dirname(self._stats_path), exist_ok=True)
+            with open(self._stats_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "today_date": self._today_date,
+                    "today_count": self._today_count,
+                    "today_chars": self._today_chars,
+                    "total_count": self._total_count,
+                    "total_chars": self._total_chars,
+                }, f, ensure_ascii=False)
+        except Exception as e:
+            logger.warning(f"[Denpa Echo] 统计持久化失败: {e}")
+
     def _reset_daily_count_if_needed(self) -> None:
-        """跨天重置计数。"""
+        """跨天重置今日计数（累计计数保留）。"""
         today = time.strftime("%Y-%m-%d")
         if today != self._today_date:
             self._today_date = today
             self._today_count = 0
             self._today_chars = 0
+            self._save_stats()
 
     def _record_stat(self, text: str, meta: dict) -> None:
-        """记录一次合成。"""
+        """记录一次合成（今日 + 累计）。
+
+        从所有合成入口调用：拦截/追加模式、/tts 指令、面板试听与调试。
+        """
         self._reset_daily_count_if_needed()
         self._today_count += 1
         usage_chars = meta.get("usage_chars", 0) or len(text)
         self._today_chars += usage_chars
+        self._total_count += 1
         self._total_chars += usage_chars
         self._stats.append({
             "time": time.strftime("%H:%M:%S"),
@@ -788,8 +836,10 @@ class Main(Star):
         # 仅保留最近 200 条
         if len(self._stats) > 200:
             self._stats = self._stats[-200:]
+        self._save_stats()
 
     async def terminate(self):
         """插件卸载时清理资源。"""
+        self._save_stats()
         await self.client.close()
         logger.info("[Denpa Echo] 插件已卸载")

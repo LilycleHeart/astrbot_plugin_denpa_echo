@@ -151,13 +151,24 @@ class T2AService:
         if not audio_hex:
             raise MinimaxAPIError(-1, "响应中无音频数据", resp.get("trace_id", ""))
 
-        extra = resp.get("extra_info", {})
+        extra = resp.get("extra_info", {}) or {}
+        data = resp.get("data", {}) or {}
+        # 自定义中转(如 MoreAI)返回结构不固定：usage_characters 可能在
+        # extra_info / data / data.extra_info / 顶层。逐一兜底，拿不到则回退 0，
+        # 由上层 _record_stat 用 len(text) 兜底。
+        usage_chars = (
+            extra.get("usage_characters")
+            or data.get("usage_characters")
+            or resp.get("usage_characters")
+            or (data.get("extra_info", {}) or {}).get("usage_characters")
+            or 0
+        )
         return T2AResult(
             audio_bytes=_decode_audio_bytes(audio_hex),
             audio_format=extra.get("audio_format", params.get("format", "mp3")),
             sample_rate=extra.get("audio_sample_rate", params.get("sample_rate", 32000)),
             audio_length=extra.get("audio_length", 0),
-            usage_characters=extra.get("usage_characters", 0),
+            usage_characters=usage_chars,
             subtitle=resp.get("extra_info", {}).get("subtitle"),
             trace_id=resp.get("trace_id", ""),
         )

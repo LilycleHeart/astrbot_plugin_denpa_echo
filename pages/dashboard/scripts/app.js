@@ -796,6 +796,8 @@ async function loadOverview() {
     document.getElementById("stat-today").textContent = stats.today_count || 0;
     document.getElementById("stat-today-chars").textContent =
       (stats.today_chars || 0).toLocaleString();
+    document.getElementById("stat-total-count").textContent =
+      (stats.total_count || 0).toLocaleString();
     document.getElementById("stat-total-chars").textContent =
       (stats.total_chars || 0).toLocaleString();
     document.getElementById("stat-cache").textContent =

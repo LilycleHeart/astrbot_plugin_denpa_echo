@@ -25,12 +25,15 @@ class MessageSender:
         tts_engine: TTSEngine,
         context,
         config: dict,
+        record_stat=None,
     ):
         self.tts_engine = tts_engine
         self.context = context
         # 持有 config 引用；send_mode 相关配置在每次事件时【实时读取】，
         # 不再在 __init__ 缓存，避免面板/配置 UI 修改模式后运行时仍不生效。
         self.config = config
+        # 统计回调（由 Main._record_stat 注入）：合成成功后记录今日/累计统计
+        self.record_stat = record_stat
 
     # —— send_mode 配置实时读取（不缓存）——
     def _sm(self) -> dict:
@@ -137,6 +140,9 @@ class MessageSender:
             new_chain.append(Record(file=wav_path, url=wav_path))
             result.chain = new_chain
 
+            if self.record_stat:
+                self.record_stat(text, meta)
+
             logger.info(
                 f"[TTS] 拦截模式合成成功: {len(text)}字 -> {wav_path} "
                 f"({meta.get('elapsed_ms', 0)}ms)"
@@ -193,6 +199,9 @@ class MessageSender:
             # MessageChain 没有 .record() 便捷方法，直接构造 chain
             message_chain = MessageChain(chain=[Record(file=wav_path, url=wav_path)])
             await self.context.send_message(umo, message_chain)
+
+            if self.record_stat:
+                self.record_stat(text, meta)
 
             logger.info(
                 f"[TTS] 追加模式合成完成并已发送: {len(text)}字 -> {wav_path} "
