@@ -58,7 +58,7 @@
   },
   "logs": {
     "title": "运行日志",
-    "subtitle": "最近 200 条合成记录"
+    "subtitle": "最近 / 累计合成记录（跨重启保留）"
   },
   "settings": {
     "title": "界面设置",

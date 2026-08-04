@@ -28,6 +28,8 @@ from .minimax.voice_clone import VoiceCloneService
 from .minimax.voice_manage import VoiceManageService
 
 PLUGIN_NAME = "astrbot_plugin_denpa_echo"
+# 合成记录累计上限（跨重启持久化，超出丢弃最旧）
+_LOG_LIMIT = 5000
 
 
 class Main(Star):
@@ -42,8 +44,9 @@ class Main(Star):
         self._total_count: int = 0
         self._total_chars: int = 0
         self._today_date: str = time.strftime("%Y-%m-%d")
-        self._stats: list[dict] = []  # 最近合成记录
+        self._stats: list[dict] = []  # 合成记录（累计，上限 _LOG_LIMIT 条）
         self._stats_path: str = ""
+        self._logs_path: str = ""
 
         # 插件数据目录
         self.plugin_data_dir = os.path.join(
@@ -64,6 +67,10 @@ class Main(Star):
             self.plugin_data_dir, "denpa_echo_stats.json"
         )
         self._load_stats()
+        self._logs_path = os.path.join(
+            self.plugin_data_dir, "denpa_echo_logs.json"
+        )
+        self._load_logs()
 
         # 初始化 Minimax 客户端
         adv = config.get("advanced", {}) or {}
@@ -764,9 +771,17 @@ class Main(Star):
         })
 
     async def _api_logs(self):
-        """返回最近合成记录。"""
-        limit = request.query.get("limit", 50, type=int)
-        return json_response({"logs": self._stats[-limit:]})
+        """返回合成记录。
+
+        mode=recent（默认）：最近 limit 条；mode=all：累计全部历史。
+        """
+        limit = request.query.get("limit", 200, type=int)
+        mode = request.query.get("mode", "recent")
+        if mode == "all":
+            logs = list(self._stats)
+        else:
+            logs = self._stats[-limit:]
+        return json_response({"logs": logs, "total": len(self._stats)})
 
     # ===== 辅助方法 =====
 
@@ -804,6 +819,29 @@ class Main(Star):
         except Exception as e:
             logger.warning(f"[Denpa Echo] 统计持久化失败: {e}")
 
+    def _load_logs(self) -> None:
+        """从磁盘加载累计合成记录（跨重启保留）。"""
+        if not self._logs_path:
+            return
+        try:
+            with open(self._logs_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                self._stats = data[-_LOG_LIMIT:]
+        except Exception:
+            pass
+
+    def _save_logs(self) -> None:
+        """持久化合成记录（累计）。"""
+        if not self._logs_path:
+            return
+        try:
+            os.makedirs(os.path.dirname(self._logs_path), exist_ok=True)
+            with open(self._logs_path, "w", encoding="utf-8") as f:
+                json.dump(self._stats, f, ensure_ascii=False)
+        except Exception as e:
+            logger.warning(f"[Denpa Echo] 日志持久化失败: {e}")
+
     def _reset_daily_count_if_needed(self) -> None:
         """跨天重置今日计数（累计计数保留）。"""
         today = time.strftime("%Y-%m-%d")
@@ -833,13 +871,15 @@ class Main(Star):
             "cached": meta.get("cached", False),
             "preview": text[:50],
         })
-        # 仅保留最近 200 条
-        if len(self._stats) > 200:
-            self._stats = self._stats[-200:]
+        # 累计保留最近 _LOG_LIMIT 条（跨重启持久化）
+        if len(self._stats) > _LOG_LIMIT:
+            self._stats = self._stats[-_LOG_LIMIT:]
         self._save_stats()
+        self._save_logs()
 
     async def terminate(self):
         """插件卸载时清理资源。"""
         self._save_stats()
+        self._save_logs()
         await self.client.close()
         logger.info("[Denpa Echo] 插件已卸载")

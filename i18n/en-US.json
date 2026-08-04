@@ -58,7 +58,7 @@
   },
   "logs": {
     "title": "Logs",
-    "subtitle": "Recent 200 synthesis records"
+    "subtitle": "Recent / cumulative synthesis records (persisted)"
   },
   "settings": {
     "title": "UI Settings",

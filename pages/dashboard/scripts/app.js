@@ -543,6 +543,7 @@ function bindEvents() {
   // 刷新
   document.getElementById("btn-refresh-all").onclick = loadOverview;
   document.getElementById("btn-refresh-logs").onclick = loadLogs;
+  document.getElementById("logs-mode").addEventListener("change", loadLogs);
 
   // 主题切换：从点击位置生成圆形遮罩外扩，View Transitions 让新旧主题同帧渲染
   const themeBtn = document.getElementById("btn-theme");
@@ -1388,7 +1389,8 @@ async function doDebugSynth() {
 // ========== 运行日志 ==========
 async function loadLogs() {
   try {
-    const data = await bridge.apiGet("logs", { limit: 200 });
+    const mode = document.getElementById("logs-mode").value || "recent";
+    const data = await bridge.apiGet("logs", { limit: 200, mode });
     const body = document.getElementById("logs-body");
     const logs = data.logs || [];
     if (logs.length === 0) {
