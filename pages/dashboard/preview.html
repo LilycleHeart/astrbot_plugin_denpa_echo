@@ -299,16 +299,31 @@
       }
       window.addEventListener("resize", resize); resize();
       function brandRGB() {
+        _brandTick++;
+        if (_brandCached && _brandTick % 30 !== 0) return _brandCached;  // 每 30 帧重取一次, 主题切换后约 0.5s 内更新
         const v = getComputedStyle(document.documentElement).getPropertyValue("--color-brand").trim() || "#ff8ab9";
         const m = v.match(/^#?([0-9a-f]{6})$/i);
-        if (!m) return [236, 72, 153];
-        const n = parseInt(m[1], 16);
-        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+        if (!m) _brandCached = [236, 72, 153];
+        else { const n = parseInt(m[1], 16); _brandCached = [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+        return _brandCached;
       }
       function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
       // Material Design 明暗配色: 暗色主题提亮品牌色(更高亮度以在暗底可见), 亮色用本色
       function lighten(c, amt) { return [Math.round(c[0] + (255 - c[0]) * amt), Math.round(c[1] + (255 - c[1]) * amt), Math.round(c[2] + (255 - c[2]) * amt)]; }
+      // 视口外暂停动画, 避免滚动时 rAF 全速常驻抢主线程
+      let _brandTick = 0, _brandCached = null, _visible = true, _raf = null;
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver((es) => {
+          const now = es[0].isIntersecting;
+          if (now === _visible) return;
+          _visible = now;
+          if (_visible) draw();
+          else { cancelAnimationFrame(_raf); _raf = null; }
+        }, { rootMargin: "150px 0px" });
+        io.observe(canvas);
+      }
       function draw() {
+        _raf = requestAnimationFrame(draw);
         const w = cw, h = ch, cy = h / 2;
         ctx.clearRect(0, 0, w, h);
         const C = brandRGB();
@@ -317,9 +332,7 @@
         ctx.shadowBlur = 0;
         idlePhase += 0.008 * (0.6 + energy * 0.8);
         const lines = 22;
-        // 暗色: 霓虹泛光 + 高不透明度; 亮色: 更明亮的本色线波(克制但不黯淡)
-        if (dark) { ctx.shadowColor = rgba(lineC, 0.75); ctx.shadowBlur = 12; }
-        else { ctx.shadowColor = rgba(lineC, 0.35); ctx.shadowBlur = 4; }
+        // 外层细线不设 shadowBlur: 高斯模糊是每帧最大开销, 辉光留给中央主波
         for (let li = 0; li < lines; li++) {
           const off = li / lines - 0.5;
           const baseY = cy + off * (h * 0.38);
@@ -353,7 +366,6 @@
         ctx.stroke();
         ctx.shadowBlur = 0;
         energy += (1 - energy) * 0.02;
-        requestAnimationFrame(draw);
       }
       draw();
       // 合成模拟：波形能量涌动

@@ -191,6 +191,8 @@ function applyUiConfig() {
   root.style.setProperty("--bg-scrim", (ui.bg_scrim ?? 40) / 100);
   // 声纹可视化模式
   try { Waveform.setVizMode(ui.viz_mode || "spectrum"); } catch (_) {}
+  // 品牌色/主题变化后失效波形品牌色缓存（刷新 --color-brand 即时生效）
+  try { Waveform.refresh(); } catch (_) {}
   const appEl = document.getElementById("app");
   if (appEl) {
     appEl.classList.toggle("bg-image-active", !!(ui.background_mode === "image" && ui.background_image));
@@ -1701,17 +1703,25 @@ const Waveform = (() => {
   let energy = 1;          // 音频能量（1=空闲，>1=有信号）
   let audioMix = 0;        // 0=空闲形态, 1=音频驱动形态（平滑过渡）
   let vizMode = "spectrum"; // "spectrum" | "wave"
+  let _brandCached = null; // 品牌色缓存（避免每帧 getComputedStyle）
+  let visible = true;      // canvas 是否在视口内（视口外暂停动画）
+  let io = null;
+  let freqBuf = null;      // 复用频谱缓冲，避免每帧分配
 
   function setVizMode(mode) { vizMode = mode; }
 
-  /** 读取品牌色（--color-brand），失败回退信号粉 */
+  /** 读取品牌色（--color-brand），失败回退信号粉；带缓存，主题切换经 refresh() 失效 */
   function brandRGB() {
+    if (_brandCached) return _brandCached;
     const v = getComputedStyle(document.documentElement)
       .getPropertyValue('--color-brand').trim() || '#ff8ab9';
     const m = v.match(/^#?([0-9a-f]{6})$/i);
-    if (!m) return [236, 72, 153];
-    const n = parseInt(m[1], 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    if (!m) _brandCached = [236, 72, 153];
+    else {
+      const n = parseInt(m[1], 16);
+      _brandCached = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    return _brandCached;
   }
   function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
   function lighten(c, amt) {
@@ -1732,10 +1742,27 @@ const Waveform = (() => {
       ro.observe(canvas);
     }
     window.addEventListener('resize', resize);
+    // 波形滚出视口时暂停 rAF：动画全速常驻会占满主线程（尤其 22 层带阴影描边），
+    // 滚动到波形时与滚动合成争抢导致卡顿。提前 150px 恢复，避免边缘闪现空白。
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver((entries) => {
+        const nowVisible = entries[0].isIntersecting;
+        if (nowVisible === visible) return;
+        visible = nowVisible;
+        if (visible) {
+          loop();
+        } else {
+          cancelAnimationFrame(raf);
+          raf = null;
+        }
+      }, { rootMargin: '150px 0px' });
+      io.observe(canvas);
+    }
     loop();
   }
 
   function refresh() {
+    _brandCached = null;   // 主题/品牌色可能已变，失效缓存
     if (canvas) resize();
   }
 
@@ -1787,8 +1814,9 @@ const Waveform = (() => {
     ctx.shadowBlur = 0;
 
     const binCount = analyser ? analyser.frequencyBinCount : 128;
-    const freqData = new Uint8Array(binCount);
-    if (analyser) analyser.getByteFrequencyData(freqData);
+    if (!freqBuf || freqBuf.length !== binCount) freqBuf = new Uint8Array(binCount);
+    if (analyser) analyser.getByteFrequencyData(freqBuf);
+    const freqData = freqBuf;
 
     const hasSignal = freqData.some(v => v > 12);
 
@@ -1846,8 +1874,9 @@ const Waveform = (() => {
     const lines = 22;
     const mix = audioMix;
 
-    if (dark) { ctx.shadowColor = rgba(lineC, 0.80); ctx.shadowBlur = 10 + mix * 8; }
-    else { ctx.shadowColor = rgba(lineC, 0.35); ctx.shadowBlur = 4 + mix * 4; }
+    // 外层细线不设 shadowBlur：canvas 高斯模糊是每帧最大开销，22 条全开必然掉帧；
+    // 辉光焦点保留给中央主波，外层低 alpha 细线去阴影后视觉差异极小。
+    ctx.shadowBlur = 0;
 
     for (let li = 0; li < lines; li++) {
       const off = li / lines - 0.5;
