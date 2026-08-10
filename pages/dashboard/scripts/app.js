@@ -1513,6 +1513,7 @@ async function loadPluginConfig() {
     set("cfg-send-scope", sm.trigger_scope || "all");
     setChk("cfg-send-keep-text", sm.keep_text !== false);
     setChk("cfg-send-sync", sm.use_sync !== false);
+    setChk("cfg-send-append-silent", sm.append_silent === true);
     set("cfg-send-min", sm.min_length ?? 1);
     set("cfg-send-max", sm.max_length ?? 5000);
     setChk("cfg-send-skip-long", sm.skip_long === true);
@@ -1589,6 +1590,7 @@ async function savePluginConfig() {
       trigger_scope: val("cfg-send-scope"),
       keep_text: chk("cfg-send-keep-text"),
       use_sync: chk("cfg-send-sync"),
+      append_silent: chk("cfg-send-append-silent"),
       min_length: int("cfg-send-min", 1),
       max_length: int("cfg-send-max", 5000),
       skip_long: chk("cfg-send-skip-long"),

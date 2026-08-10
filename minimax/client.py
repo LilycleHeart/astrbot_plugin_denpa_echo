@@ -139,6 +139,15 @@ class MinimaxClient:
                     # HTTP 层错误
                     if resp.status >= 400:
                         base_resp = payload.get("base_resp", {}) if isinstance(payload, dict) else {}
+                        if resp.status in (401, 403):
+                            _masked = (
+                                f"{self.api_key[:6]}...{self.api_key[-4:]}"
+                                if len(self.api_key) > 8
+                                else f"(过短/空: len={len(self.api_key)})"
+                            )
+                            logger.error(
+                                f"[Minimax] 鉴权失败, 当前 api_key={_masked} @ {url}"
+                            )
                         raise MinimaxAPIError(
                             resp.status,
                             f"{base_resp.get('status_msg', f'HTTP {resp.status}')} @ {url}",
