@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Denpa Echo · Audio Visualizer</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/theme.css">
+<link rel="stylesheet" href="./styles/components.css">
+<style>
+:root{--viz-bg:#08090d;--viz-panel:rgba(20,21,28,.68);--viz-line:var(--color-brand,#ff8ab9)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--viz-bg);color:var(--color-fg-1,#f5f5f5);font-family:Inter,MiSans,system-ui,sans-serif}body{overflow:hidden}
+#bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 50% 38%,rgba(255,138,185,.11),transparent 40%),var(--viz-bg)}
+#glow{position:fixed;width:42vw;height:42vw;border-radius:50%;left:50%;top:48%;transform:translate(-50%,-50%);background:var(--viz-line);opacity:.08;filter:blur(100px);z-index:-1;pointer-events:none}
+.shell{height:100vh;display:grid;grid-template-rows:auto 1fr auto;padding:28px 34px 22px;gap:18px}.top{display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:12px}.logo{width:34px;height:34px;border-radius:11px;background:var(--color-brand,#ff8ab9);display:grid;place-items:center;color:#fff;box-shadow:0 8px 28px color-mix(in srgb,var(--color-brand,#ff8ab9) 28%,transparent)}.brand-title{font-weight:650;letter-spacing:.01em}.brand-sub{font-size:12px;opacity:.55;margin-top:2px}.actions{display:flex;gap:8px}.pill{height:34px;border:1px solid color-mix(in srgb,var(--color-brand,#ff8ab9) 22%,transparent);border-radius:999px;background:rgba(255,255,255,.045);color:inherit;padding:0 13px;cursor:pointer}.pill:hover{background:rgba(255,255,255,.08)}
+.stage{position:relative;min-height:0;border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));box-shadow:inset 0 1px rgba(255,255,255,.05),0 30px 80px rgba(0,0,0,.2);overflow:hidden}.stage::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 49.9%,rgba(255,255,255,.035) 50%,transparent 50.1%);pointer-events:none}.stage canvas{display:block;width:100%;height:100%}.empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.empty-inner{text-align:center;opacity:.8}.empty-title{font-size:18px;font-weight:600}.empty-sub{font-size:13px;opacity:.5;margin-top:7px}
+.bottom{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end}.track{min-width:0}.track-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.time{font-variant-numeric:tabular-nums;font-family:JetBrains Mono,monospace;font-size:11px;opacity:.5;margin-top:4px}.progress{height:4px;margin-top:10px;background:rgba(255,255,255,.09);border-radius:999px;cursor:pointer;overflow:hidden}.progress i{display:block;height:100%;width:0;background:var(--color-brand,#ff8ab9);border-radius:inherit;box-shadow:0 0 12px color-mix(in srgb,var(--color-brand,#ff8ab9) 60%,transparent)}.controls{display:flex;align-items:center;gap:9px}.round{width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:inherit;display:grid;place-items:center;cursor:pointer}.round.primary{width:48px;height:48px;background:var(--color-brand,#ff8ab9);color:#fff;box-shadow:0 8px 25px color-mix(in srgb,var(--color-brand,#ff8ab9) 30%,transparent)}.round:hover{filter:brightness(1.1)}.volume{display:flex;align-items:center;gap:7px;margin-left:5px}.volume input{width:85px;accent-color:var(--color-brand,#ff8ab9)}input[type=file]{display:none}
+@media(max-width:700px){.shell{padding:16px;gap:12px}.bottom{grid-template-columns:1fr}.controls{justify-content:flex-end}.stage{border-radius:18px}.volume input{width:65px}}
+</style>
+</head>
+<body>
+<div id="bg"></div><div id="glow"></div>
+<div class="shell">
+<header class="top">
+  <div class="brand"><div class="logo"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 12h2M8 8v8M12 4v16M16 8v8M20 10v4"/></svg></div><div><div class="brand-title">Denpa Echo</div><div class="brand-sub">SIGNAL / AUDIO VISUALIZER</div></div></div>
+  <div class="actions"><button class="pill" id="mode">Spectrum</button><button class="pill" id="open">Open audio</button><input id="file" type="file" accept="audio/*"></div>
+</header>
+<section class="stage"><canvas id="canvas"></canvas><div class="empty" id="empty"><div class="empty-inner"><div class="empty-title">Drop an audio file here</div><div class="empty-sub">or choose Open audio · WAV / MP3 / OGG / M4A</div></div></div></section>
+<footer class="bottom">
+  <div class="track"><div class="track-name" id="name">No audio loaded</div><div class="time"><span id="current">00:00</span> / <span id="duration">00:00</span></div><div class="progress" id="progress"><i id="progressFill"></i></div></div>
+  <div class="controls"><button class="round" id="restart" title="Restart">↺</button><button class="round primary" id="play" title="Play">▶</button><div class="volume"><span>⌕</span><input id="volume" type="range" min="0" max="1" step=".01" value="1"></div></div>
+</footer>
+</div>
+<audio id="audio" crossorigin="anonymous"></audio>
+<script type="module">
+const root=document.documentElement, canvas=document.querySelector('#canvas'), ctx=canvas.getContext('2d'), audio=document.querySelector('#audio');
+const empty=document.querySelector('#empty'), file=document.querySelector('#file'), modeBtn=document.querySelector('#mode');
+let analyser=null, audioCtx=null, source=null, data=null, raf=0, mode='spectrum', phase=0, dpr=1, W=0,H=0;
+const $=id=>document.getElementById(id);
+function resize(){const r=canvas.getBoundingClientRect();W=r.width;H=r.height;dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,W*dpr);canvas.height=Math.max(1,H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(resize).observe(canvas);resize();
+function setupAudio(){if(audioCtx)return;audioCtx=new (window.AudioContext||window.webkitAudioContext)();analyser=audioCtx.createAnalyser();analyser.fftSize=256;source=audioCtx.createMediaElementSource(audio);source.connect(analyser);analyser.connect(audioCtx.destination);data=new Uint8Array(analyser.frequencyBinCount)}
+function brand(){const s=getComputedStyle(root).getPropertyValue('--color-brand').trim()||'#ff8ab9';const n=parseInt(s.replace('#',''),16);return[(n>>16)&255,(n>>8)&255,n&255]}
+function rgba(c,a){return`rgba(${c[0]},${c[1]},${c[2]},${a})`}
+function draw(){ctx.clearRect(0,0,W,H);const c=brand();if(analyser)analyser.getByteFrequencyData(data);else{data=data||new Uint8Array(128);data.fill(0)};const signal=data.some(v=>v>8);phase+=.009;
+ if(mode==='spectrum'&&analyser&&signal){const n=data.length,bw=W/n;ctx.shadowColor=rgba(c,.42);ctx.shadowBlur=12;for(let i=0;i<n;i++){const v=data[i]/255;const h=v*H*.78;const x=i*bw;const g=ctx.createLinearGradient(x,H-h,x,H);g.addColorStop(0,rgba(c,.98));g.addColorStop(1,rgba(c,.08));ctx.fillStyle=g;ctx.fillRect(x+1,H-h,Math.max(1,bw-2),h)}ctx.shadowBlur=0}else{const lines=22,cy=H/2;for(let l=0;l<lines;l++){const off=l/lines-.5,bin=Math.min(data.length-1,Math.floor(l/lines*data.length)),v=(data[bin]||0)/255;const amp=(10+(l%7))*(1-Math.abs(off)*1.35)+v*H*.28;const y0=cy+off*H*.38;ctx.beginPath();ctx.strokeStyle=rgba(c,.13+(1-Math.abs(off))*.42);ctx.lineWidth=1;for(let x=0;x<=W;x+=3){const y=y0+amp*(Math.sin(.007*x+phase+l*.75)+.33*Math.sin(.017*x+phase*1.35+l));x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}ctx.shadowColor=rgba(c,.75);ctx.shadowBlur=18;ctx.beginPath();ctx.strokeStyle=rgba(c,.9);ctx.lineWidth=2;for(let x=0;x<=W;x+=2){const y=cy+44*(Math.sin(.0105*x+phase*.58)+.3*Math.sin(.026*x+phase));x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke();ctx.shadowBlur=0}
+ raf=requestAnimationFrame(draw)}draw();
+function fmt(s){if(!isFinite(s))return'00:00';return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`}
+function load(f){if(!f)return;audio.src=URL.createObjectURL(f);audio.load();$('name').textContent=f.name;empty.style.display='none';audio.play().catch(()=>{});setupAudio();if(audioCtx.state==='suspended')audioCtx.resume()}
+$('open').onclick=()=>file.click();file.onchange=e=>load(e.target.files[0]);
+$('play').onclick=async()=>{setupAudio();if(audioCtx.state==='suspended')await audioCtx.resume();if(audio.paused){await audio.play();$('play').textContent='Ⅱ'}else{audio.pause();$('play').textContent='▶'}};
+$('restart').onclick=()=>{audio.currentTime=0;audio.play().catch(()=>{})};audio.onplay=()=>$('play').textContent='Ⅱ';audio.onpause=()=>$('play').textContent='▶';audio.ontimeupdate=()=>{$('current').textContent=fmt(audio.currentTime);$('duration').textContent=fmt(audio.duration);$('progressFill').style.width=(audio.duration?audio.currentTime/audio.duration*100:0)+'%'};
+$('progress').onclick=e=>{if(audio.duration)audio.currentTime=(e.offsetX/e.currentTarget.clientWidth)*audio.duration};$('volume').oninput=e=>audio.volume=+e.target.value;
+modeBtn.onclick=()=>{mode=mode==='spectrum'?'wave':'spectrum';modeBtn.textContent=mode==='spectrum'?'Spectrum':'Waveform'};
+document.body.ondragover=e=>e.preventDefault();document.body.ondrop=e=>{e.preventDefault();load(e.dataTransfer.files[0])};
+</script>
+</body></html>
