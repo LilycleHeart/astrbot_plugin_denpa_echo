@@ -77,12 +77,14 @@ async function init() {
 
   // 自定义主题下拉: 将所有 select.select 替换为 pv-select 组件(原生弹层→主题弹层)
   pvInitSelects();
+  syncDebugVoiceEffective();  // 补一次「生效音色」提示（音色列表可能异步晚到）
 
   bridge.onContext((newCtx) => {
     state.ctx = newCtx;
     applyTheme(newCtx);
     applyI18n(newCtx);
     applyUiConfig();
+    syncDebugVoiceEffective();  // 语言切换后刷新「生效音色」提示文案
   });
 }
 
@@ -123,6 +125,11 @@ function applyI18n(ctx) {
     } else {
       el.textContent = translated;
     }
+  });
+  // placeholder 类文案（data-i18n-placeholder="key"）
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const translated = bridge.t(el.getAttribute("data-i18n-placeholder"), "");
+    if (translated) el.placeholder = translated;
   });
 }
 
@@ -661,6 +668,29 @@ function bindEvents() {
   document.getElementById("debug-speed").addEventListener("input", (e) => {
     document.getElementById("debug-speed-val").textContent = parseFloat(e.target.value).toFixed(1);
   });
+  // 手动音色 ID：输入即时反映「生效音色」，回车直接合成
+  const debugVoiceManual = document.getElementById("debug-voice-manual");
+  if (debugVoiceManual) {
+    // 记住上次手动输入的音色 ID，便于反复试听同一音色
+    try {
+      const saved = localStorage.getItem("mmtts_debug_voice_manual");
+      if (saved) debugVoiceManual.value = saved;
+    } catch (_) { /* localStorage 不可用时忽略 */ }
+    debugVoiceManual.addEventListener("input", () => {
+      try {
+        localStorage.setItem("mmtts_debug_voice_manual", debugVoiceManual.value.trim());
+      } catch (_) { /* ignore */ }
+      syncDebugVoiceEffective();
+    });
+    debugVoiceManual.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        doDebugSynth();
+      }
+    });
+  }
+  const debugVoiceSel = document.getElementById("debug-voice");
+  if (debugVoiceSel) debugVoiceSel.addEventListener("change", syncDebugVoiceEffective);
 
   // 设置
   document.getElementById("btn-save-ui").onclick = saveUiConfig;
@@ -854,6 +884,7 @@ function _fillDebugSelect(all) {
   if (cur && merged.some((v) => v.voice_id === cur)) sel.value = cur;
   // 自定义下拉(如有)同步选中显示
   pvSyncAllSelects();
+  syncDebugVoiceEffective();
 }
 
 function addToMyVoices(voice) {
@@ -1092,6 +1123,7 @@ function fillDebugVoiceSelect() {
   }
 
   pvSyncAllSelects();
+  syncDebugVoiceEffective();
 }
 
 async function previewVoice(voiceId, name) {
@@ -1337,13 +1369,38 @@ function updateBgPreview() {
 }
 
 // ========== 调试试听 ==========
+/** 调试音色取值：手动输入的 ID 优先，为空则回退下拉所选 */
+function resolveDebugVoice() {
+  const manual = (document.getElementById("debug-voice-manual")?.value || "").trim();
+  return manual || document.getElementById("debug-voice").value;
+}
+
+/** 在提示行实时显示本次将使用的音色 ID（区分 手动 / 下拉 / 配置默认） */
+function syncDebugVoiceEffective() {
+  const valEl = document.getElementById("debug-voice-effective");
+  const srcEl = document.getElementById("debug-voice-source");
+  if (!valEl) return;
+  const manual = (document.getElementById("debug-voice-manual")?.value || "").trim();
+  const voice = resolveDebugVoice();
+  const t = (k, fallback) => bridge.t(k, fallback) || fallback;
+  if (!voice) {
+    valEl.textContent = t("debug.voiceDefault", "配置默认");
+    if (srcEl) srcEl.textContent = "";
+    return;
+  }
+  valEl.textContent = voice;
+  if (srcEl) srcEl.textContent = manual ? t("debug.voiceFromManual", "（手动）") : "";
+}
+
 async function doDebugSynth() {
   const text = document.getElementById("debug-text").value.trim();
   if (!text) {
     showToast("请输入合成文本", "warning");
     return;
   }
-  const voice = document.getElementById("debug-voice").value;
+  // 手动音色 ID 优先；两者皆空时留空提交，由后端回退到配置中的默认音色
+  const manualVoice = (document.getElementById("debug-voice-manual")?.value || "").trim();
+  const voice = resolveDebugVoice();
   const speed = parseFloat(document.getElementById("debug-speed").value);
   const emotion = document.getElementById("debug-emotion").value;
 
@@ -1351,7 +1408,11 @@ async function doDebugSynth() {
   btn.disabled = true;
   btn.textContent = "合成中...";
   const resultEl = document.getElementById("debug-result");
-  resultEl.innerHTML = '<div class="progress"><div class="progress-bar" style="width:50%"></div></div>';
+  resultEl.innerHTML =
+    '<div class="progress"><div class="progress-bar" style="width:50%"></div></div>'
+    + (manualVoice
+      ? `<p class="text-sm text-muted mt-s">手动音色 ID：<span class="text-mono">${escapeHtml(manualVoice)}</span></p>`
+      : "");
 
   try {
     const result = await bridge.apiPost("debug/synth", {
@@ -1367,7 +1428,8 @@ async function doDebugSynth() {
         <audio controls preload="metadata" src="${audioSrc}"></audio>
       </div>
       <p class="text-sm text-muted mt-s">
-        耗时 ${result.elapsed_ms}ms · 字符 ${result.usage_chars}
+        音色 <span class="text-mono">${escapeHtml(result.voice_id || voice)}</span>
+        · 耗时 ${result.elapsed_ms}ms · 字符 ${result.usage_chars}
       </p>
     `;
     const dbgAudio = resultEl.querySelector('audio');
@@ -1380,7 +1442,7 @@ async function doDebugSynth() {
     showToast("合成成功", "success");
   } catch (e) {
     resultEl.innerHTML = `<span class="badge badge-danger">合成失败</span>
-      <p class="text-sm text-muted mt-s">${e.message}</p>`;
+      <p class="text-sm text-muted mt-s">${escapeHtml(e.message)}</p>`;
     showToast(`合成失败: ${e.message}`, "error");
   } finally {
     btn.disabled = false;

@@ -312,6 +312,18 @@
                 </select>
               </div>
             </div>
+            <div class="form-row">
+              <label class="form-label" data-i18n="debug.manualVoice">手动音色 ID（可选）</label>
+              <input class="input text-mono" id="debug-voice-manual" placeholder="例如 moss_audio_xxx 或 female-shaonv（优先级高于上方下拉）" data-i18n-placeholder="debug.manualVoicePlaceholder" autocomplete="off" spellcheck="false" />
+              <p class="form-hint">
+                <span data-i18n="debug.manualVoiceHint">填写后忽略上方下拉选择，直接使用该 ID 合成；留空则用所选音色</span>
+              </p>
+              <p class="form-hint">
+                <span data-i18n="debug.effective">生效音色：</span>
+                <span id="debug-voice-effective" class="text-mono"></span>
+                <span id="debug-voice-source" class="text-mono"></span>
+              </p>
+            </div>
             <button class="btn btn-primary" id="btn-debug-synth" data-i18n="debug.synth">合成试听</button>
             <div id="debug-result" class="mt-m"></div>
           </div>

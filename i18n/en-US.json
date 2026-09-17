@@ -54,7 +54,13 @@
     "voice": "Voice",
     "speed": "Speed",
     "emotion": "Emotion",
-    "synth": "Synthesize"
+    "synth": "Synthesize",
+    "manualVoice": "Manual Voice ID (optional)",
+    "manualVoicePlaceholder": "e.g. moss_audio_xxx or female-shaonv (overrides the select above)",
+    "manualVoiceHint": "When filled, the select above is ignored and this ID is used for synthesis; leave empty to use the selected voice",
+    "effective": "Effective voice: ",
+    "voiceDefault": "config default",
+    "voiceFromManual": "(manual)"
   },
   "logs": {
     "title": "Logs",

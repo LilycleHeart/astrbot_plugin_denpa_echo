@@ -54,7 +54,13 @@
     "voice": "音色",
     "speed": "语速",
     "emotion": "情绪",
-    "synth": "合成试听"
+    "synth": "合成试听",
+    "manualVoice": "手动音色 ID（可选）",
+    "manualVoicePlaceholder": "例如 moss_audio_xxx 或 female-shaonv（优先级高于上方下拉）",
+    "manualVoiceHint": "填写后忽略上方下拉选择，直接使用该 ID 合成；留空则用所选音色",
+    "effective": "生效音色：",
+    "voiceDefault": "配置默认",
+    "voiceFromManual": "（手动）"
   },
   "logs": {
     "title": "运行日志",

@@ -539,14 +539,16 @@ class Main(Star):
         text = payload.get("text", "你好")
         if not text.strip():
             return error_response("text 不能为空", status_code=400)
-        # 允许覆盖任意 TTS 参数
+        # 允许覆盖任意 TTS 参数（voice_id 可为手动输入的任意音色 ID，去除首尾空白）
         tts_params = self.tts_engine.build_tts_params()
         for k in (
             "voice_id", "speed", "vol", "pitch", "emotion",
             "language_boost", "model", "format", "sample_rate",
         ):
-            if k in payload and payload[k] != "":
-                tts_params[k] = payload[k]
+            if k not in payload or payload[k] == "":
+                continue
+            val = payload[k]
+            tts_params[k] = val.strip() if isinstance(val, str) else val
         if "voice_id" not in tts_params or not tts_params["voice_id"]:
             tts_params["voice_id"] = "female-shaonv"
         tts_params["use_timbre_weights"] = False
@@ -572,6 +574,7 @@ class Main(Star):
             return json_response({
                 "audio_path": wav_path,
                 "audio_base64": audio_b64,
+                "voice_id": tts_params.get("voice_id", ""),
                 "elapsed_ms": elapsed,
                 "usage_chars": meta.get("usage_chars", len(text)),
                 "meta": meta,
