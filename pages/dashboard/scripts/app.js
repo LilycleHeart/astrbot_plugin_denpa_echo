@@ -1709,6 +1709,9 @@ const Waveform = (() => {
   let visible = true;      // canvas 是否在视口内（视口外暂停动画）
   let io = null;
   let freqBuf = null;      // 复用频谱缓冲，避免每帧分配
+  const lineLvl = new Float32Array(22); // 每条线对应频段的包络(attack/release)
+  let mainLvl = 0;         // 主波频段包络
+  let bassAvg = 0, beatGlow = 0;  // kick 节拍检测与主波脉冲
 
   function setVizMode(mode) { vizMode = mode; }
 
@@ -1788,7 +1791,8 @@ const Waveform = (() => {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 2048;          // bin 宽 21.5Hz:分离 kick(43-110Hz)/人声/镲片
+        analyser.smoothingTimeConstant = 0.35;
       }
       if (audioCtx.state === "suspended") {
         audioCtx.resume().then(() => audioEl.play().catch(() => {})).catch(() => {});
@@ -1849,7 +1853,7 @@ const Waveform = (() => {
 
   /* ── 频谱柱状图（有音频播放时）── */
   function drawSpectrum(data, C, dark) {
-    const n = data.length;
+    const n = Math.min(128, data.length);  // fftSize 2048 下取低段 128 bins,柱形数量与原视觉一致
     const barW = Math.max(1.5, w / n * 0.65);
     const gap = w / n - barW;
     if (dark) { ctx.shadowColor = rgba(C, 0.90); ctx.shadowBlur = 16; }
@@ -1868,10 +1872,12 @@ const Waveform = (() => {
     ctx.shadowBlur = 0;
   }
 
-  /* ── 流动波形（空闲态 ↔ 音频驱动态平滑过渡）── */
+  /* ── 流动波形（空闲态 ↔ 音频驱动态平滑过渡）──
+     响应机制:空闲时相位缓慢流动(原待机感);播放时相位冻结,
+     每条线由对应频段能量(对数分布+平滑跟随)驱动原地起伏,波峰不横移。 */
   function drawWave(freqData, C, dark) {
     const lineC = dark ? lighten(C, 0.35) : C;
-    idlePhase += 0.008 * (1 + audioMix * 2);
+    idlePhase += 0.008 * (1 - audioMix * 0.6);
     const cy = h / 2;
     const lines = 22;
     const mix = audioMix;
@@ -1880,24 +1886,44 @@ const Waveform = (() => {
     // 辉光焦点保留给中央主波，外层低 alpha 细线去阴影后视觉差异极小。
     ctx.shadowBlur = 0;
 
+    // kick 节拍检测:43-110Hz 峰值 vs 慢速基线,触发主波脉冲
+    let kick = 0;
+    for (let b = 2; b <= 5; b++) kick = Math.max(kick, freqData[b]);
+    bassAvg += (kick - bassAvg) * 0.015;
+    if (mix > 0.3 && kick > bassAvg * 1.35 && kick > 60) {
+      beatGlow = Math.min(1, beatGlow + 0.8);
+    }
+    beatGlow *= 0.86;
+
     for (let li = 0; li < lines; li++) {
       const off = li / lines - 0.5;
       const baseY = cy + off * (h * 0.38);
 
       // 基础振幅（空闲态），播放时压缩为音频腾出空间
       const idleAmp = (14 + (li % 7)) * (1 - Math.abs(off) * 1.4) * (1 - mix * 0.8);
-      // 音频驱动：从频谱取对应 bin 的能量，映射为额外振幅
-      const binIdx = Math.min(freqData.length - 1, Math.floor((li / lines) * freqData.length));
-      const binVal = freqData[binIdx] / 255;
-      // 混合振幅：空闲压缩保底 + 音频叠加
-      const amp = idleAmp + mix * binVal * h * 0.3 * (1 - Math.abs(off) * 0.6);
+      // 频段映射:43Hz-12kHz 对数分布,每线取**本频段内峰值**——
+      // 低音只驱动中间线、人声驱动中层、镲片驱动外围线,各司其职
+      const binLo = 2, binHi = 558;
+      const b0 = Math.round(binLo * Math.pow(binHi / binLo, li / lines));
+      const b1 = Math.max(b0 + 1, Math.round(binLo * Math.pow(binHi / binLo, (li + 1) / lines)));
+      let peak = 0;
+      for (let b = b0; b <= Math.min(b1, freqData.length - 1); b++) {
+        if (freqData[b] > peak) peak = freqData[b];
+      }
+      let target = (peak / 255) * (1 + Math.abs(off) * 1.0);  // 高频倾斜补偿
+      // attack 快 / release 慢的不对称包络:鼓点瞬间跳起、缓缓落下 = 节奏感
+      const prev = lineLvl[li];
+      lineLvl[li] = prev + (target - prev) * (target > prev ? 0.55 : 0.08);
+      const lvl = Math.min(1, lineLvl[li]);
+      // 混合振幅：空闲压缩保底 + 本频段能量驱动
+      const amp = idleAmp + mix * lvl * h * 0.32 * (1 - Math.abs(off) * 0.6);
 
       const freq = 0.007 + li * 0.00055;
-      const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * binVal * 0.2;
+      const alpha = (dark ? 0.18 : 0.16) + (1 - Math.abs(off)) * (dark ? 0.42 : 0.32) + mix * lvl * 0.22;
 
       ctx.beginPath();
       ctx.strokeStyle = rgba(lineC, Math.min(1, alpha));
-      ctx.lineWidth = 1 + mix * binVal * 0.8;
+      ctx.lineWidth = 1 + mix * lvl * 1.0;
       for (let x = 0; x <= w; x += 3) {
         // 始终使用同一组正弦叠加，保持视觉语言一致
         const n = Math.sin(freq * x + idlePhase + li * 0.75)
@@ -1913,10 +1939,16 @@ const Waveform = (() => {
     ctx.shadowBlur = dark ? 20 : 6;
     ctx.beginPath();
     ctx.strokeStyle = rgba(lineC, dark ? 1.0 : 0.70);
-    const mainBin = Math.floor(freqData.length * 0.25);
-    const mainVal = freqData[mainBin] / 255;
-    ctx.lineWidth = 2 + mix * mainVal * 1.5;
-    const mainAmp = 46 * (1 - mix * 0.8) + mix * mainVal * h * 0.2;
+    // 中频(300Hz-2kHz)峰值 + attack/release,辉光与线宽随 kick 节拍脉冲
+    ctx.shadowBlur = dark ? 20 + beatGlow * 14 : 6 + beatGlow * 8;
+    let mv = 0;
+    for (let b = 14; b <= 93; b += 4) {
+      if (freqData[b] > mv) mv = freqData[b];
+    }
+    const mTarget = mv / 255;
+    mainLvl = mainLvl + (mTarget - mainLvl) * (mTarget > mainLvl ? 0.5 : 0.09);
+    ctx.lineWidth = 2 + mix * mainLvl * 1.8 + beatGlow * 1.6;
+    const mainAmp = 46 * (1 - mix * 0.8) + mix * mainLvl * h * 0.2 + beatGlow * 10;
     for (let x = 0; x <= w; x += 2) {
       const n = Math.sin(0.0105 * x + idlePhase * 0.58)
               + 0.30 * Math.sin(0.026 * x + idlePhase * 1.08)
